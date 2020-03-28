@@ -101,7 +101,7 @@ namespace JsonPath.Net.Tests
         {
             IReadOnlyList<Token> tokens = Token.GetTokens("abc.def.ghi['1\"2\\\'3'][\"456\"].jkl.mno");
 
-            IReadOnlyList<SecondLeveToken> slt = Token.GetSecondLevelTokens(tokens);
+            IReadOnlyList<SecondLevelToken> slt = Token.GetSecondLevelTokens(tokens);
 
             Assert.Equal(15, slt.Count);
 

@@ -5,14 +5,14 @@ using Xunit;
 
 namespace JsonPath.Net.Tests
 {
-    public class JsonValuePathParserTests
+    public class JsonPathParserTests
     {
         [Fact]
         public void SingleValueReturnsPath()
         {
             string path = "person";
 
-            IReadOnlyList<string> values = JsonValuePathParser.GetPathParts(path);
+            IReadOnlyList<PathElement> values = JsonPathParser.GetPathParts(path);
 
             Assert.NotNull(values);
             Assert.NotEmpty(values);
@@ -39,7 +39,7 @@ namespace JsonPath.Net.Tests
 
             foreach (var path in paths)
             {
-                Assert.Throws<ArgumentException>(() => JsonValuePathParser.GetPathParts(path));
+                Assert.Throws<ArgumentException>(() => JsonPathParser.GetPathParts(path));
             }
         }
 
@@ -54,7 +54,7 @@ namespace JsonPath.Net.Tests
 
             foreach (var path in paths)
             {
-                var pathParts = JsonValuePathParser.GetPathParts(path);
+                var pathParts = JsonPathParser.GetPathParts(path);
                 Assert.Equal(path, pathParts.Single());
             }
         }
@@ -68,9 +68,9 @@ namespace JsonPath.Net.Tests
                  "['person']"
             };
 
-            foreach (var path in paths)
+            foreach (string path in paths)
             {
-                var pathParts = JsonValuePathParser.GetPathParts(path);
+                IReadOnlyList<PathElement> pathParts = JsonPathParser.GetPathParts(path);
                 Assert.Equal("person", pathParts.Single());
             }
         }
@@ -80,7 +80,7 @@ namespace JsonPath.Net.Tests
         {
             string path = "a.b";
 
-            var pathParts = JsonValuePathParser.GetPathParts(path);
+            var pathParts = JsonPathParser.GetPathParts(path);
 
             Assert.Equal(2, pathParts.Count);
 
@@ -93,7 +93,7 @@ namespace JsonPath.Net.Tests
         {
             string path = "a.b.c.d";
 
-            var pathParts = JsonValuePathParser.GetPathParts(path);
+            var pathParts = JsonPathParser.GetPathParts(path);
 
             Assert.Equal(4, pathParts.Count);
 
@@ -108,7 +108,7 @@ namespace JsonPath.Net.Tests
         {
             string path = "[\"abvd\"]['z1wer']";
 
-            var pathParts = JsonValuePathParser.GetPathParts(path);
+            var pathParts = JsonPathParser.GetPathParts(path);
 
             Assert.Equal(2, pathParts.Count);
 
@@ -121,7 +121,7 @@ namespace JsonPath.Net.Tests
         {
             string path = "[\"abvd\"]['z1wer']['123'][\"444\"]";
 
-            var pathParts = JsonValuePathParser.GetPathParts(path);
+            var pathParts = JsonPathParser.GetPathParts(path);
 
             Assert.Equal(4, pathParts.Count);
 
@@ -136,7 +136,7 @@ namespace JsonPath.Net.Tests
         {
             string path = "[\"a\"].z";
 
-            var pathParts = JsonValuePathParser.GetPathParts(path);
+            var pathParts = JsonPathParser.GetPathParts(path);
 
             Assert.Equal(2, pathParts.Count);
 
@@ -149,7 +149,7 @@ namespace JsonPath.Net.Tests
         {
             string path = "[\"a\"].z['123']['456'].abc";
 
-            var pathParts = JsonValuePathParser.GetPathParts(path);
+            var pathParts = JsonPathParser.GetPathParts(path);
 
             Assert.Equal(5, pathParts.Count);
 
@@ -164,12 +164,12 @@ namespace JsonPath.Net.Tests
         public void EscapedBackslashWorks()
         {
             var path = "['\\\\']";
-            var pathParts = JsonValuePathParser.GetPathParts(path);
+            var pathParts = JsonPathParser.GetPathParts(path);
             Assert.Equal(1, pathParts.Count);
             Assert.Equal("\\", pathParts[0]);
 
             path = "['\\\\\\\\']";
-            pathParts = JsonValuePathParser.GetPathParts(path);
+            pathParts = JsonPathParser.GetPathParts(path);
             Assert.Equal(1, pathParts.Count);
             Assert.Equal("\\\\", pathParts[0]);
         }
@@ -178,7 +178,7 @@ namespace JsonPath.Net.Tests
         public void EscapedDoubleQuotesWorks()
         {
             var path = "[\"\\\"a\\\"\"]";
-            var pathParts = JsonValuePathParser.GetPathParts(path);
+            var pathParts = JsonPathParser.GetPathParts(path);
             Assert.Equal(1, pathParts.Count);
             Assert.Equal("\"a\"", pathParts[0]);
         }
@@ -210,7 +210,7 @@ namespace JsonPath.Net.Tests
         [InlineData("a.v.['abc']")]
         public void NotValidPath_ThrowsException(string path)
         {
-            Assert.Throws<ArgumentException>(() => JsonValuePathParser.GetPathParts(path));
+            Assert.Throws<ArgumentException>(() => JsonPathParser.GetPathParts(path));
         }
 
         [Theory]
@@ -229,7 +229,7 @@ namespace JsonPath.Net.Tests
         [InlineData(" abc . def  ")]
         public void ValidPath_DoesNotThrowException(string path)
         {
-            JsonValuePathParser.GetPathParts(path);
+            JsonPathParser.GetPathParts(path);
             // nothing thrown, assertion passed
         }
 
@@ -251,7 +251,7 @@ namespace JsonPath.Net.Tests
         [InlineData(" abc . def  ", "abc;def")]
         public void ValidPath_ReturnsValidValues(string path, string expectedCsv)
         {
-            var parts = JsonValuePathParser.GetPathParts(path);
+            var parts = JsonPathParser.GetPathParts(path);
             var expectedParts = expectedCsv.Split(";");
 
             Assert.Equal(expectedParts.Length, parts.Count);
@@ -265,97 +265,15 @@ namespace JsonPath.Net.Tests
         [Fact]
         public void ValidPath_IsValid_ReturnTrue()
         {
-            bool valid = JsonValuePathParser.IsValid("abc.def", out _);
+            bool valid = JsonPathParser.IsValid("abc.def", out _);
             Assert.True(valid);
         }
 
         [Fact]
         public void InvalidPath_IsValid_ReturnFalse()
         {
-            bool valid = JsonValuePathParser.IsValid("abc.1def", out _);
+            bool valid = JsonPathParser.IsValid("abc.1def", out _);
             Assert.False(valid);
-        }
-
-        [Fact]
-        public void ArrayAccessPath_WithIndex_ReturnsCorrectValue()
-        {
-            string path = "a.b[ 33   ].c";
-            IReadOnlyList<string> pathParts = JsonValuePathParser.GetPathParts(path);
-
-            Assert.Equal(4, pathParts.Count);
-            Assert.Equal("a", pathParts[0]);
-            Assert.Equal("b", pathParts[1]);
-            Assert.Equal(JsonValuePathParser.ArrayAccessPrefix + 33, pathParts[2]);
-            Assert.Equal("c", pathParts[3]);
-        }
-
-        [Fact]
-        public void ArrayAccessPath_WithIndexWithLeadingZeros_ReturnsCorrectValue()
-        {
-            string path = "['a'].b[ 007 ].c";
-            IReadOnlyList<string> pathParts = JsonValuePathParser.GetPathParts(path);
-
-            Assert.Equal(4, pathParts.Count);
-            Assert.Equal("a", pathParts[0]);
-            Assert.Equal("b", pathParts[1]);
-            Assert.Equal(JsonValuePathParser.ArrayAccessPrefix + 7, pathParts[2]);
-            Assert.Equal("c", pathParts[3]);
-        }
-
-        [Fact]
-        public void ArrayAccessPath_WithAny_ReturnsCorrectValue()
-        {
-            string path = "a.b[ :any   ].c";
-            IReadOnlyList<string> pathParts = JsonValuePathParser.GetPathParts(path);
-
-            Assert.Equal(4, pathParts.Count);
-            Assert.Equal("a", pathParts[0]);
-            Assert.Equal("b", pathParts[1]);
-            Assert.Equal(JsonValuePathParser.ArrayAccessAny, pathParts[2]);
-            Assert.Equal("c", pathParts[3]);
-        }
-
-        [Fact]
-        public void ArrayAccessPath_WithNone_ReturnsCorrectValue()
-        {
-            string path = "a.b[ :none   ].c";
-            IReadOnlyList<string> pathParts = JsonValuePathParser.GetPathParts(path);
-
-            Assert.Equal(4, pathParts.Count);
-            Assert.Equal("a", pathParts[0]);
-            Assert.Equal("b", pathParts[1]);
-            Assert.Equal(JsonValuePathParser.ArrayAccessNone, pathParts[2]);
-            Assert.Equal("c", pathParts[3]);
-        }
-
-        [Fact]
-        public void ArrayAccessPath_WithLast_ReturnsCorrectValue()
-        {
-            string path = "a.b[ :last  ].c";
-            IReadOnlyList<string> pathParts = JsonValuePathParser.GetPathParts(path);
-
-            Assert.Equal(4, pathParts.Count);
-            Assert.Equal("a", pathParts[0]);
-            Assert.Equal("b", pathParts[1]);
-            Assert.Equal(JsonValuePathParser.ArrayAccessLast, pathParts[2]);
-            Assert.Equal("c", pathParts[3]);
-        }
-
-        [Fact]
-        public void ArrayAccessPath_WithInvalidAccessor_ThrowException()
-        {
-            string path = "a.b[ :first   ].c";
-            Assert.Throws<ArgumentException>(() => JsonValuePathParser.GetPathParts(path));
-        }
-
-        [Fact]
-        public void ArrayAccessPath_WithOnlyArrayAccess_ReturnsCorrectValue()
-        {
-            string path = "[ 0303  ]";
-            IReadOnlyList<string> pathParts = JsonValuePathParser.GetPathParts(path);
-
-            Assert.Equal(1, pathParts.Count);
-            Assert.Equal(JsonValuePathParser.ArrayAccessPrefix + 303, pathParts[0]);
         }
     }
 }

@@ -26,21 +26,19 @@ namespace JsonPath.Net
             return GetTokensInternal(chars, subStrings).ToList();
         }
 
-        public static IReadOnlyList<SecondLeveToken> GetSecondLevelTokens(string path) => GetSecondLevelTokens(GetTokens(path));
+        public static IReadOnlyList<SecondLevelToken> GetSecondLevelTokens(string path) => GetSecondLevelTokens(GetTokens(path));
 
-        public static IReadOnlyList<SecondLeveToken> GetSecondLevelTokens(IReadOnlyList<Token> tokens)
+        public static IReadOnlyList<SecondLevelToken> GetSecondLevelTokens(IReadOnlyList<Token> tokens)
         {
             if (tokens is null) throw new ArgumentNullException(nameof(tokens));
 
-            tokens = ReplaceArrayAccessTokens(tokens);
-
-            List<SecondLeveToken> ret = new List<SecondLeveToken>();
+            List<SecondLevelToken> ret = new List<SecondLevelToken>();
 
             List<CharToken> charTokens = new List<CharToken>();
 
             foreach (var t in tokens)
             {
-                if (t is SecondLeveToken slt)
+                if (t is SecondLevelToken slt)
                 {
                     if (charTokens.Any())
                     {
@@ -77,7 +75,7 @@ namespace JsonPath.Net
             return ret;
         }
 
-        public static void EnsureSecondLevelTokensAreValid(IReadOnlyList<SecondLeveToken> tokens)
+        public static void EnsureSecondLevelTokensAreValid(IReadOnlyList<SecondLevelToken> tokens)
         {
             if (tokens is null) throw new ArgumentNullException(nameof(tokens));
 
@@ -133,156 +131,48 @@ namespace JsonPath.Net
                 
                 if (tokens.Count == 1)
                 {
-                    if (!tokens[0].IsUnEscapedPath) throw new ArgumentException($"Unexpected first token");
+                    if (!tokens[0].IsUnEscapedPath) throw new ArgumentException("Unexpected first token");
                 }
             }
         }
 
-        private static IReadOnlyList<Token> ReplaceArrayAccessTokens(IReadOnlyList<Token> tokens)
-        {
-            var tokenGroups = GetTokensBetweenOpenCloseStringTokenInclusive(tokens).ToList();
+        //private static bool IsTokenGroupEscapedPath(IReadOnlyList<Token> tokens)
+        //{
+        //    tokens = tokens.Where(x => !x.IsWhiteSpace()).ToList();
 
-            tokenGroups = tokenGroups.Where(x =>
-            {
-                if (x.Count < 3) return false;
+        //    if (tokens.Count != 3) return false;
 
-                if (IsTokenGroupStringPath(x) || IsTokenGroupEscapedPath(x)) return false;
+        //    return tokens[0] is OpenStringToken && tokens[1] is PathToken && tokens[2] is CloseStringToken;
+        //}
 
-                return true;
+        //private static bool IsTokenGroupStringPath(IReadOnlyList<Token> tokens)
+        //{
+        //    tokens = tokens.Where(x => !x.IsWhiteSpace()).ToList();
 
-            }).ToList();
+        //    if (tokens.Count != 3) return false;
 
-            if (tokenGroups.Any())
-            {
-                List<(int minIndex, int maxIndex)> toReplace = new List<(int minIndex, int maxIndex)>();
+        //    return tokens[0] is OpenStringToken && tokens[1] is StringToken && tokens[2] is CloseStringToken;
+        //}
 
-                foreach (var tg in tokenGroups)
-                {
-                    if (!IsTokenTokenGroupIndexAccessor(tg))
-                    {
-                        if (!IsTokenGroupEscapedPath(tg)) throw new ArgumentException("Unexpected sequence of chars between [ and ] . " +
-                            "When accessing array member use index number (e.g. 7) or :last or :any . When access object property use string in (double or single) quotes.");
-                    }
-                    else
-                    {
-                        toReplace.Add((tg.First().Index, tg.Last().Index));
-                    }
-                }
+        //private static bool IsTokenTokenGroupIndexAccessor(IReadOnlyList<Token> tokens)
+        //{
+        //    tokens = tokens.Where(x => !x.IsWhiteSpace()).ToList();
 
-                if (toReplace.Any())
-                {
-                    return ReplaceArrayAccessTokens(tokens, toReplace);
-                }
-            }
+        //    if (tokens.Count < 3) return false;
 
-            return tokens;
-        }
+        //    if (!tokens.First().IsOpenString() || !tokens.Last().IsCloseString()) return false;
 
-        private static IReadOnlyList<Token> ReplaceArrayAccessTokens(IReadOnlyList<Token> tokens, IReadOnlyList<(int minIndex, int maxIndex)> indexes)
-        {
-            List<(int minIndex, int maxIndex, PathToken path)> replacements = new List<(int minIndex, int maxIndex, PathToken path)>();
+        //    if (!tokens.Skip(1).Take(tokens.Count - 2).All(x => x is CharToken)) return false;
 
-            if (indexes.Count == 0) return tokens;
+        //    var tokenString = new string(tokens.Skip(1).Take(tokens.Count - 2).Cast<CharToken>().Select(x => x.Value).ToArray()).Trim();
 
-            foreach (var index in indexes)
-            {
-                string stringReplacement = new string(
-                    tokens
-                        .Where(x => x.Index >= index.minIndex && x.Index <= index.maxIndex && x is CharToken)
-                        .Cast<CharToken>()
-                        .Select(x => x.Value)
-                        .ToArray()
-                    )
-                    .Trim();
+        //    bool isNumber = int.TryParse(tokenString, out _);
+        //    bool isLast = tokenString == ":last";
+        //    bool isAny = tokenString == ":any";
+        //    bool isNone = tokenString == ":none";
 
-                if (int.TryParse(stringReplacement, out int t))
-                {
-                    stringReplacement = JsonValuePathParser.ArrayAccessPrefix + t;
-                }
-                else if (stringReplacement == ":any")
-                {
-                    stringReplacement = JsonValuePathParser.ArrayAccessAny;
-                }
-                else if (stringReplacement == ":last")
-                {
-                    stringReplacement = JsonValuePathParser.ArrayAccessLast;
-                }
-                else if (stringReplacement == ":none")
-                {
-                    stringReplacement = JsonValuePathParser.ArrayAccessNone;
-                }
-                else
-                {
-                    throw new ArgumentException("Unexpected sequence of chars between [ and ] . " +
-                            "When accessing array member use index number (e.g. 33) or :last or :any . When access object property use string in (double or single) quotes.");
-                }
-
-                replacements.Add((index.minIndex, index.maxIndex, new PathToken(new SubString(stringReplacement, index.minIndex, index.maxIndex))));
-            }
-
-            List<Token> retTokens = new List<Token>();
-
-            foreach (var t in tokens)
-            {
-                if (replacements.Any(x => t.Index >= x.minIndex && t.Index <= x.maxIndex))
-                {
-                    var replacementToken = replacements.First(x => t.Index >= x.minIndex && t.Index <= x.maxIndex).path;
-
-                    if (t is OpenStringToken) retTokens.Add(t);
-
-                    if (!retTokens.Contains(replacementToken))
-                    {
-                        retTokens.Add(replacementToken);
-                    }
-
-                    if (t is CloseStringToken) retTokens.Add(t);
-                }
-                else
-                {
-                    retTokens.Add(t);
-                }
-            }
-
-            return retTokens;
-        }
-
-        private static bool IsTokenGroupEscapedPath(IReadOnlyList<Token> tokens)
-        {
-            tokens = tokens.Where(x => !x.IsWhiteSpace()).ToList();
-
-            if (tokens.Count != 3) return false;
-
-            return tokens[0] is OpenStringToken && tokens[1] is PathToken && tokens[2] is CloseStringToken;
-        }
-
-        private static bool IsTokenGroupStringPath(IReadOnlyList<Token> tokens)
-        {
-            tokens = tokens.Where(x => !x.IsWhiteSpace()).ToList();
-
-            if (tokens.Count != 3) return false;
-
-            return tokens[0] is OpenStringToken && tokens[1] is StringToken && tokens[2] is CloseStringToken;
-        }
-
-        private static bool IsTokenTokenGroupIndexAccessor(IReadOnlyList<Token> tokens)
-        {
-            tokens = tokens.Where(x => !x.IsWhiteSpace()).ToList();
-
-            if (tokens.Count < 3) return false;
-
-            if (!tokens.First().IsOpenString() || !tokens.Last().IsCloseString()) return false;
-
-            if (!tokens.Skip(1).Take(tokens.Count - 2).All(x => x is CharToken)) return false;
-
-            var tokenString = new string(tokens.Skip(1).Take(tokens.Count - 2).Cast<CharToken>().Select(x => x.Value).ToArray()).Trim();
-
-            bool isNumber = int.TryParse(tokenString, out _);
-            bool isLast = tokenString == ":last";
-            bool isAny = tokenString == ":any";
-            bool isNone = tokenString == ":none";
-
-            return isNumber || isLast || isAny || isNone;
-        }
+        //    return isNumber || isLast || isAny || isNone;
+        //}
 
         private static IEnumerable<IReadOnlyList<Token>> GetTokensBetweenOpenCloseStringTokenInclusive(IReadOnlyList<Token> tokens, bool ignoreWhiteSpaceTokens = true)
         {
@@ -341,7 +231,7 @@ namespace JsonPath.Net
     /// Token that is not primitive, tokens that are variables and variables and separators which is
     /// all token types except <see cref="CharToken"/> and <see cref="StringToken"/>
     /// </summary>
-    internal abstract class SecondLeveToken: Token
+    internal abstract class SecondLevelToken: Token
     {
         public abstract bool IsEscapedPath { get; }
         public abstract bool IsUnEscapedPath { get; }
@@ -364,17 +254,33 @@ namespace JsonPath.Net
         public PathToken ToPathToken() => new PathToken(new SubString(Value, int.MinValue, int.MaxValue));
     }
 
-    internal class PathToken: SecondLeveToken
+    internal class PathToken: SecondLevelToken
     {
         public string Value { get; }
         public override int Index { get; }
         public bool IsEscaped { get; }
+        public bool IsWildcard { get; }
+        public bool IsFilter { get; }
 
         public override bool IsEscapedPath => IsEscaped;
         
         public override bool IsUnEscapedPath => !IsEscaped;
 
         public override bool IsUnEscapedEmptyPath => IsUnEscapedPath && Value.All(Char.IsWhiteSpace);
+
+        public PathToken(bool isWildcard, string filter)
+        {
+            if (isWildcard)
+            {
+                IsWildcard = true;
+                if (filter == null) throw new ArgumentException("filter must be null when isWildcard true");
+            }
+            else
+            {
+                if (string.IsNullOrWhiteSpace(filter)) throw new ArgumentException("filter must be set when isWildcard false");
+                Value = filter;
+            }
+        }
 
         public PathToken(SubString s)
         {
@@ -410,7 +316,7 @@ namespace JsonPath.Net
 
         public void EnsureValid()
         {
-            if (IsEscaped) return;
+            if (IsEscapedPath) return;
 
             var value = Value.Trim();
 
@@ -434,10 +340,22 @@ namespace JsonPath.Net
 
         public override string ToString() => $"PathToken: {Value} at {Index}";
 
-        public string GetPathVariableName() => IsEscaped ? Value : Value.Trim();
+        public string GetPathVariableName() => IsEscapedPath ? Value : Value.Trim();
+
+        public PathElement GetPathElement()
+        {
+            if (IsWildcard) return PathElement.CreateWildcard();
+
+            if (IsFilter) return PathElement.CreateFilter(Value);
+
+            if (IsEscaped)
+                return PathElement.CreateVariableAccess(Value);
+
+            return PathElement.CreateVariableAccess(Value.Trim());
+        }
     }
 
-    internal class OpenStringToken: SecondLeveToken
+    internal class OpenStringToken: SecondLevelToken
     {
         public override int Index { get; }
 
@@ -455,7 +373,7 @@ namespace JsonPath.Net
         public override string ToString() => $"OpenStringToken at {Index}";
     }
 
-    internal class CloseStringToken: SecondLeveToken
+    internal class CloseStringToken: SecondLevelToken
     {
         public override int Index { get; }
 
@@ -493,7 +411,7 @@ namespace JsonPath.Net
         public override string ToString() => $"CharToken: {Value} at {Index}";
     }
 
-    internal class PathSeparatorToken: SecondLeveToken
+    internal class PathSeparatorToken: SecondLevelToken
     {
         public override int Index { get; }
 
