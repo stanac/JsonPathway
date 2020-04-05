@@ -1,0 +1,4 @@
+﻿[*.cs]
+
+# RCS1155: Use StringComparison when comparing strings.
+dotnet_diagnostic.RCS1155.severity = suggestion

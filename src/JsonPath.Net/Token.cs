@@ -13,6 +13,7 @@ namespace JsonPath.Net
             if (s is null) throw new ArgumentNullException(nameof(s));
 
             PositionedChar[] chars = PositionedChar.CreateFromString(s);
+
             IReadOnlyList<SubString> subStrings = SubStringFinder.FindStrings(s).ToList();
 
             return GetTokens(chars, subStrings).ToList();
@@ -23,7 +24,8 @@ namespace JsonPath.Net
             if (chars is null) throw new ArgumentNullException(nameof(chars));
             if (subStrings is null) throw new ArgumentNullException(nameof(subStrings));
 
-            return GetTokensInternal(chars, subStrings).ToList();
+            var tokens = GetTokensInternal(chars, subStrings).ToList();
+            return RemoveExtraWhiteSpaceTokens(tokens);
         }
 
         public static IReadOnlyList<SecondLevelToken> GetSecondLevelTokens(string path) => GetSecondLevelTokens(GetTokens(path));
@@ -35,6 +37,8 @@ namespace JsonPath.Net
             List<SecondLevelToken> ret = new List<SecondLevelToken>();
 
             List<CharToken> charTokens = new List<CharToken>();
+
+            tokens = FilterTokenFinder.FindAndReplaceFilterExpressionTokens(tokens);
 
             foreach (var t in tokens)
             {
@@ -136,43 +140,10 @@ namespace JsonPath.Net
             }
         }
 
-        //private static bool IsTokenGroupEscapedPath(IReadOnlyList<Token> tokens)
-        //{
-        //    tokens = tokens.Where(x => !x.IsWhiteSpace()).ToList();
-
-        //    if (tokens.Count != 3) return false;
-
-        //    return tokens[0] is OpenStringToken && tokens[1] is PathToken && tokens[2] is CloseStringToken;
-        //}
-
-        //private static bool IsTokenGroupStringPath(IReadOnlyList<Token> tokens)
-        //{
-        //    tokens = tokens.Where(x => !x.IsWhiteSpace()).ToList();
-
-        //    if (tokens.Count != 3) return false;
-
-        //    return tokens[0] is OpenStringToken && tokens[1] is StringToken && tokens[2] is CloseStringToken;
-        //}
-
-        //private static bool IsTokenTokenGroupIndexAccessor(IReadOnlyList<Token> tokens)
-        //{
-        //    tokens = tokens.Where(x => !x.IsWhiteSpace()).ToList();
-
-        //    if (tokens.Count < 3) return false;
-
-        //    if (!tokens.First().IsOpenString() || !tokens.Last().IsCloseString()) return false;
-
-        //    if (!tokens.Skip(1).Take(tokens.Count - 2).All(x => x is CharToken)) return false;
-
-        //    var tokenString = new string(tokens.Skip(1).Take(tokens.Count - 2).Cast<CharToken>().Select(x => x.Value).ToArray()).Trim();
-
-        //    bool isNumber = int.TryParse(tokenString, out _);
-        //    bool isLast = tokenString == ":last";
-        //    bool isAny = tokenString == ":any";
-        //    bool isNone = tokenString == ":none";
-
-        //    return isNumber || isLast || isAny || isNone;
-        //}
+        public static IReadOnlyList<Token> RemoveExtraWhiteSpaceTokens(IReadOnlyList<Token> tokens)
+        {
+            throw new NotImplementedException();
+        }
 
         private static IEnumerable<IReadOnlyList<Token>> GetTokensBetweenOpenCloseStringTokenInclusive(IReadOnlyList<Token> tokens, bool ignoreWhiteSpaceTokens = true)
         {
@@ -431,6 +402,11 @@ namespace JsonPath.Net
 
     internal static class TokenExtensions
     {
+        public static bool IsCharToken(this Token token, char c)
+        {
+            return token is CharToken ct && ct.Value == c;
+        }
+
         public static bool IsWhiteSpace(this Token token)
         {
             return token is CharToken ct && ct.IsWhiteSpace;
