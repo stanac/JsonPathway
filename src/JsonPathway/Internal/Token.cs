@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.Linq;
 
 namespace JsonPathway.Internal
 {
@@ -41,7 +42,7 @@ namespace JsonPathway.Internal
             EndIndex = endIndex;
         }
 
-        public bool IntesectesInclusive(int value) => value >= StartIndex && value <= EndIndex;
+        public bool IntersectesInclusive(int value) => value >= StartIndex && value <= EndIndex;
     }
 
     public class StringToken: MultiCharToken
@@ -59,6 +60,8 @@ namespace JsonPathway.Internal
 
     public class SymbolToken: Token
     {
+        public const string SupportedChars = "[]()@?!.=></+-";
+
         public SymbolToken(int index, char symbol)
         {
             StringValue = new string(new[] { symbol });
@@ -77,11 +80,15 @@ namespace JsonPathway.Internal
         public bool IsGreaterThan => StringValue == ">";
         public bool IsLessThan => StringValue == "<";
         public bool IsForwardSlash => StringValue == "/";
+        public bool IsPlus => StringValue == "+";
+        public bool IsMinus => StringValue == "-";
 
-        public bool IsRecognizedSymbol() =>
-            IsOpenSquareBracket || IsCloseSquareBracket || IsOpenRoundBracket || IsCloseRoundBracket
-            || IsAtSign || IsQuestionMark || IsExlamationMark || IsPoint || IsEqualSign
-            || IsGreaterThan || IsLessThan || IsForwardSlash;
+        public bool IsRecognizedSymbol() => IsCharSupported(StringValue[0]);
+
+        public static bool IsCharSupported(char c)
+        {
+            return SupportedChars.Contains(c);
+        }
 
         public void EnsureItsRecognizedSymbol()
         {
@@ -112,9 +119,11 @@ namespace JsonPathway.Internal
 
     public class NumberToken: MultiCharToken
     {
-        public float NumberValue { get; }
+        public static NumberStyles AllowedStyle => NumberStyles.AllowDecimalPoint | NumberStyles.AllowLeadingSign;
 
-        public NumberToken(int startIndex, int endIndex, float number) : base(startIndex, endIndex)
+        public double NumberValue { get; }
+
+        public NumberToken(int startIndex, int endIndex, double number) : base(startIndex, endIndex)
         {
             NumberValue = number;
             StringValue = NumberValue.ToString(CultureInfo.InvariantCulture);

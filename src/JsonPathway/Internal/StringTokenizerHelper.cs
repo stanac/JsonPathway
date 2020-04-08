@@ -17,7 +17,7 @@ namespace JsonPathway.Internal
 
             PositionedChar[] chars = PositionedChar.GetFromString(s);
 
-            PositionedCharList currentString = new PositionedCharList();
+            PositionedCharStringList currentString = new PositionedCharStringList();
 
             int start = int.MinValue;
             const char singleQuote = '\'';
@@ -33,7 +33,7 @@ namespace JsonPathway.Internal
                     if (c.Value == openQuote && !currentString.IsLastEscapeSymbol)
                     {
                         string value = currentString.ToString();
-                        currentString = new PositionedCharList();
+                        currentString = new PositionedCharStringList();
                         openQuote = char.MinValue;
                         start = int.MinValue;
                         yield return new StringToken(start, i, value);

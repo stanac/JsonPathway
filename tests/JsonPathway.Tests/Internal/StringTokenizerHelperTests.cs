@@ -2,7 +2,7 @@ using JsonPathway.Internal;
 using System.Collections.Generic;
 using Xunit;
 
-namespace JsonPathway.Tests
+namespace JsonPathway.Tests.Internal
 {
     public class StringTokenizerHelperTests
     {

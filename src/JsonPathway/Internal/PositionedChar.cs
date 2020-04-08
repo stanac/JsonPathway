@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace JsonPathway.Internal
 {
@@ -15,6 +17,8 @@ namespace JsonPathway.Internal
             Value = value;
             IsEscaped = isEscaped;
         }
+
+        public static string CreateString(IEnumerable<PositionedChar> chars) => new string(chars.Select(c => c.Value).ToArray());
 
         public static PositionedChar[] GetFromString(string s)
         {

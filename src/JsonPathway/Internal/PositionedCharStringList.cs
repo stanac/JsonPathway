@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace JsonPathway.Internal
 {
-    internal class PositionedCharList
+    internal class PositionedCharStringList
     {
         private readonly List<PositionedChar> _chars = new List<PositionedChar>();
 

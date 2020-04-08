@@ -21,7 +21,7 @@ namespace JsonPathway.Internal
                 throw new ArgumentException("Value not set", nameof(input));
             }
 
-            var tokens = GetTokensInternal(input);
+            IReadOnlyList<Token> tokens = GetTokensInternal(input);
             tokens = RemoveWhiteSpaceTokens(tokens);
             tokens = ConvertStringTokensToPropertyTokens(tokens);
 
@@ -35,15 +35,71 @@ namespace JsonPathway.Internal
         /// <returns>Tokens</returns>
         private static IReadOnlyList<Token> GetTokensInternal(string s)
         {
-            int index = 0;
+            IReadOnlyList<Either<StringToken, PositionedChar[]>> stringsAndStringTokens = SplitStrings(s);
 
-            IReadOnlyList<StringToken> stringTokens = StringTokenizerHelper.GetStringTokens(s);
-            
+            List<Token> tokens = new List<Token>();
 
-            while (index < s.Length)
+            foreach (var value in stringsAndStringTokens)
             {
-
+                if (value.Is<StringToken>())
+                {
+                    tokens.Add(value.Get<StringToken>());
+                }
+                else
+                {
+                    tokens.AddRange(TokenReaderHelpers.ReadTokens(value.Get<PositionedChar[]>()));
+                }
             }
+
+            return tokens;
+        }
+
+        /// <summary>
+        /// Splits input into positioned chars and strings
+        /// </summary>
+        /// <param name="s">Input</param>
+        /// <returns>List containing elements that are either PositionedChar[] or StringToken</returns>
+        private static List<Either<StringToken, PositionedChar[]>> SplitStrings(string s)
+        {
+            IReadOnlyList<StringToken> stringTokens = StringTokenizerHelper.GetStringTokens(s);
+
+            List<Either<StringToken, PositionedChar[]>> values = new List<Either<StringToken, PositionedChar[]>>();
+
+            bool ValuesContains(StringToken st)
+            {
+                return values.Any(x => x.Is<StringToken>() && x.Get<StringToken>() == st);
+            }
+
+            List<PositionedChar> currentString = new List<PositionedChar>();
+
+            for (int i = 0; i < s.Length; i++)
+            {
+                var intersectingToken = stringTokens.FirstOrDefault(x => x.IntersectesInclusive(i));
+                if (intersectingToken != null)
+                {
+                    if (currentString.Any())
+                    {
+                        values.Add(new Either<StringToken, PositionedChar[]>(currentString.ToArray()));
+                        currentString.Clear();
+                    }
+                    
+                    if (!ValuesContains(intersectingToken))
+                    {
+                        values.Add(new Either<StringToken, PositionedChar[]>(intersectingToken));
+                    }
+                }
+                else
+                {
+                    currentString.Add(new PositionedChar(i, s[i]));
+                }
+            }
+
+            if (currentString.Any())
+            {
+                values.Add(new Either<StringToken, PositionedChar[]>(currentString.ToArray()));
+            }
+
+            return values;
         }
 
         /// <summary>
@@ -74,7 +130,7 @@ namespace JsonPathway.Internal
             
             foreach (var token in tokens)
             {
-                var intersecting = propTokens.FirstOrDefault(x => x.IntesectesInclusive(token.StartIndex));
+                var intersecting = propTokens.FirstOrDefault(x => x.IntersectesInclusive(token.StartIndex));
                 if (intersecting != null)
                 {
                     if (!ret.Contains(intersecting)) ret.Add(intersecting);

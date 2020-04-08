@@ -18,6 +18,21 @@ namespace JsonPathway
         }
     }
 
+    public class InternalJsonPathwayException : JsonPathwayException
+    {
+        public InternalJsonPathwayException() : base("Unexpected internal exception in the library")
+        {
+        }
+
+        public InternalJsonPathwayException(string message) : base("Unexpected internal exception in the library." + message)
+        {
+        }
+
+        public InternalJsonPathwayException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+    }
+
     public abstract class TokenizationException : JsonPathwayException
     {
         public TokenizationException()
@@ -29,6 +44,31 @@ namespace JsonPathway
         }
 
         public TokenizationException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+    }
+
+    public class UnrecognizedCharSequence : TokenizationException
+    {
+        public UnrecognizedCharSequence() : base()
+        {
+        }
+
+        public UnrecognizedCharSequence(string message) : base(message)
+        {
+        }
+
+        public UnrecognizedCharSequence(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        internal UnrecognizedCharSequence(PositionedChar c)
+            : this(c.Index, c.Value)
+        {
+        }
+
+        public UnrecognizedCharSequence(int index, char startingChar)
+            : this($"Unrecognized character sequence starting with '{startingChar}' at position {index}")
         {
         }
     }
