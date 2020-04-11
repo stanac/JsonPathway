@@ -16,9 +16,17 @@ namespace JsonPathway.Internal
         private static IEnumerable<Token> ReadTokensInternal(PositionedChar[] chars)
         {
             int index = 0;
+            int callCount = 0;
 
             while (index < chars.Length)
             {
+                callCount++;
+
+                if (callCount > chars.Length * 2)
+                {
+                    throw new InternalJsonPathwayException("Failed to read token");
+                }
+
                 yield return ReadToken(chars, ref index);
             }
         }
@@ -31,15 +39,15 @@ namespace JsonPathway.Internal
                 return whiteSpaceToken;
             }
 
+            if (TryReadNumberToken(chars, ref index, out NumberToken numberToken))
+            {
+                return numberToken;
+            }
+
             if (TryReadSymbolToken(chars, index, out SymbolToken symbolToken))
             {
                 index++;
                 return symbolToken;
-            }
-
-            if (TryReadNumberToken(chars, ref index, out NumberToken numberToken))
-            {
-                return numberToken;
             }
 
             if (TryReadBoolToken(chars, ref index, out BoolToken boolToken))
@@ -49,7 +57,7 @@ namespace JsonPathway.Internal
 
             if (TryReadPropertyToken(chars, ref index, out PropertyToken propToken))
             {
-                return numberToken;
+                return propToken;
             }
 
             throw new UnrecognizedCharSequence(chars[index]);
@@ -71,7 +79,7 @@ namespace JsonPathway.Internal
         {
             var c = chars[index].Value;
 
-            if (char.IsSymbol(c) && c != '$' && c != '_' && c != '\'' && c != '"')
+            if (SymbolToken.IsCharSupported(c))
             {
                 token = new SymbolToken(index, c);
                 return true;
@@ -100,10 +108,11 @@ namespace JsonPathway.Internal
                     index++;
                 }
             }
-            while (read);
+            while (read && index < chars.Length);
 
             if (!tokenChars.Any() || (tokenChars.Count == 1 && tokenChars[0].Value == '.'))
             {
+                index = startIndex;
                 token = null;
                 return false;
             }
@@ -136,7 +145,36 @@ namespace JsonPathway.Internal
 
         private static bool TryReadPropertyToken(PositionedChar[] chars, ref int index, out PropertyToken token)
         {
-            
+            int startIndex = index;
+
+            bool read;
+            char c;
+
+            List<PositionedChar> currentValue = new List<PositionedChar>();
+
+            do
+            {
+                c = chars[index].Value;
+                read = char.IsLetter(c) || c == '$' || c == '_';
+                if (!read && currentValue.Any() && char.IsDigit(c)) read = true;
+
+                if (read)
+                {
+                    currentValue.Add(chars[index]);
+                    index++;
+                }
+            } 
+            while (read && index < chars.Length);
+
+            if (currentValue.Any())
+            {
+                token = new PropertyToken(startIndex, index, PositionedChar.CreateString(currentValue));
+                return true;
+            }
+
+            token = null;
+            index = startIndex;
+            return false;
         }
     }
 }

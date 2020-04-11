@@ -28,6 +28,13 @@ namespace JsonPathway.Internal
         public bool IsSymbolTokenAtSign() => this is SymbolToken && StringValue == "@";
         public bool IsSymbolTokenQuestionMark() => this is SymbolToken && StringValue == "?";
         public bool IsSymbolTokenPoint() => this is SymbolToken && StringValue == ".";
+
+        public StringToken CastToStringToken() => (StringToken)this;
+        public WhiteSpaceToken CastToWhiteSpaceToken() => (WhiteSpaceToken)this;
+        public PropertyToken CastToPropertyToken() => (PropertyToken)this;
+        public NumberToken CastToNumberToken() => (NumberToken)this;
+        public BoolToken CastToBoolToken() => (BoolToken)this;
+        public SymbolToken CastToSymbolToken() => (SymbolToken)this;
     }
 
     public abstract class MultiCharToken: Token
@@ -60,7 +67,7 @@ namespace JsonPathway.Internal
 
     public class SymbolToken: Token
     {
-        public const string SupportedChars = "[]()@?!.=></+-";
+        public const string SupportedChars = "[]()@?!.=></+-*";
 
         public SymbolToken(int index, char symbol)
         {
@@ -82,6 +89,7 @@ namespace JsonPathway.Internal
         public bool IsForwardSlash => StringValue == "/";
         public bool IsPlus => StringValue == "+";
         public bool IsMinus => StringValue == "-";
+        public bool IsAsterisk => StringValue == "*";
 
         public bool IsRecognizedSymbol() => IsCharSupported(StringValue[0]);
 
@@ -134,7 +142,7 @@ namespace JsonPathway.Internal
     {
         public PropertyToken(int startIndex, int endIndex, string value) : base(startIndex, endIndex)
         {
-            if (StringValue == null) throw new ArgumentNullException(nameof(value));
+            if (value == null) throw new ArgumentNullException(nameof(value));
 
             StringValue = value;
         }
