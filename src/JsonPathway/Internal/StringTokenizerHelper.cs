@@ -35,8 +35,8 @@ namespace JsonPathway.Internal
                         string value = currentString.ToString();
                         currentString = new PositionedCharStringList();
                         openQuote = char.MinValue;
-                        start = int.MinValue;
                         yield return new StringToken(start, i, value);
+                        start = int.MinValue;
                     }
                     else
                     {

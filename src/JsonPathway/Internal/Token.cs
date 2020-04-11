@@ -69,6 +69,11 @@ namespace JsonPathway.Internal
     {
         public const string SupportedChars = "[]()@?!.=></+-*";
 
+        internal SymbolToken(PositionedChar c)
+            : this (c.Index, c.Value)
+        {
+        }
+
         public SymbolToken(int index, char symbol)
         {
             StringValue = new string(new[] { symbol });

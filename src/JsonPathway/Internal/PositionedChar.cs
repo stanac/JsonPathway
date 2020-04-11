@@ -46,6 +46,6 @@ namespace JsonPathway.Internal
             return new PositionedChar(c.Index, c.Value, true);
         }
 
-        public override string ToString() => $"{Value} at {Index}";
+        public override string ToString() => Value == default ? $"Default value at {Index}" : $"{Value} at {Index}";
     }
 }

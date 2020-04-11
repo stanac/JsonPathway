@@ -33,6 +33,23 @@ namespace JsonPathway.Tests.Internal
         }
 
         [Fact]
+        public void ValidValue_SetsCorrectIndexes()
+        {
+            string input = "abc['def'][\"ghi\"]";
+
+            IReadOnlyList<StringToken> tokens = StringTokenizerHelper.GetStringTokens(input);
+
+            Assert.Equal(2, tokens.Count);
+
+            Assert.Equal(4, tokens[0].StartIndex);
+            Assert.Equal(8, tokens[0].EndIndex);
+
+            Assert.Equal(11, tokens[1].StartIndex);
+            Assert.Equal(15, tokens[1].EndIndex);
+
+        }
+
+        [Fact]
         public void UnclosedString_ThrowsException()
         {
             string[] inputs = new[]

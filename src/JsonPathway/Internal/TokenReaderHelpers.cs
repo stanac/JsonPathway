@@ -21,11 +21,7 @@ namespace JsonPathway.Internal
             while (index < chars.Length)
             {
                 callCount++;
-
-                if (callCount > chars.Length * 2)
-                {
-                    throw new InternalJsonPathwayException("Failed to read token");
-                }
+                if (callCount > chars.Length * 2) throw new InternalJsonPathwayException("Failed to read token");
 
                 yield return ReadToken(chars, ref index);
             }
@@ -67,7 +63,7 @@ namespace JsonPathway.Internal
         {
             if (char.IsWhiteSpace(chars[index].Value))
             {
-                token = new WhiteSpaceToken(index);
+                token = new WhiteSpaceToken(chars[index].Index);
                 return true;
             }
 
@@ -81,7 +77,7 @@ namespace JsonPathway.Internal
 
             if (SymbolToken.IsCharSupported(c))
             {
-                token = new SymbolToken(index, c);
+                token = new SymbolToken(chars[index]);
                 return true;
             }
 
@@ -121,7 +117,7 @@ namespace JsonPathway.Internal
             
             if (double.TryParse(readString, NumberToken.AllowedStyle, CultureInfo.InvariantCulture, out double d))
             {
-                token = new NumberToken(startIndex, index - 1, d);
+                token = new NumberToken(chars[startIndex].Index, chars[index - 1].Index, d);
                 return true;
             }
 
@@ -134,7 +130,7 @@ namespace JsonPathway.Internal
 
             if (TryReadPropertyToken(chars, ref index, out PropertyToken t) && bool.TryParse(t.StringValue, out bool b))
             {
-                token = new BoolToken(startIndex, index, b);
+                token = new BoolToken(chars[startIndex].Index, chars[index - 1].Index, b);
                 return true;
             }
 
@@ -168,7 +164,7 @@ namespace JsonPathway.Internal
 
             if (currentValue.Any())
             {
-                token = new PropertyToken(startIndex, index, PositionedChar.CreateString(currentValue));
+                token = new PropertyToken(chars[startIndex].Index, chars[index - 1].Index, PositionedChar.CreateString(currentValue));
                 return true;
             }
 

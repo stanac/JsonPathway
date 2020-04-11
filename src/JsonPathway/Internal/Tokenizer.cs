@@ -21,7 +21,7 @@ namespace JsonPathway.Internal
                 throw new ArgumentException("Value not set", nameof(input));
             }
 
-            IReadOnlyList<Token> tokens = GetTokensInternal(input);
+            IReadOnlyList<Token> tokens = GetTokensInner(input);
             tokens = RemoveWhiteSpaceTokens(tokens);
             tokens = ConvertStringTokensToPropertyTokens(tokens);
 
@@ -33,7 +33,7 @@ namespace JsonPathway.Internal
         /// </summary>
         /// <param name="s"></param>
         /// <returns>Tokens</returns>
-        private static IReadOnlyList<Token> GetTokensInternal(string s)
+        private static IReadOnlyList<Token> GetTokensInner(string s)
         {
             IReadOnlyList<Either<StringToken, PositionedChar[]>> stringsAndStringTokens = SplitStrings(s);
 
