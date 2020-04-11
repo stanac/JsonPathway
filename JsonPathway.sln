@@ -3,18 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29905.134
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonPath.Net", "src\JsonPath.Net\JsonPath.Net.csproj", "{7DD3886C-B0D6-41C2-8E3B-DACF49C032AF}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonPath.Net.Tests", "tests\JsonPath.Net.Tests\JsonPath.Net.Tests.csproj", "{AFF470D0-841D-44C9-BADA-F32A4614440B}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6719B66A-7C91-4D89-A604-579B34E479C6}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JsonPathway", "src\JsonPathway\JsonPathway.csproj", "{3602B74D-6859-4FA1-9EC0-D17EB05814D0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonPathway", "src\JsonPathway\JsonPathway.csproj", "{3602B74D-6859-4FA1-9EC0-D17EB05814D0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JsonPathway.Tests", "tests\JsonPathway.Tests\JsonPathway.Tests.csproj", "{80A547C9-1720-40DC-B2FE-26747BA7188F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonPathway.Tests", "tests\JsonPathway.Tests\JsonPathway.Tests.csproj", "{80A547C9-1720-40DC-B2FE-26747BA7188F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,30 +22,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7DD3886C-B0D6-41C2-8E3B-DACF49C032AF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7DD3886C-B0D6-41C2-8E3B-DACF49C032AF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7DD3886C-B0D6-41C2-8E3B-DACF49C032AF}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{7DD3886C-B0D6-41C2-8E3B-DACF49C032AF}.Debug|x64.Build.0 = Debug|Any CPU
-		{7DD3886C-B0D6-41C2-8E3B-DACF49C032AF}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{7DD3886C-B0D6-41C2-8E3B-DACF49C032AF}.Debug|x86.Build.0 = Debug|Any CPU
-		{7DD3886C-B0D6-41C2-8E3B-DACF49C032AF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7DD3886C-B0D6-41C2-8E3B-DACF49C032AF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7DD3886C-B0D6-41C2-8E3B-DACF49C032AF}.Release|x64.ActiveCfg = Release|Any CPU
-		{7DD3886C-B0D6-41C2-8E3B-DACF49C032AF}.Release|x64.Build.0 = Release|Any CPU
-		{7DD3886C-B0D6-41C2-8E3B-DACF49C032AF}.Release|x86.ActiveCfg = Release|Any CPU
-		{7DD3886C-B0D6-41C2-8E3B-DACF49C032AF}.Release|x86.Build.0 = Release|Any CPU
-		{AFF470D0-841D-44C9-BADA-F32A4614440B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AFF470D0-841D-44C9-BADA-F32A4614440B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AFF470D0-841D-44C9-BADA-F32A4614440B}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{AFF470D0-841D-44C9-BADA-F32A4614440B}.Debug|x64.Build.0 = Debug|Any CPU
-		{AFF470D0-841D-44C9-BADA-F32A4614440B}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{AFF470D0-841D-44C9-BADA-F32A4614440B}.Debug|x86.Build.0 = Debug|Any CPU
-		{AFF470D0-841D-44C9-BADA-F32A4614440B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AFF470D0-841D-44C9-BADA-F32A4614440B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AFF470D0-841D-44C9-BADA-F32A4614440B}.Release|x64.ActiveCfg = Release|Any CPU
-		{AFF470D0-841D-44C9-BADA-F32A4614440B}.Release|x64.Build.0 = Release|Any CPU
-		{AFF470D0-841D-44C9-BADA-F32A4614440B}.Release|x86.ActiveCfg = Release|Any CPU
-		{AFF470D0-841D-44C9-BADA-F32A4614440B}.Release|x86.Build.0 = Release|Any CPU
 		{3602B74D-6859-4FA1-9EC0-D17EB05814D0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{3602B74D-6859-4FA1-9EC0-D17EB05814D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3602B74D-6859-4FA1-9EC0-D17EB05814D0}.Debug|x64.ActiveCfg = Debug|Any CPU
