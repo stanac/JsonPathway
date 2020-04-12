@@ -11,7 +11,7 @@ namespace JsonPathway
 
         private ExpressionList(IReadOnlyList<Token> tokens)
         {
-            throw new NotImplementedException();
+            _expressions.AddRange(Parser.Parse(tokens));
         }
 
         public Expression this[int index] => _expressions[index];

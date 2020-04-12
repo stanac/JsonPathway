@@ -1,16 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace JsonPathway.Internal
 {
     internal static class Parser
     {
-        public static ExpressionList Parse(IReadOnlyList<Token> tokens)
+        public static IEnumerable<Expression> Parse(IReadOnlyList<Token> tokens)
         {
-            throw new NotImplementedException();
+            EnsureTokensAreValid(tokens);
+
+            yield break;
+        }
+
+        private static void EnsureTokensAreValid(IReadOnlyList<Token> tokens)
+        {
+
         }
     }
 }

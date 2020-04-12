@@ -56,6 +56,8 @@ namespace JsonPathway.Internal
                 return propToken;
             }
 
+
+
             throw new UnrecognizedCharSequence(chars[index]);
         }
 
@@ -164,7 +166,7 @@ namespace JsonPathway.Internal
 
             if (currentValue.Any())
             {
-                token = new PropertyToken(chars[startIndex].Index, chars[index - 1].Index, PositionedChar.CreateString(currentValue));
+                token = new PropertyToken(chars[startIndex].Index, chars[index - 1].Index, PositionedChar.CreateString(currentValue), false);
                 return true;
             }
 

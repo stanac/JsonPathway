@@ -5,7 +5,7 @@ using System.Linq;
 namespace JsonPathway.Internal
 {
     /// <summary>
-    /// Represent single token in path
+    /// Represent single token in json path
     /// </summary>
     public abstract class Token
     {
@@ -17,6 +17,7 @@ namespace JsonPathway.Internal
         public bool IsStringToken() => this is StringToken;
         public bool IsWhiteSpaceToken() => this is WhiteSpaceToken;
         public bool IsPropertyToken() => this is PropertyToken;
+        public bool IsFilterToken() => this is FilterToken;
         public bool IsNumberToken() => this is NumberToken;
         public bool IsBoolToken() => this is BoolToken;
 
@@ -35,6 +36,7 @@ namespace JsonPathway.Internal
         public NumberToken CastToNumberToken() => (NumberToken)this;
         public BoolToken CastToBoolToken() => (BoolToken)this;
         public SymbolToken CastToSymbolToken() => (SymbolToken)this;
+        public FilterToken CastToFilterToken() => (FilterToken)this;
     }
 
     public abstract class MultiCharToken: Token
@@ -63,11 +65,13 @@ namespace JsonPathway.Internal
             EndIndex = endIndex;
             StringValue = value;
         }
+
+        public string GetQuotedValue() => $"'{StringValue.Replace("'", "\\'")}'";
     }
 
     public class SymbolToken: Token
     {
-        public const string SupportedChars = "[]()@?!.=></+-*";
+        public const string SupportedChars = "[]()@?!.=></+-*&|";
 
         internal SymbolToken(PositionedChar c)
             : this (c.Index, c.Value)
@@ -95,6 +99,8 @@ namespace JsonPathway.Internal
         public bool IsPlus => StringValue == "+";
         public bool IsMinus => StringValue == "-";
         public bool IsAsterisk => StringValue == "*";
+        public bool IsAmpersandSign => StringValue == "&";
+        public bool IsPipeSign => StringValue == "|";
 
         public bool IsRecognizedSymbol() => IsCharSupported(StringValue[0]);
 
@@ -145,9 +151,32 @@ namespace JsonPathway.Internal
 
     public class PropertyToken: MultiCharToken
     {
-        public PropertyToken(int startIndex, int endIndex, string value) : base(startIndex, endIndex)
+        public bool Escaped { get; }
+
+        public PropertyToken(int startIndex, int endIndex, string value, bool escaped) : base(startIndex, endIndex)
         {
             if (value == null) throw new ArgumentNullException(nameof(value));
+
+            Escaped = escaped;
+            StringValue = value;
+        }
+    }
+
+    public class FilterToken: MultiCharToken
+    {
+        public FilterToken(int startIndex, int endIndex, string value) : base(startIndex, endIndex)
+        {
+            if (value == null) throw new ArgumentNullException(nameof(value));
+
+            if (value.StartsWith("[?("))
+            {
+                value = value.Substring(3);
+            }
+
+            if (value.EndsWith(")]"))
+            {
+                value = value.Substring(0, value.Length - 2);
+            }
 
             StringValue = value;
         }

@@ -24,6 +24,7 @@ namespace JsonPathway.Internal
             IReadOnlyList<Token> tokens = GetTokensInner(input);
             tokens = RemoveWhiteSpaceTokens(tokens);
             tokens = ConvertStringTokensToPropertyTokens(tokens);
+            tokens = ConvertTokensToFilterTokens(tokens.ToList());
 
             return tokens;
         }
@@ -122,7 +123,7 @@ namespace JsonPathway.Internal
             {
                 if (tokens[i].IsSymbolTokenOpenSquareBracket() && tokens[i + 1].IsStringToken() && tokens[i + 2].IsSymbolTokenCloseSquareBracket())
                 {
-                    propTokens.Add(new PropertyToken(tokens[i].StartIndex, tokens[i + 2].StartIndex, tokens[i + 1].StringValue));
+                    propTokens.Add(new PropertyToken(tokens[i].StartIndex, tokens[i + 2].StartIndex, tokens[i + 1].StringValue, true));
                 }
             }
 
@@ -144,5 +145,88 @@ namespace JsonPathway.Internal
             return ret;
         }
 
+        private static IReadOnlyList<Token> ConvertTokensToFilterTokens(List<Token> tokens)
+        {
+            bool converted;
+
+            do
+            {
+                tokens = ConvertTokensToFilterTokens(tokens, out converted);
+            }
+            while (converted);
+
+            return tokens;
+        }
+
+        private static List<Token> ConvertTokensToFilterTokens(List<Token> tokens, out bool converted)
+        {
+            // filter token looks like "[?( ... filterExpression ... )]"
+
+            int open = 0;
+            int closed = 0;
+
+            for (int i = 0; i < tokens.Count - 4; i++)
+            {
+                if (tokens[i].IsSymbolTokenOpenSquareBracket() && tokens[i+1].IsSymbolTokenQuestionMark() && tokens[i+2].IsSymbolTokenOpenRoundBracket())
+                {
+                    var closedRoundBracket = tokens.First(x => x.StartIndex > tokens[i + 1].StartIndex && x.IsSymbolTokenCloseRoundBracket());
+
+                    if (closedRoundBracket != null && closedRoundBracket != tokens.Last())
+                    {
+                        var nextToken = tokens[tokens.IndexOf(closedRoundBracket) + 1];
+                        if (nextToken.IsSymbolTokenCloseSquareBracket())
+                        {
+                            open = i;
+                            closed = tokens.IndexOf(nextToken);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (open > 0 && closed > 0)
+            {
+                converted = true;
+
+                List<Token> ret = new List<Token>();
+                List<Token> toConvert = new List<Token>();
+                
+                for (int i = 0; i < tokens.Count; i++)
+                {
+                    if (i >= open && i <= closed)
+                    {
+                        toConvert.Add(tokens[i]);
+                    }
+                    else if (toConvert.Any())
+                    {
+                        ret.Add(CreateFilterToken(toConvert));
+                        toConvert.Clear();
+                    }
+                    else
+                    {
+                        ret.Add(tokens[i]);
+                    }
+                }
+
+                if (toConvert.Any())
+                {
+                    ret.Add(CreateFilterToken(toConvert));
+                }
+
+                return ret;
+            }
+            else
+            {
+                converted = false;
+                return tokens;
+            }
+        }
+
+        private static FilterToken CreateFilterToken(List<Token> tokens)
+        {
+            string value = string.Join("", tokens.Select(x => x.IsStringToken() ? x.CastToStringToken().GetQuotedValue() : x.StringValue));
+
+            return new FilterToken(tokens.First().StartIndex, tokens.Last().StartIndex, value);
+        }
     }
 }
