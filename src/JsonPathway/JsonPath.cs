@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace JsonPathway
 {
-    public class JsonPath
+    public static class JsonPath
     {
         /// <summary>
         /// Executes json path and returns matching elements.
@@ -21,7 +21,7 @@ namespace JsonPathway
         /// <param name="jsonPathExpression">string representation of JsonPath expression</param>
         /// <param name="json">JSON document</param>
         /// <returns>Matching JsonElements</returns>
-        public IReadOnlyList<JsonElement> ExecutePath(string jsonPathExpression, string json)
+        public static IReadOnlyList<JsonElement> ExecutePath(string jsonPathExpression, string json)
         {
             JsonDocument doc = JsonDocument.Parse(json);
             return ExecutePath(jsonPathExpression, doc);
@@ -41,7 +41,7 @@ namespace JsonPathway
         /// <param name="jsonPathExpression">JsonPath expression</param>
         /// <param name="doc">Parsed JSON document</param>
         /// <returns>Matching JsonElements</returns>
-        public IReadOnlyList<JsonElement> ExecutePath(string jsonPathExpression, JsonDocument doc)
+        public static IReadOnlyList<JsonElement> ExecutePath(string jsonPathExpression, JsonDocument doc)
         {
             var tokens = Tokenizer.Tokenize(jsonPathExpression);
             var exprList = ExpressionList.Parse(tokens);
@@ -54,7 +54,7 @@ namespace JsonPathway
         /// <param name="expression">Parsed JsonPath expression</param>
         /// <param name="json">JSON document</param>
         /// <returns>Matching JsonElements</returns>
-        public IReadOnlyList<JsonElement> ExecutePath(ExpressionList expression, string json)
+        public static IReadOnlyList<JsonElement> ExecutePath(ExpressionList expression, string json)
         {
             JsonDocument doc = JsonDocument.Parse(json);
             return ExecutePath(expression, doc);
@@ -66,7 +66,23 @@ namespace JsonPathway
         /// <param name="expression">Parsed JsonPath expression</param>
         /// <param doc="json">Parse JSON document</param>
         /// <returns>Matching JsonElements</returns>
-        public IReadOnlyList<JsonElement> ExecutePath(ExpressionList expression, JsonDocument doc)
+        public static IReadOnlyList<JsonElement> ExecutePath(ExpressionList expression, JsonDocument doc)
+        {
+            try
+            {
+                return ExecutePathInner(expression, doc);
+            }
+            catch (JsonPathwayException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new InternalJsonPathwayException("Unexpected internal exception", ex);
+            }
+        }
+
+        private static IReadOnlyList<JsonElement> ExecutePathInner(ExpressionList expression, JsonDocument doc)
         {
             throw new NotImplementedException();
         }

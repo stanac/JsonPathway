@@ -162,6 +162,17 @@ namespace JsonPathway.Internal
         }
     }
 
+    public class ArrayElementsToken: MultiCharToken
+    {
+        public ArrayElementsToken(int startIndex, int endIndex, string value)
+            : base(startIndex, endIndex)
+        {
+            if (string.IsNullOrWhiteSpace(value)) throw new ArgumentException("Value not set", nameof(value));
+
+            StringValue = value;
+        }
+    }
+
     public class FilterToken: MultiCharToken
     {
         public FilterToken(int startIndex, int endIndex, string value) : base(startIndex, endIndex)

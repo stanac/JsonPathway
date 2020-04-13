@@ -116,21 +116,58 @@ namespace JsonPathway
     {
         public UnclosedStringException()
         {
-
         }
 
         public UnclosedStringException(string message) : base(message)
         {
-
         }
 
         public UnclosedStringException(string message, Exception innerException) : base(message, innerException)
         {
-
         }
 
         public UnclosedStringException(char openQuote, int index)
             : base($"String opened with {openQuote} at {index} isn't closed")
+        {
+        }
+    }
+
+    public class ParsingException: JsonPathwayException
+    {
+        public ParsingException() : base()
+        {
+        }
+
+        public ParsingException(string message) : base(message)
+        {
+        }
+
+        public ParsingException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+    }
+
+    public class UnexpectedTokenException: ParsingException
+    {
+        public UnexpectedTokenException() : base()
+        {
+        }
+
+        public UnexpectedTokenException(string message) : base(message)
+        {
+        }
+
+        public UnexpectedTokenException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+
+        public UnexpectedTokenException(Token token)
+            : this(token, "")
+        {
+        }
+
+        public UnexpectedTokenException(Token token, string message)
+            : this($"Unexpected {token}. {message}")
         {
         }
     }
