@@ -2,3 +2,6 @@
 
 # RCS1155: Use StringComparison when comparing strings.
 dotnet_diagnostic.RCS1155.severity = suggestion
+
+# RCS1124: Inline local variable.
+dotnet_diagnostic.RCS1124.severity = none

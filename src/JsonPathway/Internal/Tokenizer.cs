@@ -26,6 +26,7 @@ namespace JsonPathway.Internal
             tokens = ConvertStringTokensToPropertyTokens(tokens);
             tokens = ConvertTokensToFilterTokens(tokens.ToList());
 
+
             return tokens;
         }
 

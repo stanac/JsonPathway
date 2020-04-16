@@ -6,6 +6,7 @@ MinimumVisualStudioVersion = 15.0.26124.0
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{6719B66A-7C91-4D89-A604-579B34E479C6}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		readme.md = readme.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonPathway", "src\JsonPathway\JsonPathway.csproj", "{3602B74D-6859-4FA1-9EC0-D17EB05814D0}"

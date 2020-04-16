@@ -20,6 +20,8 @@ namespace JsonPathway.Internal
         public bool IsFilterToken() => this is FilterToken;
         public bool IsNumberToken() => this is NumberToken;
         public bool IsBoolToken() => this is BoolToken;
+        public bool IsChildPropertiesToken() => this is ChildPropertiesToken;
+        public bool IsRecursivePropertiesToken() => this is RecursivePropertiesToken;
 
         public bool IsSymbolToken() => this is SymbolToken;
         public bool IsSymbolTokenOpenSquareBracket() => this is SymbolToken && StringValue == "[";
@@ -37,6 +39,8 @@ namespace JsonPathway.Internal
         public BoolToken CastToBoolToken() => (BoolToken)this;
         public SymbolToken CastToSymbolToken() => (SymbolToken)this;
         public FilterToken CastToFilterToken() => (FilterToken)this;
+        public ChildPropertiesToken CastToChildPropertiesToken() => (ChildPropertiesToken)this;
+        public RecursivePropertiesToken CastRecursivePropertiesTokenToken() => (RecursivePropertiesToken)this;
     }
 
     public abstract class MultiCharToken: Token
@@ -159,6 +163,29 @@ namespace JsonPathway.Internal
 
             Escaped = escaped;
             StringValue = value;
+        }
+    }
+
+    /// <summary>
+    /// * JSONPath Operator
+    /// </summary>
+    public class ChildPropertiesToken: Token
+    {
+        public ChildPropertiesToken(int index)
+        {
+            StartIndex = index;
+            StringValue = "*";
+        }
+    }
+
+    /// <summary>
+    /// .. JSONPath Operator
+    /// </summary>
+    public class RecursivePropertiesToken : MultiCharToken
+    {
+        public RecursivePropertiesToken(int startIndex, int endIndex) : base(startIndex, endIndex)
+        {
+            StringValue = "..";
         }
     }
 
