@@ -27,10 +27,7 @@ namespace JsonPathway.Tests.Internal
         }
 
         [Theory]
-        [InlineData("..4")]
-        [InlineData(".4.")]
-        [InlineData(".4 ..4")]
-        [InlineData(".4 .44.")]
+        [InlineData(".4 .4.4.")]
         [InlineData("4.4.4")]
         public void InputWithNumberAndExtraPoints_ThrowsException(string input)
         {

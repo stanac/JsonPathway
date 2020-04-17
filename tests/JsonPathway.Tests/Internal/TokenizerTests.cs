@@ -27,6 +27,21 @@ namespace JsonPathway.Tests.Internal
         }
 
         [Fact]
+        public void Tokenize_InputWithWildcards_ReturnValidTokens()
+        {
+            string input = "a..b.*";
+            IReadOnlyList<Token> tokens = Tokenizer.Tokenize(input);
+
+            Assert.Equal(5, tokens.Count);
+
+            Assert.True(tokens[0].IsPropertyToken());
+            Assert.True(tokens[1].IsRecursivePropertiesToken());
+            Assert.True(tokens[2].IsPropertyToken());
+            Assert.True(tokens[3].IsSymbolTokenPoint());
+            Assert.True(tokens[4].IsChildPropertiesToken());
+        }
+
+        [Fact]
         public void Tokenize_InputWithFitler_ReturnsValidTokens()
         {
             string input = "abc['cde'][?(@.length > 2 && @ != 'A')]";

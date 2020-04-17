@@ -123,7 +123,9 @@ namespace JsonPathway.Internal
                 return true;
             }
 
-            throw new UnrecognizedCharSequence($"Failed to create token from number starting at {startIndex}");
+            index = startIndex;
+            token = null;
+            return false;
         }
 
         private static bool TryReadBoolToken(PositionedChar[] chars, ref int index, out BoolToken token)

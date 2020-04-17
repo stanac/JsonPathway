@@ -25,7 +25,7 @@ namespace JsonPathway.Internal
             tokens = RemoveWhiteSpaceTokens(tokens);
             tokens = ConvertStringTokensToPropertyTokens(tokens);
             tokens = ConvertTokensToFilterTokens(tokens.ToList());
-
+            tokens = ConvertWildcardTokens(tokens.ToList());
 
             return tokens;
         }
@@ -223,11 +223,39 @@ namespace JsonPathway.Internal
             }
         }
 
+        private static List<Token> ConvertWildcardTokens(IReadOnlyList<Token> tokens)
+        {
+            List<Token> ret = tokens
+                .Select(x =>
+                {
+                    if (x.IsSymbolTokenWildcard()) return new ChildPropertiesToken(x.StartIndex);
+                    return x;
+                })
+                .ToList();
+
+            for (int i = ret.Count - 1; i > 0; i--) // i > 0 is intentional
+            {
+                if (ret[i].IsSymbolTokenPoint() && ret[i - 1].IsSymbolTokenPoint())
+                {
+                    var toRemove1 = ret[i - 1];
+                    var toRemove2 = ret[i];
+
+                    ret.Insert(i - 1, new RecursivePropertiesToken(toRemove1.StartIndex, toRemove2.StartIndex));
+                    ret.Remove(toRemove1);
+                    ret.Remove(toRemove2);
+                }
+            }
+
+            return ret;
+        }
+
         private static FilterToken CreateFilterToken(List<Token> tokens)
         {
             string value = string.Join("", tokens.Select(x => x.IsStringToken() ? x.CastToStringToken().GetQuotedValue() : x.StringValue));
 
             return new FilterToken(tokens.First().StartIndex, tokens.Last().StartIndex, value);
         }
+
+
     }
 }

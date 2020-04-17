@@ -29,6 +29,7 @@ namespace JsonPathway.Internal
         public bool IsSymbolTokenOpenRoundBracket() => this is SymbolToken && StringValue == "(";
         public bool IsSymbolTokenCloseRoundBracket() => this is SymbolToken && StringValue == ")";
         public bool IsSymbolTokenAtSign() => this is SymbolToken && StringValue == "@";
+        public bool IsSymbolTokenWildcard() => this is SymbolToken && StringValue == "*";
         public bool IsSymbolTokenQuestionMark() => this is SymbolToken && StringValue == "?";
         public bool IsSymbolTokenPoint() => this is SymbolToken && StringValue == ".";
 
