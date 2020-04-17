@@ -37,7 +37,7 @@ namespace JsonPathway.Tests.Internal
             Assert.True(tokens[0].IsPropertyToken());
             Assert.True(tokens[1].IsRecursivePropertiesToken());
             Assert.True(tokens[2].IsPropertyToken());
-            Assert.True(tokens[3].IsSymbolTokenPoint());
+            Assert.True(tokens[3].IsSymbolToken('.'));
             Assert.True(tokens[4].IsChildPropertiesToken());
         }
 
@@ -68,6 +68,69 @@ namespace JsonPathway.Tests.Internal
             IReadOnlyList<Token> tokens = Tokenizer.Tokenize(input);
 
             Assert.DoesNotContain(tokens, x => x.IsFilterToken());
+        }
+
+        [Fact]
+        public void Tokenize_InputWithAllArrayElements_ReturnsValidTokens()
+        {
+            string input = "$[*]";
+            IReadOnlyList<Token> tokens = Tokenizer.Tokenize(input);
+            Assert.True(tokens.Count == 2 && tokens.Last().IsAllArrayElementsToken());
+
+            input = "[*]";
+            tokens = Tokenizer.Tokenize(input);
+            Assert.True(tokens.Single().IsAllArrayElementsToken());
+        }
+
+        [Fact]
+        public void Tokenize_InputWithArrayAccess_ReturnsValidTokens()
+        {
+            string input = "$[4]";
+
+            IReadOnlyList<Token> tokens = Tokenizer.Tokenize(input);
+
+            Assert.Equal(2, tokens.Count);
+            Assert.IsType<ArrayElementsToken>(tokens[1]);
+
+            ArrayElementsToken t = tokens.Last().CastToArrayElementsToken();
+            Assert.NotNull(t.ExactElementsAccess);
+            Assert.Equal(1, t.ExactElementsAccess.Length);
+            Assert.Equal(4, t.ExactElementsAccess[0]);
+        }
+
+        [Fact]
+        public void Tokenize_InputWithArrayAccessMultipleExact_ReturnsValidTokens()
+        {
+            string input = "$[4,1,2]";
+
+            IReadOnlyList<Token> tokens = Tokenizer.Tokenize(input);
+
+            Assert.Equal(2, tokens.Count);
+            Assert.IsType<ArrayElementsToken>(tokens[1]);
+
+            ArrayElementsToken t = tokens.Last().CastToArrayElementsToken();
+            Assert.NotNull(t.ExactElementsAccess);
+            Assert.Equal(3, t.ExactElementsAccess.Length);
+            Assert.Equal(4, t.ExactElementsAccess[0]);
+            Assert.Equal(1, t.ExactElementsAccess[1]);
+            Assert.Equal(2, t.ExactElementsAccess[2]);
+        }
+
+        [Fact]
+        public void Tokenize_InputWithArrayAccessSlice_ReturnsValidTokens()
+        {
+            string input = "$[4:2:9]";
+
+            IReadOnlyList<Token> tokens = Tokenizer.Tokenize(input);
+
+            Assert.Equal(2, tokens.Count);
+            Assert.IsType<ArrayElementsToken>(tokens[1]);
+
+            ArrayElementsToken t = tokens.Last().CastToArrayElementsToken();
+            Assert.Null(t.ExactElementsAccess);
+            Assert.Equal(4, t.Start);
+            Assert.Equal(2, t.End);
+            Assert.Equal(9, t.Step);
         }
     }
 }

@@ -26,6 +26,7 @@ namespace JsonPathway.Internal
             tokens = ConvertStringTokensToPropertyTokens(tokens);
             tokens = ConvertTokensToFilterTokens(tokens.ToList());
             tokens = ConvertWildcardTokens(tokens.ToList());
+            tokens = ConvertArrayAccessTokens(tokens);
 
             return tokens;
         }
@@ -122,7 +123,7 @@ namespace JsonPathway.Internal
 
             for (int i = 0; i < tokens.Count - 2; i++)
             {
-                if (tokens[i].IsSymbolTokenOpenSquareBracket() && tokens[i + 1].IsStringToken() && tokens[i + 2].IsSymbolTokenCloseSquareBracket())
+                if (tokens[i].IsSymbolToken('[') && tokens[i + 1].IsStringToken() && tokens[i + 2].IsSymbolToken(']'))
                 {
                     propTokens.Add(new PropertyToken(tokens[i].StartIndex, tokens[i + 2].StartIndex, tokens[i + 1].StringValue, true));
                 }
@@ -168,14 +169,14 @@ namespace JsonPathway.Internal
 
             for (int i = 0; i < tokens.Count - 4; i++)
             {
-                if (tokens[i].IsSymbolTokenOpenSquareBracket() && tokens[i+1].IsSymbolTokenQuestionMark() && tokens[i+2].IsSymbolTokenOpenRoundBracket())
+                if (tokens[i].IsSymbolToken('[') && tokens[i+1].IsSymbolToken('?') && tokens[i+2].IsSymbolToken('('))
                 {
-                    var closedRoundBracket = tokens.First(x => x.StartIndex > tokens[i + 1].StartIndex && x.IsSymbolTokenCloseRoundBracket());
+                    var closedRoundBracket = tokens.First(x => x.StartIndex > tokens[i + 1].StartIndex && x.IsSymbolToken(')'));
 
                     if (closedRoundBracket != null && closedRoundBracket != tokens.Last())
                     {
                         var nextToken = tokens[tokens.IndexOf(closedRoundBracket) + 1];
-                        if (nextToken.IsSymbolTokenCloseSquareBracket())
+                        if (nextToken.IsSymbolToken(']'))
                         {
                             open = i;
                             closed = tokens.IndexOf(nextToken);
@@ -223,19 +224,26 @@ namespace JsonPathway.Internal
             }
         }
 
+        private static FilterToken CreateFilterToken(List<Token> tokens)
+        {
+            string value = string.Join("", tokens.Select(x => x.IsStringToken() ? x.CastToStringToken().GetQuotedValue() : x.StringValue));
+
+            return new FilterToken(tokens.First().StartIndex, tokens.Last().StartIndex, value);
+        }
+
         private static List<Token> ConvertWildcardTokens(IReadOnlyList<Token> tokens)
         {
             List<Token> ret = tokens
                 .Select(x =>
                 {
-                    if (x.IsSymbolTokenWildcard()) return new ChildPropertiesToken(x.StartIndex);
+                    if (x.IsSymbolToken('*')) return new ChildPropertiesToken(x.StartIndex);
                     return x;
                 })
                 .ToList();
 
             for (int i = ret.Count - 1; i > 0; i--) // i > 0 is intentional
             {
-                if (ret[i].IsSymbolTokenPoint() && ret[i - 1].IsSymbolTokenPoint())
+                if (ret[i].IsSymbolToken('.') && ret[i - 1].IsSymbolToken('.'))
                 {
                     var toRemove1 = ret[i - 1];
                     var toRemove2 = ret[i];
@@ -246,16 +254,74 @@ namespace JsonPathway.Internal
                 }
             }
 
+            for (int i = ret.Count - 1; i > 1; i--) // i > 1 is intentional
+            {
+                if (i < ret.Count && ret[i].IsSymbolToken(']') && ret[i - 1].IsChildPropertiesToken() && ret[i - 2].IsSymbolToken('['))
+                {
+                    var toRemove1 = ret[i - 2];
+                    var toRemove2 = ret[i - 1];
+                    var toRemove3 = ret[i];
+
+                    ret.Insert(i - 2, new AllArrayElementsToken(toRemove1.StartIndex, toRemove3.StartIndex));
+                    ret.Remove(toRemove1);
+                    ret.Remove(toRemove2);
+                    ret.Remove(toRemove3);
+                }
+            }
+
             return ret;
         }
 
-        private static FilterToken CreateFilterToken(List<Token> tokens)
+        public static IReadOnlyList<Token> ConvertArrayAccessTokens(IReadOnlyList<Token> tokens)
         {
-            string value = string.Join("", tokens.Select(x => x.IsStringToken() ? x.CastToStringToken().GetQuotedValue() : x.StringValue));
+            List<Token> ret = tokens.ToList();
 
-            return new FilterToken(tokens.First().StartIndex, tokens.Last().StartIndex, value);
+            var openTokens = ret.Where(x => x.IsSymbolToken('[')).ToList();
+
+            List<(int start, int end)> openCloseIndexes = new List<(int, int)>();
+
+            foreach (var ot in openTokens)
+            {
+                var ct = ret.FirstOrDefault(x => x.StartIndex > ot.StartIndex && x.IsSymbolToken(']'));
+
+                if (ct != null && ret.Any(x => x.StartIndex > ot.StartIndex && x.StartIndex < ct.StartIndex
+                                           && (x.IsNumberToken() || x.IsSymbolToken(',') || x.IsSymbolToken(':'))
+                                        )
+                   )
+                {
+                    openCloseIndexes.Add((ot.StartIndex, ct.StartIndex));
+                }
+            }
+
+            var arrayAccessTokens = openCloseIndexes.Select(x =>
+            {
+                IEnumerable<string> toConvert = ret
+                    .Where(t => t.StartIndex >= x.start && t.StartIndex <= x.end)
+                    .Select(t => t.StringValue);
+
+                string value = string.Join("", toConvert);
+
+                return new ArrayElementsToken(x.start, x.end, value);
+            })
+            .ToList();
+
+            List<Token> retList = new List<Token>();
+
+            foreach (var t in ret)
+            {
+                var intersecting = arrayAccessTokens.FirstOrDefault(x => x.IntersectesInclusive(t.StartIndex));
+
+                if (intersecting != null)
+                {
+                    if (!retList.Contains(intersecting)) retList.Add(intersecting);
+                }
+                else
+                {
+                    retList.Add(t);
+                }
+            }
+
+            return retList;
         }
-
-
     }
 }

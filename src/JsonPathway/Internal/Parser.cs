@@ -16,13 +16,13 @@ namespace JsonPathway.Internal
         {
             if (!tokens.Any()) return;
 
-            Token unexpectedToken = tokens.FirstOrDefault(x => !x.IsFilterToken() && !x.IsSymbolTokenPoint() && !x.IsPropertyToken());
+            Token unexpectedToken = tokens.FirstOrDefault(x => !x.IsFilterToken() && !x.IsSymbolToken('.') && !x.IsPropertyToken());
             if (unexpectedToken != null) throw new UnexpectedTokenException(unexpectedToken);
 
-            if (tokens[0].IsSymbolTokenPoint()) throw new UnexpectedTokenException(tokens[0]);
-            if (tokens.Last().IsSymbolTokenPoint()) throw new UnexpectedTokenException(tokens.Last());
+            if (tokens[0].IsSymbolToken('.')) throw new UnexpectedTokenException(tokens[0]);
+            if (tokens.Last().IsSymbolToken('.')) throw new UnexpectedTokenException(tokens.Last());
 
-            var pointTokens = tokens.Where(x => x.IsSymbolTokenPoint());
+            var pointTokens = tokens.Where(x => x.IsSymbolToken('.'));
             
             foreach (SymbolToken pt in pointTokens)
             {
