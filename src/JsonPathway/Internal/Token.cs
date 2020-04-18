@@ -23,6 +23,7 @@ namespace JsonPathway.Internal
         public bool IsChildPropertiesToken() => this is ChildPropertiesToken;
         public bool IsRecursivePropertiesToken() => this is RecursivePropertiesToken;
         public bool IsAllArrayElementsToken() => this is AllArrayElementsToken;
+        public bool IsMultiplePropertiesToken() => this is MultiplePropertiesToken;
 
         public bool IsSymbolToken() => this is SymbolToken;
         public bool IsSymbolToken(char value) => this is SymbolToken && StringValue[0] == value;
@@ -30,6 +31,7 @@ namespace JsonPathway.Internal
         public StringToken CastToStringToken() => (StringToken)this;
         public WhiteSpaceToken CastToWhiteSpaceToken() => (WhiteSpaceToken)this;
         public PropertyToken CastToPropertyToken() => (PropertyToken)this;
+        public MultiplePropertiesToken CastToMultiplePropertiesToken() => (MultiplePropertiesToken)this;
         public NumberToken CastToNumberToken() => (NumberToken)this;
         public BoolToken CastToBoolToken() => (BoolToken)this;
         public SymbolToken CastToSymbolToken() => (SymbolToken)this;
@@ -144,6 +146,17 @@ namespace JsonPathway.Internal
         }
     }
 
+    public class MultiplePropertiesToken: MultiCharToken
+    {
+        public string[] Properties { get; }
+
+        public MultiplePropertiesToken(int startIndex, int endIndex, StringToken[] values) : base(startIndex, endIndex)
+        {
+            Properties = values.Select(x => x.StringValue).ToArray();
+            StringValue = string.Join(",", Properties);
+        }
+    }
+
     /// <summary>
     /// * JSONPath Operator
     /// </summary>
@@ -214,7 +227,7 @@ namespace JsonPathway.Internal
                 }
                 else if (parts.Length > 3)
                 {
-                    throw new ArgumentException("Value contains more than 2 : which isn't valid syntax for array element starting at " + startIndex);
+                    throw new UnrecognizedCharSequence("Value contains more than 2 : which isn't valid syntax for array element starting at " + startIndex);
                 }
             }
             else

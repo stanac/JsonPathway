@@ -132,5 +132,60 @@ namespace JsonPathway.Tests.Internal
             Assert.Equal(2, t.End);
             Assert.Equal(9, t.Step);
         }
+
+        [Fact]
+        public void Tokenize_InputWithArrayAccessSliceNotValid_ThrowsException()
+        {
+            string input = "$[4:2:9:]";
+
+            Assert.Throws<UnrecognizedCharSequence>(() => Tokenizer.Tokenize(input));
+        }
+
+        [Fact]
+        public void Tokenize_InputWithArrayAccessNegative_ReturnsValidToken()
+        {
+            string input = "$[-4]";
+
+            var token = Tokenizer.Tokenize(input).Last().CastToArrayElementsToken();
+
+            Assert.Single(token.ExactElementsAccess);
+            Assert.Equal(-4, token.ExactElementsAccess.Single());
+        }
+
+        [Fact]
+        public void Tokenize_InputWithArrayAccessDefaultValues_ReturnsValidToken()
+        {
+            string input = "[:2]";
+
+            ArrayElementsToken token = Tokenizer.Tokenize(input).Single().CastToArrayElementsToken();
+
+            Assert.Null(token.ExactElementsAccess);
+            Assert.Equal(0, token.Start);
+            Assert.Equal(2, token.End);
+            Assert.Null(token.Step);
+        }
+
+        [Fact]
+        public void Tokenize_InputWithMultipleProperties_ReturnsValidToken()
+        {
+            string input = "$['abc', 'efg']";
+
+            IReadOnlyList<Token> tokens = Tokenizer.Tokenize(input);
+            Assert.Equal(2, tokens.Count);
+            MultiplePropertiesToken mpt = tokens.Last().CastToMultiplePropertiesToken();
+            Assert.Equal(2, mpt.Properties.Length);
+            Assert.Equal("abc", mpt.Properties[0]);
+            Assert.Equal("efg", mpt.Properties[1]);
+        }
+
+        [Theory]
+        [InlineData("$['abc',]")]
+        [InlineData("$['abc','efg',]")]
+        [InlineData("$['abc',,'efg']")]
+        [InlineData("$[,'abc','efg']")]
+        public void Tokenize_InputWithMultiplePropertiesNotValid_ThrowsException(string input)
+        {
+            Assert.Throws<UnrecognizedCharSequence>(() => Tokenizer.Tokenize(input));
+        }
     }
 }

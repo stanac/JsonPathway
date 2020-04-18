@@ -26,6 +26,7 @@ namespace JsonPathway.Internal
             tokens = ConvertStringTokensToPropertyTokens(tokens);
             tokens = ConvertTokensToFilterTokens(tokens.ToList());
             tokens = ConvertWildcardTokens(tokens.ToList());
+            tokens = ConvertMultiplePropertyTokens(tokens);
             tokens = ConvertArrayAccessTokens(tokens);
 
             return tokens;
@@ -272,26 +273,49 @@ namespace JsonPathway.Internal
             return ret;
         }
 
-        public static IReadOnlyList<Token> ConvertArrayAccessTokens(IReadOnlyList<Token> tokens)
+        private static IReadOnlyList<Token> ConvertMultiplePropertyTokens(IReadOnlyList<Token> tokens)
         {
             List<Token> ret = tokens.ToList();
+            List<(int start, int end)> openCloseIndexes = FindOpenClosedTokens(ret);
 
-            var openTokens = ret.Where(x => x.IsSymbolToken('[')).ToList();
+            List<MultiplePropertiesToken> converted = new List<MultiplePropertiesToken>();
 
-            List<(int start, int end)> openCloseIndexes = new List<(int, int)>();
-
-            foreach (var ot in openTokens)
+            foreach (var oc in openCloseIndexes)
             {
-                var ct = ret.FirstOrDefault(x => x.StartIndex > ot.StartIndex && x.IsSymbolToken(']'));
+                var tokensToConvert = ret.Where(x => x.StartIndex > oc.start && x.StartIndex < oc.end).ToList();
 
-                if (ct != null && ret.Any(x => x.StartIndex > ot.StartIndex && x.StartIndex < ct.StartIndex
-                                           && (x.IsNumberToken() || x.IsSymbolToken(',') || x.IsSymbolToken(':'))
-                                        )
-                   )
+                if (tokensToConvert.All(x => x.IsSymbolToken(',') || x.IsStringToken()))
                 {
-                    openCloseIndexes.Add((ot.StartIndex, ct.StartIndex));
+                    ValidateMultiPropertyTokenOrder(tokensToConvert);
+                    var stringTokens = tokensToConvert.Where(x => x.IsStringToken()).Select(x => x.CastToStringToken()).ToArray();
+
+                    converted.Add(new MultiplePropertiesToken(oc.start, oc.end, stringTokens));
                 }
             }
+
+            List<Token> ret2 = new List<Token>();
+
+            foreach (var token in tokens)
+            {
+                var intersecting = converted.FirstOrDefault(x => x.IntersectesInclusive(token.StartIndex));
+
+                if (intersecting != null)
+                {
+                    if (!ret2.Contains(intersecting)) ret2.Add(intersecting);
+                }
+                else
+                {
+                    ret2.Add(token);
+                }
+            }
+
+            return ret2;
+        }
+
+        private static IReadOnlyList<Token> ConvertArrayAccessTokens(IReadOnlyList<Token> tokens)
+        {
+            List<Token> ret = tokens.ToList();
+            List<(int start, int end)> openCloseIndexes = FindOpenClosedTokens(ret);
 
             var arrayAccessTokens = openCloseIndexes.Select(x =>
             {
@@ -322,6 +346,46 @@ namespace JsonPathway.Internal
             }
 
             return retList;
+        }
+
+        private static List<(int start, int end)> FindOpenClosedTokens(IReadOnlyList<Token> ret)
+        {
+            var openTokens = ret.Where(x => x.IsSymbolToken('[')).ToList();
+
+            List<(int start, int end)> openCloseIndexes = new List<(int, int)>();
+
+            foreach (var ot in openTokens)
+            {
+                var ct = ret.FirstOrDefault(x => x.StartIndex > ot.StartIndex && x.IsSymbolToken(']'));
+
+                if (ct != null && ret.Any(x => x.StartIndex > ot.StartIndex && x.StartIndex < ct.StartIndex
+                                           && (x.IsNumberToken() || x.IsSymbolToken(',') || x.IsSymbolToken(':'))
+                                        )
+                   )
+                {
+                    openCloseIndexes.Add((ot.StartIndex, ct.StartIndex));
+                }
+            }
+
+            return openCloseIndexes;
+        }
+
+        private static void ValidateMultiPropertyTokenOrder(List<Token> tokens)
+        {
+            int startIndex = tokens.First().StartIndex;
+            string error = $"Failed to convert strings to multiple properties token starting at {startIndex}";
+
+            if (tokens.Any(x => !x.IsSymbolToken(',') && !x.IsStringToken()))
+                throw new UnrecognizedCharSequence(error);
+
+            if (tokens.First().IsSymbolToken(',') || tokens.Last().IsSymbolToken(','))
+                throw new UnrecognizedCharSequence(error);
+
+            for (int i = 0; i < tokens.Count - 1; i++)
+            {
+                if (tokens[i].GetType() == tokens[i+1].GetType())
+                    throw new UnrecognizedCharSequence(error);
+            }
         }
     }
 }
