@@ -128,9 +128,9 @@ namespace JsonPathway.Tests.Internal
 
             ArrayElementsToken t = tokens.Last().CastToArrayElementsToken();
             Assert.Null(t.ExactElementsAccess);
-            Assert.Equal(-4, t.Start);
-            Assert.Equal(-2, t.End);
-            Assert.Equal(-9, t.Step);
+            Assert.Equal(-4, t.SliceStart);
+            Assert.Equal(-2, t.SliceEnd);
+            Assert.Equal(-9, t.SliceStep);
 
             input = "$[4:2:9]";
 
@@ -141,9 +141,9 @@ namespace JsonPathway.Tests.Internal
 
             t = tokens.Last().CastToArrayElementsToken();
             Assert.Null(t.ExactElementsAccess);
-            Assert.Equal(4, t.Start);
-            Assert.Equal(2, t.End);
-            Assert.Equal(9, t.Step);
+            Assert.Equal(4, t.SliceStart);
+            Assert.Equal(2, t.SliceEnd);
+            Assert.Equal(9, t.SliceStep);
 
             input = "$[+4:+2:+9]";
 
@@ -154,9 +154,9 @@ namespace JsonPathway.Tests.Internal
 
             t = tokens.Last().CastToArrayElementsToken();
             Assert.Null(t.ExactElementsAccess);
-            Assert.Equal(4, t.Start);
-            Assert.Equal(2, t.End);
-            Assert.Equal(9, t.Step);
+            Assert.Equal(4, t.SliceStart);
+            Assert.Equal(2, t.SliceEnd);
+            Assert.Equal(9, t.SliceStep);
         }
 
         [Fact]
@@ -186,9 +186,9 @@ namespace JsonPathway.Tests.Internal
             ArrayElementsToken token = Tokenizer.Tokenize(input).Single().CastToArrayElementsToken();
 
             Assert.Null(token.ExactElementsAccess);
-            Assert.Equal(0, token.Start);
-            Assert.Equal(2, token.End);
-            Assert.Null(token.Step);
+            Assert.Equal(0, token.SliceStart);
+            Assert.Equal(2, token.SliceEnd);
+            Assert.Null(token.SliceStep);
         }
 
         [Fact]

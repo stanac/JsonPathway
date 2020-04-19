@@ -24,6 +24,11 @@ namespace JsonPathway.Internal
         public bool IsRecursivePropertiesToken() => this is RecursivePropertiesToken;
         public bool IsAllArrayElementsToken() => this is AllArrayElementsToken;
         public bool IsMultiplePropertiesToken() => this is MultiplePropertiesToken;
+        public bool IsArrayElementToken() => this is ArrayElementsToken;
+
+        public bool CanBeConvertedToExpression() =>
+            IsPropertyToken() || IsChildPropertiesToken() || IsMultiplePropertiesToken() || IsRecursivePropertiesToken()
+            || IsAllArrayElementsToken() || IsArrayElementToken() || IsFilterToken();
 
         public bool IsSymbolToken() => this is SymbolToken;
         public bool IsSymbolToken(char value) => this is SymbolToken && StringValue[0] == value;
@@ -191,9 +196,9 @@ namespace JsonPathway.Internal
     public class ArrayElementsToken: MultiCharToken
     {
         public int[] ExactElementsAccess { get; }
-        public int? Start { get; }
-        public int? End { get; }
-        public int? Step { get; }
+        public int? SliceStart { get; }
+        public int? SliceEnd { get; }
+        public int? SliceStep { get; }
 
         public ArrayElementsToken(int startIndex, int endIndex, string value)
             : base(startIndex, endIndex)
@@ -211,18 +216,18 @@ namespace JsonPathway.Internal
             {
                 string[] parts = value.Split(":".ToCharArray(), StringSplitOptions.None);
 
-                if (string.IsNullOrWhiteSpace(parts[0])) Start = 0;
-                else if (int.TryParse(parts[0], out int t1)) Start = t1;
+                if (string.IsNullOrWhiteSpace(parts[0])) SliceStart = 0;
+                else if (int.TryParse(parts[0], out int t1)) SliceStart = t1;
                 else throw new UnrecognizedCharSequence("Unexpected value in array slice operator at array element operator starting at " + startIndex);
 
-                if (string.IsNullOrWhiteSpace(parts[1])) End = null;
-                else if (int.TryParse(parts[1], out int t2)) End = t2;
+                if (string.IsNullOrWhiteSpace(parts[1])) SliceEnd = null;
+                else if (int.TryParse(parts[1], out int t2)) SliceEnd = t2;
                 else throw new UnrecognizedCharSequence("Unexpected value in array slice operator at array element operator starting at " + startIndex);
 
                 if (parts.Length == 3)
                 {
-                    if (string.IsNullOrWhiteSpace(parts[2])) Step = null;
-                    else if (int.TryParse(parts[2], out int t3)) Step = t3;
+                    if (string.IsNullOrWhiteSpace(parts[2])) SliceStep = null;
+                    else if (int.TryParse(parts[2], out int t3)) SliceStep = t3;
                     else throw new UnrecognizedCharSequence("Unexpected value in array slice operator at array element operator starting at " + startIndex);
                 }
                 else if (parts.Length > 3)

@@ -16,7 +16,7 @@ namespace JsonPathway
         /// <br/><br/>
         /// <see cref="ExpressionList"/> has <see cref="ExpressionList.SerializerToJson"/> and
         /// <see cref="ExpressionList.DeserializeFromJson(string)"/>. Deserializing expression list from JSON
-        /// is a lot faster than parsin expression again.
+        /// is a lot faster than parsing expression again.
         /// </summary>
         /// <param name="jsonPathExpression">string representation of JsonPath expression</param>
         /// <param name="json">JSON document</param>
@@ -36,7 +36,7 @@ namespace JsonPathway
         /// <br/> <br/>
         /// <see cref="ExpressionList"/> has <see cref="ExpressionList.SerializerToJson"/> and
         /// <see cref="ExpressionList.DeserializeFromJson(string)"/>. Deserializing expression list from JSON
-        /// is a lot faster than parsin expression again.
+        /// is a lot faster than parsing expression again.
         /// </summary>
         /// <param name="jsonPathExpression">JsonPath expression</param>
         /// <param name="doc">Parsed JSON document</param>
@@ -70,7 +70,7 @@ namespace JsonPathway
         {
             try
             {
-                return ExecutePathInner(expression, doc);
+                return ExpressionInterpreter.Execute(expression, doc);
             }
             catch (JsonPathwayException)
             {
@@ -81,11 +81,5 @@ namespace JsonPathway
                 throw new InternalJsonPathwayException("Unexpected internal exception", ex);
             }
         }
-
-        private static IReadOnlyList<JsonElement> ExecutePathInner(ExpressionList expression, JsonDocument doc)
-        {
-            throw new NotImplementedException();
-        }
-
     }
 }

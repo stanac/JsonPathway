@@ -9,14 +9,20 @@ namespace JsonPathway.Internal
         {
             EnsureTokensAreValid(tokens.ToList());
 
-            yield break;
+            foreach (Token t in tokens)
+            {
+                foreach (Expression e in Parse(t))
+                {
+                    yield return e;
+                }
+            }
         }
 
         private static void EnsureTokensAreValid(List<Token> tokens)
         {
             if (!tokens.Any()) return;
 
-            Token unexpectedToken = tokens.FirstOrDefault(x => !x.IsFilterToken() && !x.IsSymbolToken('.') && !x.IsPropertyToken());
+            Token unexpectedToken = tokens.FirstOrDefault(x => !x.CanBeConvertedToExpression() && !x.IsSymbolToken('.'));
             if (unexpectedToken != null) throw new UnexpectedTokenException(unexpectedToken);
 
             if (tokens[0].IsSymbolToken('.')) throw new UnexpectedTokenException(tokens[0]);
@@ -33,7 +39,33 @@ namespace JsonPathway.Internal
 
                 if (next.CastToPropertyToken().Escaped) throw new UnexpectedTokenException(next, "Expected unescaped property accessor");
             }
+        }
 
+        private static IEnumerable<Expression> Parse(Token t)
+        {
+            switch (t)
+            {
+                case PropertyToken pt: yield return new PropertyAccessExpression(pt);
+                    break;
+
+                case ChildPropertiesToken pt: yield return new PropertyAccessExpression(pt);
+                    break;
+
+                case RecursivePropertiesToken pt: yield return new PropertyAccessExpression(pt);
+                    break;
+
+                case MultiplePropertiesToken pt: yield return new PropertyAccessExpression(pt);
+                    break;
+
+                case ArrayElementsToken at: yield return new ArrayElementsExpression(at);
+                    break;
+
+                case AllArrayElementsToken at: yield return new ArrayElementsExpression(at);
+                    break;
+
+                case FilterToken ft: yield return new FilterExpression(ft);
+                    break;
+            }
         }
     }
 }
