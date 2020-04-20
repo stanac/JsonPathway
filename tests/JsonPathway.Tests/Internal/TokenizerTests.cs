@@ -204,6 +204,19 @@ namespace JsonPathway.Tests.Internal
             Assert.Equal("efg", mpt.Properties[1]);
         }
 
+        [Fact]
+        public void Tokenize_InputWithFilter_ReturnsValidToken()
+        {
+            string input = "$.a[?(@.b > 0)]";
+
+            IReadOnlyList<Token> tokens = Tokenizer.Tokenize(input);
+            Assert.IsType<FilterToken>(tokens.Last());
+
+            input = "$.a[?(@.b > 0 && (@.c == 'a' || @.c == ''))]";
+            tokens = Tokenizer.Tokenize(input);
+            Assert.IsType<FilterToken>(tokens.Last());
+        }
+
         [Theory]
         [InlineData("$['abc',]")]
         [InlineData("$['abc','efg',]")]

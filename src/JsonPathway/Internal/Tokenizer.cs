@@ -172,15 +172,15 @@ namespace JsonPathway.Internal
             {
                 if (tokens[i].IsSymbolToken('[') && tokens[i+1].IsSymbolToken('?') && tokens[i+2].IsSymbolToken('('))
                 {
-                    var closedRoundBracket = tokens.First(x => x.StartIndex > tokens[i + 1].StartIndex && x.IsSymbolToken(')'));
+                    var closedSquareBracket = tokens.FirstOrDefault(x => x.StartIndex > tokens[i + 1].StartIndex && x.IsSymbolToken(']'));
 
-                    if (closedRoundBracket != null && closedRoundBracket != tokens.Last())
+                    if (closedSquareBracket != null)
                     {
-                        var nextToken = tokens[tokens.IndexOf(closedRoundBracket) + 1];
-                        if (nextToken.IsSymbolToken(']'))
+                        var previousToken = tokens[tokens.IndexOf(closedSquareBracket) - 1];
+                        if (previousToken.IsSymbolToken(')'))
                         {
                             open = i;
-                            closed = tokens.IndexOf(nextToken);
+                            closed = tokens.IndexOf(closedSquareBracket);
                             break;
                         }
                     }

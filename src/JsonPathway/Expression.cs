@@ -73,7 +73,7 @@ namespace JsonPathway
     {
         public FilterExpression(FilterToken token)
         {
-            throw new NotImplementedException();
+            IReadOnlyList<Token> tokens = Tokenizer.Tokenize(token.StringValue);
         }
     }
 }
