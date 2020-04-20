@@ -9,12 +9,12 @@ using Xunit;
 
 namespace JsonPathway.Tests.Internal
 {
-    public class FilterExpressionTests
+    public class BoolParserTests
     {
         [Fact]
         public void Test()
         {
-            string input = "@.price > 0 && (@.name.contains('a') || @.name.contains('b') || !@.f)";
+            string input = "@.price > 0 && (@.name.contains('a') || @['name'].contains('b') || !@.f)";
 
             var r = BoolParser.Parse(input);
         }

@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace JsonPathway.Internal.BoolExpressions
 {
-    internal class BoolExpression
-    {
-        public BoolExpression(IReadOnlyList<Either<Token, TokenGroup>> elements)
-        {
-            Elements = elements;
-        }
+    //internal class BoolExpression
+    //{
+    //    public BoolExpression(IReadOnlyList<Either<Token, TokenGroup>> elements)
+    //    {
+    //        Elements = elements;
+    //    }
 
-        public IReadOnlyList<Either<Token, TokenGroup>> Elements { get; }
-    }
+    //    public IReadOnlyList<Either<Token, TokenGroup>> Elements { get; }
+    //}
 }
