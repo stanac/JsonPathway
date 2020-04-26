@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace JsonPathway.Internal.BoolExpressions
@@ -55,7 +56,6 @@ namespace JsonPathway.Internal.BoolExpressions
         public PropertyExpressionToken(PropertyToken[] tokens)
         {
             PropertyChain = tokens ?? throw new ArgumentNullException(nameof(tokens));
-            if (tokens.Length == 0) throw new ArgumentException("Empty array not allowed");
         }
 
         public override string ToString() => base.ToString() + ToInternalString();
@@ -151,9 +151,20 @@ namespace JsonPathway.Internal.BoolExpressions
 
     }
 
-    public class ExpressionConstantBoolToken: ExpressionToken
+    public abstract class ConstantBaseExpressionToken: ExpressionToken
     {
-        public ExpressionConstantBoolToken(BoolToken token)
+        public string StringValue { get; }
+
+        public ConstantBaseExpressionToken(string value)
+        {
+            StringValue = value;
+        }
+    }
+    
+    public class ConstantBoolExpressionToken : ConstantBaseExpressionToken
+    {
+        public ConstantBoolExpressionToken (BoolToken token)
+            : base(token.StringValue)
         {
             Token = token ?? throw new ArgumentNullException(nameof(token));
         }
@@ -163,9 +174,10 @@ namespace JsonPathway.Internal.BoolExpressions
         public override string ToString() => base.ToString() + Token.StringValue;
     }
 
-    public class ExpressionConstantNumberToken : ExpressionToken
+    public class ConstantNumberExpressionToken : ConstantBaseExpressionToken
     {
-        public ExpressionConstantNumberToken(NumberToken token)
+        public ConstantNumberExpressionToken(NumberToken token)
+            : base(token.StringValue)
         {
             Token = token ?? throw new ArgumentNullException(nameof(token));
         }
@@ -175,9 +187,10 @@ namespace JsonPathway.Internal.BoolExpressions
         public override string ToString() => base.ToString() + Token.StringValue;
     }
 
-    public class ExpressionConstantStringToken: ExpressionToken
+    public class ConstantStringExpressionToken: ConstantBaseExpressionToken
     {
-        public ExpressionConstantStringToken(StringToken token)
+        public ConstantStringExpressionToken(StringToken token)
+            : base(token.StringValue)
         {
             Token = token ?? throw new ArgumentNullException(nameof(token));
         }
@@ -187,25 +200,30 @@ namespace JsonPathway.Internal.BoolExpressions
         public override string ToString() => base.ToString() + Token.StringValue;
     }
 
-    public class MethodCallToken: ExpressionToken
+    public class MethodCallExpressionToken: ExpressionToken
     {
-        public MethodCallToken(PropertyExpressionToken property, string methodName, ExpressionToken[] arguments)
+        public MethodCallExpressionToken(ExpressionToken property, string methodName, ExpressionToken[] arguments)
         {
             if (string.IsNullOrWhiteSpace(methodName))
             {
                 throw new ArgumentException("Value not provided", nameof(methodName));
             }
 
-            Property = property ?? throw new ArgumentNullException(nameof(property));
+            CalledOnExpression = property ?? throw new ArgumentNullException(nameof(property));
             MethodName = methodName;
             Arguments = arguments ?? throw new ArgumentNullException(nameof(arguments));
         }
 
-        public PropertyExpressionToken Property { get; }
+        public ExpressionToken CalledOnExpression { get; }
         public string MethodName { get; }
-        public ExpressionToken[] Arguments { get; }
+        public ExpressionToken[] Arguments { get; private set; }
 
-        public override string ToString() => base.ToString() + $"{Property.ToInternalString()} {MethodName} "
+        public void ReplaceArgumentTokens(IEnumerable<ExpressionToken> tokens)
+        {
+            Arguments = tokens.ToArray();
+        }
+
+        public override string ToString() => base.ToString() + $"{CalledOnExpression} {MethodName} "
             + string.Join(", ", Arguments.Select(x => x.ToString()));
     }
 }

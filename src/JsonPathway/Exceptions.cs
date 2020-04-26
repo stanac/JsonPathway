@@ -1,4 +1,5 @@
 ﻿using JsonPathway.Internal;
+using JsonPathway.Internal.BoolExpressions;
 using System;
 
 namespace JsonPathway
@@ -166,7 +167,17 @@ namespace JsonPathway
         {
         }
 
+        public UnexpectedTokenException(ExpressionToken token)
+            : this(token, "")
+        {
+        }
+
         public UnexpectedTokenException(Token token, string message)
+            : this($"Unexpected {token}. {message}")
+        {
+        }
+
+        public UnexpectedTokenException(ExpressionToken token, string message)
             : this($"Unexpected {token}. {message}")
         {
         }

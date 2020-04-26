@@ -28,6 +28,7 @@ namespace JsonPathway.Internal.BoolExpressions
             expressionTokens = ReplaceMethodCallsTokens(expressionTokens);
             expressionTokens = ReplaceBinaryOperatorTokens(expressionTokens);
             expressionTokens = ReplaceNegationTokens(expressionTokens);
+            expressionTokens = TokenizeInnerTokens(expressionTokens);
 
             EnsureTokensAreValid(expressionTokens);
             return expressionTokens;
@@ -50,15 +51,15 @@ namespace JsonPathway.Internal.BoolExpressions
                 {
                     if (pet.Token.IsStringToken())
                     {
-                        ret.Add(new ExpressionConstantStringToken(pet.Token.CastToStringToken()));
+                        ret.Add(new ConstantStringExpressionToken(pet.Token.CastToStringToken()));
                     }
                     else if (pet.Token.IsBoolToken())
                     {
-                        ret.Add(new ExpressionConstantBoolToken(pet.Token.CastToBoolToken()));
+                        ret.Add(new ConstantBoolExpressionToken (pet.Token.CastToBoolToken()));
                     }
                     else if (pet.Token.IsNumberToken())
                     {
-                        ret.Add(new ExpressionConstantNumberToken(pet.Token.CastToNumberToken()));
+                        ret.Add(new ConstantNumberExpressionToken(pet.Token.CastToNumberToken()));
                     }
                     else
                     {
@@ -260,31 +261,39 @@ namespace JsonPathway.Internal.BoolExpressions
 
         private static List<ExpressionToken> ReplaceMethodCallsTokens(List<ExpressionToken> tokens)
         {
+            tokens = ReplaceMethodCallsOnProps(tokens);
+            tokens = ReplaceMethodCallsOnConstants(tokens);
+            return ReplaceMethodCallsOnMethods(tokens);
+        }
+
+        private static List<ExpressionToken> ReplaceMethodCallsOnProps(List<ExpressionToken> tokens)
+        {
             List<PropertyExpressionToken> propTokens = tokens.Where(x => x is PropertyExpressionToken).Cast<PropertyExpressionToken>().ToList();
-            List<ExpressionToken> ret = tokens.ToList();
+            var ret = tokens.ToList();
 
             foreach (PropertyExpressionToken pt in propTokens)
             {
-                int nextIndex = tokens.IndexOf(pt) + 1;
-                if (nextIndex < tokens.Count && tokens[nextIndex] is OpenGroupToken)
+                int nextIndex = ret.IndexOf(pt) + 1;
+                if (nextIndex < ret.Count && ret[nextIndex] is OpenGroupToken)
                 {
-                    OpenGroupToken open = tokens[nextIndex] as OpenGroupToken;
-                    CloseGroupToken close = tokens.First(x => x is CloseGroupToken cgt && cgt.GroupId == open.GroupId) as CloseGroupToken;
+                    OpenGroupToken open = ret[nextIndex] as OpenGroupToken;
+                    CloseGroupToken close = ret.First(x => x is CloseGroupToken cgt && cgt.GroupId == open.GroupId) as CloseGroupToken;
 
-                    int openIndex = tokens.IndexOf(open);
-                    int closeIndex = tokens.IndexOf(close);
+                    int openIndex = ret.IndexOf(open);
+                    int closeIndex = ret.IndexOf(close);
 
-                    List<ExpressionToken> arguments = new List<ExpressionToken>();
+                    List<ExpressionToken> args = new List<ExpressionToken>();
                     for (int i = openIndex + 1; i < closeIndex; i++)
                     {
-                        arguments.Add(tokens[i]);
+                        args.Add(ret[i]);
                     }
+                    args = FormatAndValidateMethodArgumentTokens(args);
 
                     string methodName;
                     PropertyExpressionToken allButLast = pt.AllButLast(out methodName);
-                    int ptIndex = tokens.IndexOf(pt);
+                    int ptIndex = ret.IndexOf(pt);
 
-                    ret[ptIndex] = new MethodCallToken(pt, methodName, arguments.ToArray());
+                    ret[ptIndex] = new MethodCallExpressionToken(allButLast, methodName, args.ToArray());
 
                     List<ExpressionToken> toRemove = new List<ExpressionToken>();
 
@@ -296,6 +305,137 @@ namespace JsonPathway.Internal.BoolExpressions
             }
 
             return ret.Where(x => x != null).ToList();
+        }
+
+        private static List<ExpressionToken> ReplaceMethodCallsOnConstants(List<ExpressionToken> tokens)
+        {
+            List<ExpressionToken> ret = tokens.ToList();
+
+            foreach (ConstantBaseExpressionToken ct in tokens.Where(x => x is ConstantBaseExpressionToken))
+            {
+                int index = ret.IndexOf(ct);
+
+                if (index < ret.Count - 4 && ret[index + 1] is PrimitiveExpressionToken pet1 && pet1.Token.IsSymbolToken('.')
+                    && ret[index + 2] is PrimitiveExpressionToken pet2 && pet2.Token.IsPropertyToken()
+                    && ret[index + 3] is OpenGroupToken)
+                {
+                    var open = ret[index + 3] as OpenGroupToken;
+                    var close = ret.Single(x => x is CloseGroupToken cgt && cgt.GroupId == open.GroupId);
+
+                    var methodName = (ret[index + 2] as PrimitiveExpressionToken).Token.CastToPropertyToken().StringValue;
+
+                    var args = new List<ExpressionToken>();
+
+                    int closeIndex = ret.IndexOf(close);
+                    for (int i = index + 4; i < closeIndex; i++)
+                    {
+                        args.Add(ret[i]);
+                    }
+                    args = FormatAndValidateMethodArgumentTokens(args);
+
+                    ret[index] = new MethodCallExpressionToken(ct, methodName, args.ToArray());
+
+                    for (int i = index + 1; i <= closeIndex; i++)
+                    {
+                        ret[i] = null;
+                    }
+                }
+            }
+
+            return ret.Where(x => x != null).ToList();
+        }
+
+        private static List<ExpressionToken> ReplaceMethodCallsOnMethods(List<ExpressionToken> tokens)
+        {
+            int callCount = 0;
+            int replacedCount;
+
+            do
+            {
+                tokens = ReplaceMethodCallsOnMethodsInner(tokens, ref callCount, out replacedCount);
+            }
+            while (replacedCount > 0);
+
+            return tokens;
+        }
+
+        private static List<ExpressionToken> ReplaceMethodCallsOnMethodsInner(List<ExpressionToken> tokens, ref int callCount, out int replacedCount)
+        {
+            callCount++;
+            replacedCount = 0;
+
+            if (callCount > 10 * 1000)
+            {
+                throw new InternalJsonPathwayException(
+                    "Number of calls to ReplaceMethodCallsOnMethodsInner exceeded max expected number of 10000, possible stack overflow or infinite loop.");
+            }
+
+            List<ExpressionToken> ret = tokens.ToList();
+
+            foreach (MethodCallExpressionToken mc in tokens.Where(x => x is MethodCallExpressionToken))
+            {
+                int index = ret.IndexOf(mc);
+
+                if (index < ret.Count - 4 && ret[index + 1] is PrimitiveExpressionToken pet1 && pet1.Token.IsSymbolToken('.')
+                    && ret[index + 2] is PrimitiveExpressionToken pet2 && pet2.Token.IsPropertyToken()
+                    && ret[index + 3] is OpenGroupToken)
+                {
+                    var open = ret[index + 3] as OpenGroupToken;
+                    var close = ret.Single(x => x is CloseGroupToken cgt && cgt.GroupId == open.GroupId);
+
+                    var methodName = (ret[index + 2] as PrimitiveExpressionToken).Token.CastToPropertyToken().StringValue;
+
+                    var args = new List<ExpressionToken>();
+
+                    int closeIndex = ret.IndexOf(close);
+                    for (int i = index + 4; i < closeIndex; i++)
+                    {
+                        args.Add(ret[i]);
+                    }
+                    args = FormatAndValidateMethodArgumentTokens(args);
+
+                    ret[index] = new MethodCallExpressionToken(mc, methodName, args.ToArray());
+
+                    for (int i = index + 1; i <= closeIndex; i++)
+                    {
+                        ret[i] = null;
+                    }
+
+                    replacedCount++;
+                }
+            }
+
+            return ret.Where(x => x != null).ToList();
+        }
+
+        private static List<ExpressionToken> FormatAndValidateMethodArgumentTokens(List<ExpressionToken> tokens)
+        {
+            if (tokens.Count == 0) return tokens;
+
+            if (tokens.First() is PrimitiveExpressionToken pet3 && pet3.Token.IsSymbolToken(','))
+            {
+                throw new UnexpectedTokenException(pet3.Token);
+            }
+            if (tokens.Last() is PrimitiveExpressionToken pet4 && pet4.Token.IsSymbolToken(','))
+            {
+                throw new UnexpectedTokenException(pet4.Token);
+            }
+
+            if (tokens.Count == 0)
+            {
+                return tokens;
+            }
+
+            for (int i = 1; i < tokens.Count; i++)
+            {
+                if (tokens[i] is PrimitiveExpressionToken pet1 && pet1.Token.IsSymbolToken(',') &&
+                    tokens[i - 1] is PrimitiveExpressionToken pet2 && pet2.Token.IsSymbolToken(','))
+                {
+                    throw new UnexpectedTokenException((tokens[i] as PrimitiveExpressionToken).Token);
+                }
+            }
+
+            return tokens.Where(x => !(x is PrimitiveExpressionToken) || x is PrimitiveExpressionToken pet && !pet.Token.IsSymbolToken(',')).ToList();
         }
 
         private static List<ExpressionToken> ReplaceNegationTokens(List<ExpressionToken> tokens)
@@ -313,14 +453,126 @@ namespace JsonPathway.Internal.BoolExpressions
             return ret;
         }
 
-        private static void EnsureTokensAreValid(List<ExpressionToken> tokens)
+        internal static List<ExpressionToken> TokenizeInnerTokens(List<ExpressionToken> tokens)
         {
-            var primitiveToken = tokens.FirstOrDefault(x => x is PrimitiveExpressionToken) as PrimitiveExpressionToken;
+            int callCount = 0;
+            return TokenizeInnerTokens(tokens, ref callCount);
+        }
 
-            if (primitiveToken != null)
+        internal static List<ExpressionToken> TokenizeInnerTokens(List<ExpressionToken> tokens, ref int numberOfCalls)
+        {
+            numberOfCalls++;
+
+            if (numberOfCalls > 10 * 1000)
             {
-                throw new UnexpectedTokenException(primitiveToken.Token);
+                throw new InternalJsonPathwayException(
+                    "Number of calls to TokenizeInnerTokens exceeded max expected number of 10000, possible stack overflow or infinite loop.");
             }
+
+            var ret = tokens.ToList();
+
+            foreach (MethodCallExpressionToken t in ret.Where(x => x is MethodCallExpressionToken))
+            {
+                ExpressionToken[] inner = t.Arguments;
+                if (inner.Any())
+                {
+                    var replacement1 = Tokenize(inner);
+                    t.ReplaceArgumentTokens(replacement1);
+                }
+
+                var calleeMethod = t.CalledOnExpression as MethodCallExpressionToken;
+                if (calleeMethod != null && calleeMethod.Arguments.Any())
+                {
+                    var replacement2 = Tokenize(calleeMethod.Arguments);
+                    t.ReplaceArgumentTokens(replacement2);
+                }
+            }
+
+            return ret;
+        }
+
+        private static void EnsureTokensAreValid(IEnumerable<ExpressionToken> tokens)
+        {
+            int callCount = 0;
+            EnsureTokensAreValidInner(tokens, ref callCount);
+            EnsureMethodArgumentsAreValid(tokens);
+        }
+
+        private static void EnsureTokensAreValidInner(IEnumerable<ExpressionToken> tokens, ref int numberOfCalls)
+        {
+            numberOfCalls++;
+
+            if (numberOfCalls > 10 * 1000)
+            {
+                throw new InternalJsonPathwayException(
+                    "Number of calls to EnsureTokensAreValidInner exceeded max expected number of 10000, possible stack overflow or infinite loop.");
+            }
+
+            foreach (var t in tokens)
+            {
+                if (t is PrimitiveExpressionToken)
+                {
+                    throw new UnexpectedTokenException(t);
+                }
+                
+                if (t is MethodCallExpressionToken tc)
+                {
+                    EnsureTokensAreValidInner(tc.Arguments, ref numberOfCalls);
+
+                    var calleeMethod = tc.CalledOnExpression as MethodCallExpressionToken;
+                    while (calleeMethod != null)
+                    {
+                        EnsureTokensAreValidInner(calleeMethod.Arguments, ref numberOfCalls);
+                        calleeMethod = calleeMethod.CalledOnExpression as MethodCallExpressionToken;
+                    }
+                }
+            }
+
+        }
+
+        private static void EnsureMethodArgumentsAreValid(IEnumerable<ExpressionToken> tokens)
+        {
+            int callCount = 0;
+            EnsureMethodArgumentsAreValid(tokens, ref callCount);
+        }
+
+        private static void EnsureMethodArgumentsAreValid(IEnumerable<ExpressionToken> tokens, ref int callCount)
+        {
+            callCount++;
+
+            if (callCount > 10 * 1000)
+            {
+                throw new InternalJsonPathwayException(
+                    "Number of calls to EnsureTokensAreValidInner exceeded max expected number of 10000, possible stack overflow or infinite loop.");
+            }
+
+            foreach (MethodCallExpressionToken method in tokens.Where(x => x is MethodCallExpressionToken))
+            {
+                EnsureMethodArgumentsAreValid(method, ref callCount);
+            }
+        }
+
+        private static void EnsureMethodArgumentsAreValid(MethodCallExpressionToken mct, ref int callCount)
+        {
+            callCount++;
+
+            if (callCount > 10 * 1000)
+            {
+                throw new InternalJsonPathwayException(
+                    "Number of calls to EnsureTokensAreValidInner exceeded max expected number of 10000, possible stack overflow or infinite loop.");
+            }
+
+            if (mct.CalledOnExpression is MethodCallExpressionToken inner1) EnsureMethodArgumentsAreValid(inner1, ref callCount);
+
+            foreach (var arg in mct.Arguments)
+            {
+                if (arg is MethodCallExpressionToken inner2) EnsureMethodArgumentsAreValid(inner2, ref callCount);
+            }
+
+            var prim = mct.Arguments.FirstOrDefault(x => x is PrimitiveExpressionToken);
+
+            if (prim != null)
+                throw new UnexpectedTokenException((prim as PrimitiveExpressionToken).Token);
         }
     }
 }
