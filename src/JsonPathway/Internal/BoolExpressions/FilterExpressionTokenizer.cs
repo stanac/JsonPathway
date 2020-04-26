@@ -484,7 +484,7 @@ namespace JsonPathway.Internal.BoolExpressions
                 if (calleeMethod != null && calleeMethod.Arguments.Any())
                 {
                     var replacement2 = Tokenize(calleeMethod.Arguments);
-                    t.ReplaceArgumentTokens(replacement2);
+                    calleeMethod.ReplaceArgumentTokens(replacement2);
                 }
             }
 

@@ -143,7 +143,7 @@ namespace JsonPathway.Tests.Internal
         [Fact]
         public void ExpressionWithChainedMethodCalls_ReturnValidToken()
         {
-            string input = "'a'.ToUpper0().ToUpper1(1).ToUpper2(2, 3).ToUpper3('abc', true, false, false, 'A') == \"A\"";
+            string input = "'a'.ToUpper0().ToUpper1(1).ToUpper2(7, 9.12).ToUpper3('abc', true, false, false, 'A') == \"A\"";
             IReadOnlyList<ExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
 
             Assert.Equal(3, tokens.Count);
@@ -165,13 +165,15 @@ namespace JsonPathway.Tests.Internal
             Assert.Equal(1.0, (toUpper1.Arguments[0] as ConstantNumberExpressionToken).Token.NumberValue, 6);
 
             Assert.Equal(2, toUpper2.Arguments.Length);
-            Assert.Equal(2.0, (toUpper2.Arguments[0] as ConstantNumberExpressionToken).Token.NumberValue, 6);
-            Assert.Equal(3.0, (toUpper2.Arguments[1] as ConstantNumberExpressionToken).Token.NumberValue, 6);
+            Assert.Equal(7.0, (toUpper2.Arguments[0] as ConstantNumberExpressionToken).Token.NumberValue, 6);
+            Assert.Equal(9.12, (toUpper2.Arguments[1] as ConstantNumberExpressionToken).Token.NumberValue, 6);
 
-            Assert.Equal(3, toUpper3.Arguments.Length);
+            Assert.Equal(5, toUpper3.Arguments.Length);
             Assert.Equal("abc", (toUpper3.Arguments[0] as ConstantStringExpressionToken).Token.StringValue);
             Assert.True((toUpper3.Arguments[1] as ConstantBoolExpressionToken).Token.BoolValue);
             Assert.False((toUpper3.Arguments[2] as ConstantBoolExpressionToken).Token.BoolValue);
+            Assert.False((toUpper3.Arguments[3] as ConstantBoolExpressionToken).Token.BoolValue);
+            Assert.Equal("A", (toUpper3.Arguments[4] as ConstantStringExpressionToken).Token.StringValue);
         }
 
         [Fact]
