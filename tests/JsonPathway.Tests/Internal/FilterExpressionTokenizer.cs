@@ -121,7 +121,7 @@ namespace JsonPathway.Tests.Internal
 
         [Theory]
         [InlineData("@.a.DoIt(true,,true)")]
-        // [InlineData("@.a.DoIt(true true)")]
+        [InlineData("@.a.DoIt(true true)")]
         [InlineData("@.a.DoIt(true,true,)")]
         public void ExpressionWithInvalidMethodCall_ThrowsException(string input)
         {

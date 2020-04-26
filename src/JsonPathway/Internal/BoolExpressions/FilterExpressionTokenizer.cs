@@ -130,7 +130,10 @@ namespace JsonPathway.Internal.BoolExpressions
                     break;
                 }
 
-                PropertyExpressionToken propEx = new PropertyExpressionToken(tokensForReplacement.Where(x => ! x.Token.IsSymbolToken('@')).Select(x => x.Token.CastToPropertyToken()).ToArray());
+                PropertyExpressionToken propEx = new PropertyExpressionToken(
+                    tokensForReplacement.Where(x => !x.Token.IsSymbolToken('@')).Select(x => x.Token.CastToPropertyToken()).ToArray(),
+                    tokensForReplacement.First().StartIndex
+                    );
 
                 replacements.Add((propEx, tokensForReplacement.Cast<ExpressionToken>().ToList()));
             }
@@ -428,11 +431,14 @@ namespace JsonPathway.Internal.BoolExpressions
 
             for (int i = 1; i < tokens.Count; i++)
             {
-                if (tokens[i] is PrimitiveExpressionToken pet1 && pet1.Token.IsSymbolToken(',') &&
-                    tokens[i - 1] is PrimitiveExpressionToken pet2 && pet2.Token.IsSymbolToken(','))
+                bool is1Comma = tokens[i - 1] is PrimitiveExpressionToken pet1 && pet1.Token.IsSymbolToken(',');
+                bool is2Comma = tokens[i] is PrimitiveExpressionToken pet2 && pet2.Token.IsSymbolToken(',');
+                
+                if ((is1Comma && is2Comma) || (!is1Comma && !is2Comma))
                 {
-                    throw new UnexpectedTokenException((tokens[i] as PrimitiveExpressionToken).Token);
+                    throw new UnexpectedTokenException($"Unexpected token starting at {tokens[i].StartIndex}");
                 }
+                
             }
 
             return tokens.Where(x => !(x is PrimitiveExpressionToken) || x is PrimitiveExpressionToken pet && !pet.Token.IsSymbolToken(',')).ToList();

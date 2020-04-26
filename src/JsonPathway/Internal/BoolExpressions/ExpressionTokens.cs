@@ -7,6 +7,7 @@ namespace JsonPathway.Internal.BoolExpressions
     public abstract class ExpressionToken
     {
         public override string ToString() => GetType().Name + ": ";
+        public abstract int StartIndex { get; }
     }
 
     public class PrimitiveExpressionToken: ExpressionToken
@@ -18,6 +19,8 @@ namespace JsonPathway.Internal.BoolExpressions
 
         public Token Token { get; }
 
+        public override int StartIndex => Token.StartIndex;
+
         public override string ToString() => base.ToString() + Token;
     }
 
@@ -28,6 +31,8 @@ namespace JsonPathway.Internal.BoolExpressions
             Token = token ?? throw new ArgumentNullException(nameof(token));
             GroupId = groupId;
         }
+
+        public override int StartIndex => Token.StartIndex;
 
         public SymbolToken Token { get; }
         public int GroupId { get; }
@@ -42,6 +47,8 @@ namespace JsonPathway.Internal.BoolExpressions
             Token = token ?? throw new ArgumentNullException(nameof(token));
             GroupId = groupId;
         }
+        
+        public override int StartIndex => Token.StartIndex;
 
         public SymbolToken Token { get; }
         public int GroupId { get; }
@@ -53,10 +60,13 @@ namespace JsonPathway.Internal.BoolExpressions
     {
         public PropertyToken[] PropertyChain { get; }
 
-        public PropertyExpressionToken(PropertyToken[] tokens)
+        public PropertyExpressionToken(PropertyToken[] tokens, int startIndex)
         {
             PropertyChain = tokens ?? throw new ArgumentNullException(nameof(tokens));
+            StartIndex = startIndex;
         }
+        
+        public override int StartIndex { get; }
 
         public override string ToString() => base.ToString() + ToInternalString();
 
@@ -65,7 +75,7 @@ namespace JsonPathway.Internal.BoolExpressions
         public PropertyExpressionToken AllButLast(out string lastName)
         {
             lastName = PropertyChain.Last().StringValue;
-            return new PropertyExpressionToken(PropertyChain.Take(PropertyChain.Length - 1).ToArray());
+            return new PropertyExpressionToken(PropertyChain.Take(PropertyChain.Length - 1).ToArray(), StartIndex);
         }
     }
 
@@ -77,6 +87,8 @@ namespace JsonPathway.Internal.BoolExpressions
 
             if (!token.IsSymbolToken('!')) throw new ArgumentException("Symbol token is not ! token");
         }
+        
+        public override int StartIndex => Token.StartIndex;
 
         public SymbolToken Token { get; }
     }
@@ -112,6 +124,8 @@ namespace JsonPathway.Internal.BoolExpressions
             op.StringValue = value;
             return op;
         }
+        
+        public override int StartIndex => Tokens.First().StartIndex;
 
         public override string ToString() => base.ToString() + $" {StringValue} at {Tokens.First().StartIndex}";
     }
@@ -170,6 +184,8 @@ namespace JsonPathway.Internal.BoolExpressions
         }
 
         public BoolToken Token { get; }
+        
+        public override int StartIndex => Token.StartIndex;
 
         public override string ToString() => base.ToString() + Token.StringValue;
     }
@@ -183,6 +199,8 @@ namespace JsonPathway.Internal.BoolExpressions
         }
 
         public NumberToken Token { get; }
+        
+        public override int StartIndex => Token.StartIndex;
 
         public override string ToString() => base.ToString() + Token.StringValue;
     }
@@ -196,6 +214,8 @@ namespace JsonPathway.Internal.BoolExpressions
         }
 
         public StringToken Token { get; }
+        
+        public override int StartIndex => Token.StartIndex;
 
         public override string ToString() => base.ToString() + Token.StringValue;
     }
@@ -217,6 +237,8 @@ namespace JsonPathway.Internal.BoolExpressions
         public ExpressionToken CalledOnExpression { get; }
         public string MethodName { get; }
         public ExpressionToken[] Arguments { get; private set; }
+        
+        public override int StartIndex => CalledOnExpression.StartIndex;
 
         public void ReplaceArgumentTokens(IEnumerable<ExpressionToken> tokens)
         {
