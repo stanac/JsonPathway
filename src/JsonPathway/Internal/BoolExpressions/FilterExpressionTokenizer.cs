@@ -28,7 +28,7 @@ namespace JsonPathway.Internal.BoolExpressions
             expressionTokens = ReplaceMethodCallsTokens(expressionTokens);
             expressionTokens = ReplaceBinaryOperatorTokens(expressionTokens);
             expressionTokens = ReplaceNegationTokens(expressionTokens);
-            expressionTokens = TokenizeInnerTokens(expressionTokens);
+            // expressionTokens = TokenizeInnerTokens(expressionTokens);
 
             EnsureTokensAreValid(expressionTokens);
             return expressionTokens;
@@ -415,33 +415,75 @@ namespace JsonPathway.Internal.BoolExpressions
         {
             if (tokens.Count == 0) return tokens;
 
-            if (tokens.First() is PrimitiveExpressionToken pet3 && pet3.Token.IsSymbolToken(','))
+            bool IsComma(ExpressionToken t) => t is PrimitiveExpressionToken pt && pt.Token.IsSymbolToken(',');
+            bool IsPartOfGroup(ExpressionToken t)
             {
-                throw new UnexpectedTokenException(pet3.Token);
-            }
-            if (tokens.Last() is PrimitiveExpressionToken pet4 && pet4.Token.IsSymbolToken(','))
-            {
-                throw new UnexpectedTokenException(pet4.Token);
-            }
+                int index = tokens.IndexOf(t);
+                List<int> openGroups = new List<int>();
 
-            if (tokens.Count == 0)
-            {
-                return tokens;
-            }
-
-            for (int i = 1; i < tokens.Count; i++)
-            {
-                bool is1Comma = tokens[i - 1] is PrimitiveExpressionToken pet1 && pet1.Token.IsSymbolToken(',');
-                bool is2Comma = tokens[i] is PrimitiveExpressionToken pet2 && pet2.Token.IsSymbolToken(',');
-                
-                if ((is1Comma && is2Comma) || (!is1Comma && !is2Comma))
+                for (int i = 0; i < index; i++)
                 {
-                    throw new UnexpectedTokenException($"Unexpected token starting at {tokens[i].StartIndex}");
+                    if (tokens[i] is OpenGroupToken ogt)
+                    {
+                        openGroups.Add(ogt.GroupId);
+                    }
+                    else if (tokens[i] is CloseGroupToken cgt)
+                    {
+                        openGroups.Remove(cgt.GroupId);
+                    }
                 }
-                
+
+                return openGroups.Any();
+            }
+            SymbolToken GetComma(ExpressionToken t) => (t as PrimitiveExpressionToken).Token.CastToSymbolToken();
+
+            if (IsComma(tokens.First()))
+            {
+                throw new UnexpectedTokenException(GetComma(tokens.First()));
+            }
+            if (IsComma(tokens.Last()))
+            {
+                throw new UnexpectedTokenException(GetComma(tokens.Last()));
             }
 
-            return tokens.Where(x => !(x is PrimitiveExpressionToken) || x is PrimitiveExpressionToken pet && !pet.Token.IsSymbolToken(',')).ToList();
+            for (int i = 0; i < tokens.Count - 1; i ++)
+            {
+                if (IsComma(tokens[i]) && IsComma(tokens[i + 1]))
+                {
+                    throw new UnexpectedTokenException(GetComma(tokens[i + 1]));
+                }
+            }
+
+            var groups = new List<List<ExpressionToken>>();
+            groups.Add(new List<ExpressionToken>());
+            
+            foreach (var token in tokens)
+            {
+                if (IsComma(token) && !IsPartOfGroup(token))
+                {
+                    groups.Add(new List<ExpressionToken>());
+                }
+                else
+                {
+                    groups.Last().Add(token);
+                }
+            }
+
+            groups = groups.Where(x => x.Count > 0).ToList();
+
+            List<ExpressionToken> ret = new List<ExpressionToken>();
+
+            foreach (var g in groups)
+            {
+                var args = Tokenize(g);
+                if (args.Count > 1)
+                {
+                    throw new UnexpectedTokenException(args[1]);
+                }
+                ret.Add(args.Single());
+            }
+
+            return ret;
         }
 
         private static List<ExpressionToken> ReplaceNegationTokens(List<ExpressionToken> tokens)
@@ -459,43 +501,43 @@ namespace JsonPathway.Internal.BoolExpressions
             return ret;
         }
 
-        internal static List<ExpressionToken> TokenizeInnerTokens(List<ExpressionToken> tokens)
-        {
-            int callCount = 0;
-            return TokenizeInnerTokens(tokens, ref callCount);
-        }
+        //internal static List<ExpressionToken> TokenizeInnerTokens(List<ExpressionToken> tokens)
+        //{
+        //    int callCount = 0;
+        //    return TokenizeInnerTokens(tokens, ref callCount);
+        //}
 
-        internal static List<ExpressionToken> TokenizeInnerTokens(List<ExpressionToken> tokens, ref int numberOfCalls)
-        {
-            numberOfCalls++;
+        //internal static List<ExpressionToken> TokenizeInnerTokens(List<ExpressionToken> tokens, ref int numberOfCalls)
+        //{
+        //    numberOfCalls++;
 
-            if (numberOfCalls > 10 * 1000)
-            {
-                throw new InternalJsonPathwayException(
-                    "Number of calls to TokenizeInnerTokens exceeded max expected number of 10000, possible stack overflow or infinite loop.");
-            }
+        //    if (numberOfCalls > 10 * 1000)
+        //    {
+        //        throw new InternalJsonPathwayException(
+        //            "Number of calls to TokenizeInnerTokens exceeded max expected number of 10000, possible stack overflow or infinite loop.");
+        //    }
 
-            var ret = tokens.ToList();
+        //    var ret = tokens.ToList();
 
-            foreach (MethodCallExpressionToken t in ret.Where(x => x is MethodCallExpressionToken))
-            {
-                ExpressionToken[] inner = t.Arguments;
-                if (inner.Any())
-                {
-                    var replacement1 = Tokenize(inner);
-                    t.ReplaceArgumentTokens(replacement1);
-                }
+        //    foreach (MethodCallExpressionToken t in ret.Where(x => x is MethodCallExpressionToken))
+        //    {
+        //        ExpressionToken[] inner = t.Arguments;
+        //        if (inner.Any())
+        //        {
+        //            var replacement1 = Tokenize(inner);
+        //            t.ReplaceArgumentTokens(replacement1);
+        //        }
 
-                var calleeMethod = t.CalledOnExpression as MethodCallExpressionToken;
-                if (calleeMethod != null && calleeMethod.Arguments.Any())
-                {
-                    var replacement2 = Tokenize(calleeMethod.Arguments);
-                    calleeMethod.ReplaceArgumentTokens(replacement2);
-                }
-            }
+        //        var calleeMethod = t.CalledOnExpression as MethodCallExpressionToken;
+        //        if (calleeMethod != null && calleeMethod.Arguments.Any())
+        //        {
+        //            var replacement2 = Tokenize(calleeMethod.Arguments);
+        //            calleeMethod.ReplaceArgumentTokens(replacement2);
+        //        }
+        //    }
 
-            return ret;
-        }
+        //    return ret;
+        //}
 
         private static void EnsureTokensAreValid(IEnumerable<ExpressionToken> tokens)
         {

@@ -177,9 +177,47 @@ namespace JsonPathway.Tests.Internal
         }
 
         [Fact]
+        public void ExpressionWithMethodCallWithMixedArgs_ReturnsValidTokens()
+        {
+            string input = "@.a.c.Call1(@.call2(123, false).call3(), true)";
+
+            IReadOnlyList<ExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
+
+            Assert.Single(tokens);
+            Assert.IsType<MethodCallExpressionToken>(tokens.Single());
+
+            var call1 = tokens.Single() as MethodCallExpressionToken;
+            Assert.IsType<PropertyExpressionToken>(call1.CalledOnExpression);
+            var prop1 = call1.CalledOnExpression as PropertyExpressionToken;
+            Assert.Equal(2, prop1.PropertyChain.Length);
+            Assert.Equal("a", prop1.PropertyChain[0].StringValue);
+            Assert.Equal("c", prop1.PropertyChain[1].StringValue);
+            Assert.Equal("Call1", call1.MethodName);
+
+            Assert.Equal(2, call1.Arguments.Length);
+            Assert.IsType<ConstantBoolExpressionToken>(call1.Arguments.Last());
+            Assert.True(call1.Arguments.Last() is ConstantBoolExpressionToken cbt && cbt.Token.BoolValue);
+
+            Assert.IsType<MethodCallExpressionToken>(call1.Arguments.First());
+            var call3 = call1.Arguments.First() as MethodCallExpressionToken;
+            Assert.Equal("call3", call3.MethodName);
+            Assert.Empty(call3.Arguments);
+
+            Assert.IsType<MethodCallExpressionToken>(call3.CalledOnExpression);
+            var call2 = call3.CalledOnExpression as MethodCallExpressionToken;
+            Assert.Equal("call2", call2.MethodName);
+            Assert.IsType<PropertyExpressionToken>(call2.CalledOnExpression);
+            Assert.Empty((call2.CalledOnExpression as PropertyExpressionToken).PropertyChain);
+            Assert.Equal(2, call2.Arguments.Length);
+
+            Assert.True(call2.Arguments[0] is ConstantNumberExpressionToken arg1 && arg1.Token.NumberValue == 123.0);
+            Assert.True(call2.Arguments[1] is ConstantBoolExpressionToken arg2 && !arg2.Token.BoolValue);
+        }
+
+        [Fact]
         public void ExpressionWithNestedMethodCalls_ReturnsValidTokens()
         {
-            string input = "@.call(@.a.SubString(@a.b.GetLength(@a.c.Something())))";
+            string input = "@.call(@.a.SubString(@.a.b.GetLength(@.a.c.Something())))";
 
             IReadOnlyList<ExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
 
