@@ -11,7 +11,7 @@ namespace JsonPathway.Internal
             if (expressions is null) throw new ArgumentNullException(nameof(expressions));
             if (doc is null) throw new ArgumentNullException(nameof(doc));
 
-            throw new NotImplementedException();
+            throw new Exception();
         }
     }
 }

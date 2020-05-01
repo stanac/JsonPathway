@@ -1,5 +1,5 @@
 ﻿using JsonPathway.Internal;
-using JsonPathway.Internal.BoolExpressions;
+using JsonPathway.Internal.FilterExpressionTokens;
 using System;
 
 namespace JsonPathway

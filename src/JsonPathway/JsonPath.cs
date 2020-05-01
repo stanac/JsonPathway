@@ -8,7 +8,7 @@ namespace JsonPathway
     public static class JsonPath
     {
         /// <summary>
-        /// Executes json path and returns matching elements.
+        /// Executes JSONPath and returns matching elements.
         /// <br/><br/>
         /// In case when same jsonPathExpression needs
         /// to be used multiple times it's faster to call <see cref="ExpressionList.TokenizeAndParse(string)"/>
@@ -28,7 +28,7 @@ namespace JsonPathway
         }
 
         /// <summary>
-        /// Executes json path and returns matching elements.
+        /// Executes JSONPath and returns matching elements.
         /// <br/><br/>
         /// In case when same jsonPathExpression needs
         /// to be used multiple times it's faster to call <see cref="ExpressionList.TokenizeAndParse(string)"/>
@@ -49,7 +49,7 @@ namespace JsonPathway
         }
 
         /// <summary>
-        /// Executes json path and returns matching elements
+        /// Executes JSONPath and returns matching elements
         /// </summary>
         /// <param name="expression">Parsed JsonPath expression</param>
         /// <param name="json">JSON document</param>
@@ -61,7 +61,7 @@ namespace JsonPathway
         }
 
         /// <summary>
-        /// Executes json path and returns matching elements
+        /// Executes JSONPath and returns matching elements
         /// </summary>
         /// <param name="expression">Parsed JsonPath expression</param>
         /// <param doc="json">Parse JSON document</param>

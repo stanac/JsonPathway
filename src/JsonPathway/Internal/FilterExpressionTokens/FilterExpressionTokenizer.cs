@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace JsonPathway.Internal.BoolExpressions
+namespace JsonPathway.Internal.FilterExpressionTokens
 {
     internal static class FilterExpressionTokenizer
     {

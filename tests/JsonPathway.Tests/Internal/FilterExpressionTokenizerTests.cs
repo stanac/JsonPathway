@@ -1,4 +1,5 @@
-﻿using JsonPathway.Internal.BoolExpressions;
+﻿using JsonPathway.Internal.FilterExpressionTokens;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
@@ -242,6 +243,35 @@ namespace JsonPathway.Tests.Internal
             var innerInnerArg = innerArg.Arguments[0] as MethodCallExpressionToken;
             Assert.Empty(innerInnerArg.Arguments);
             Assert.IsType<PropertyExpressionToken>(innerInnerArg.CalledOnExpression);
+        }
+
+        [Fact]
+        public void ExpressionWithLogicalOperators_ReturnsTokensOfValidTypes()
+        {
+            string input = "@.a || (@.b > 3 && @.b <= 5)";
+            var tokens = FilterExpressionTokenizer.Tokenize(input);
+
+            Type[] tokenTypes = new[]
+            {
+                typeof(PropertyExpressionToken),
+                typeof(LogicalBinaryOperatorExpressionToken),
+                typeof(OpenGroupToken),
+                typeof(PropertyExpressionToken),
+                typeof(ComparisonOperatorExpressionToken),
+                typeof(ConstantNumberExpressionToken),
+                typeof(LogicalBinaryOperatorExpressionToken),
+                typeof(PropertyExpressionToken),
+                typeof(ComparisonOperatorExpressionToken),
+                typeof(ConstantNumberExpressionToken),
+                typeof(CloseGroupToken)
+            };
+
+            Assert.Equal(tokenTypes.Length, tokens.Count);
+
+            for (int i = 0; i < tokens.Count; i++)
+            {
+                Assert.IsType(tokenTypes[i], tokens[i]);
+            }
         }
     }
 }

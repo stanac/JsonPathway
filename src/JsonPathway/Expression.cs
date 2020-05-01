@@ -16,7 +16,7 @@ namespace JsonPathway
         public bool ChildProperties { get; }
         public bool RecursiveProperties { get; }
 
-        public PropertyAccessExpression(PropertyToken token)
+        internal PropertyAccessExpression(PropertyToken token)
         {
             Properties = new List<string>
             {
@@ -24,19 +24,19 @@ namespace JsonPathway
             };
         }
 
-        public PropertyAccessExpression(MultiplePropertiesToken token)
+        internal PropertyAccessExpression(MultiplePropertiesToken token)
         {
             Properties = token.Properties.ToList();
         }
 
 #pragma warning disable RCS1163 // Unused parameter.
 #pragma warning disable IDE0060 // Remove unused parameter
-        public PropertyAccessExpression(RecursivePropertiesToken token)
+        internal PropertyAccessExpression(RecursivePropertiesToken token)
         {
             RecursiveProperties = true;
         }
 
-        public PropertyAccessExpression(ChildPropertiesToken token)
+        internal PropertyAccessExpression(ChildPropertiesToken token)
         {
             ChildProperties = true;
         }
@@ -52,14 +52,14 @@ namespace JsonPathway
 
         public bool AllElements { get; }
 
-        public ArrayElementsExpression(AllArrayElementsToken token)
+        internal ArrayElementsExpression(AllArrayElementsToken token)
         {
             AllElements = true;
         }
 #pragma warning restore IDE0060 // Remove unused parameter
 #pragma warning restore RCS1163 // Unused parameter.
 
-        public ArrayElementsExpression(ArrayElementsToken token)
+        internal ArrayElementsExpression(ArrayElementsToken token)
         {
             SliceStart = token.SliceStart;
             SliceEnd = token.SliceEnd;
@@ -71,7 +71,7 @@ namespace JsonPathway
 
     public class FilterExpression : Expression
     {
-        public FilterExpression(FilterToken token)
+        internal FilterExpression(FilterToken token)
         {
             IReadOnlyList<Token> tokens = Tokenizer.Tokenize(token.StringValue);
         }
