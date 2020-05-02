@@ -2,36 +2,54 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace JsonPathway.Internal.FilterExpressionTokens
+namespace JsonPathway.Internal.Filters
 {
     internal static class FilterExpressionTokenizer
     {
-        public static IReadOnlyList<ExpressionToken> Tokenize(string expression)
+        public static IReadOnlyList<FilterExpressionToken> Tokenize(string expression)
         {
             if (string.IsNullOrWhiteSpace(expression)) throw new ArgumentException("Value not set", nameof(expression));
 
             IReadOnlyList<Token> tokens = Tokenizer.Tokenize(expression);
-            List<ExpressionToken> expressionTokens = tokens
+            List<FilterExpressionToken> expressionTokens = tokens
                 .Select(x => new PrimitiveExpressionToken(x))
                 .Where(x => !x.Token.IsWhiteSpaceToken())
-                .Cast<ExpressionToken>()
+                .Cast<FilterExpressionToken>()
                 .ToList();
 
             return Tokenize(expressionTokens);
         }
 
-        public static IReadOnlyList<ExpressionToken> Tokenize(IReadOnlyList<ExpressionToken> tokens)
+        public static IReadOnlyList<FilterExpressionToken> Tokenize(IReadOnlyList<FilterExpressionToken> tokens)
         {
             var expressionTokens = ReplaceConstantExpressionTokens(tokens.ToList());
+            expressionTokens = ReplaceArrayExpressionTokens(expressionTokens);
             expressionTokens = ReplacePropertyTokens(expressionTokens);
             expressionTokens = ReplaceGroupTokens(expressionTokens);
             expressionTokens = ReplaceMethodCallsTokens(expressionTokens);
             expressionTokens = ReplaceBinaryOperatorTokens(expressionTokens);
             expressionTokens = ReplaceNegationTokens(expressionTokens);
-            // expressionTokens = TokenizeInnerTokens(expressionTokens);
-
+            
             EnsureTokensAreValid(expressionTokens);
             return expressionTokens;
+        }
+
+        private static List<FilterExpressionToken> ReplaceArrayExpressionTokens(IReadOnlyList<FilterExpressionToken> tokens)
+        {
+            var ret = tokens.ToList();
+
+            for (int i = 0; i < ret.Count; i++)
+            {
+                if (ret[i] is PrimitiveExpressionToken pet)
+                {
+                    if (pet.Token.IsArrayElementToken())
+                        ret[i] = new ArrayAccessExpressionToken(pet.Token.CastToArrayElementsToken());
+                    else if (pet.Token.IsAllArrayElementsToken())
+                        ret[i] = new ArrayAccessExpressionToken(pet.Token.CastToAllArrayElementsToken());
+                }
+            }
+
+            return ret;
         }
 
         /// <summary>
@@ -39,13 +57,13 @@ namespace JsonPathway.Internal.FilterExpressionTokens
         /// </summary>
         /// <param name="tokens">tokens input</param>
         /// <returns>tokens</returns>
-        private static List<ExpressionToken> ReplaceConstantExpressionTokens(List<ExpressionToken> tokens)
+        private static List<FilterExpressionToken> ReplaceConstantExpressionTokens(List<FilterExpressionToken> tokens)
         {
-            List<ExpressionToken> ret = new List<ExpressionToken>(tokens.Count);
+            List<FilterExpressionToken> ret = new List<FilterExpressionToken>(tokens.Count);
 
             for (int i = 0; i < tokens.Count; i++)
             {
-                ExpressionToken t = tokens[i];
+                FilterExpressionToken t = tokens[i];
 
                 if (t is PrimitiveExpressionToken pet)
                 {
@@ -80,7 +98,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
         /// </summary>
         /// <param name="tokens">tokens input</param>
         /// <returns>tokens</returns>
-        private static List<ExpressionToken> ReplacePropertyTokens(List<ExpressionToken> tokens)
+        private static List<FilterExpressionToken> ReplacePropertyTokens(List<FilterExpressionToken> tokens)
         {
             List<PrimitiveExpressionToken> @symbols = tokens
                 .Where(x => x is PrimitiveExpressionToken pet && pet.Token.IsSymbolToken('@'))
@@ -89,7 +107,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
 
             if (!symbols.Any()) return tokens;
 
-            List<(PropertyExpressionToken prop, List<ExpressionToken> primitives)> replacements = new List<(PropertyExpressionToken, List<ExpressionToken>)>();
+            List<(PropertyExpressionToken prop, List<FilterExpressionToken> primitives)> replacements = new List<(PropertyExpressionToken, List<FilterExpressionToken>)>();
             
             foreach (var st in @symbols)
             {
@@ -135,7 +153,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
                     tokensForReplacement.First().StartIndex
                     );
 
-                replacements.Add((propEx, tokensForReplacement.Cast<ExpressionToken>().ToList()));
+                replacements.Add((propEx, tokensForReplacement.Cast<FilterExpressionToken>().ToList()));
             }
 
             var ret = tokens.ToList();
@@ -160,7 +178,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
         /// </summary>
         /// <param name="tokens"></param>
         /// <returns></returns>
-        private static List<ExpressionToken> ReplaceBinaryOperatorTokens(List<ExpressionToken> tokens)
+        private static List<FilterExpressionToken> ReplaceBinaryOperatorTokens(List<FilterExpressionToken> tokens)
         {
             List<List<PrimitiveExpressionToken>> symbolGroups = new List<List<PrimitiveExpressionToken>>();
 
@@ -217,7 +235,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
         /// </summary>
         /// <param name="tokens">tokens input</param>
         /// <returns>tokens</returns>
-        private static List<ExpressionToken> ReplaceGroupTokens(List<ExpressionToken> tokens)
+        private static List<FilterExpressionToken> ReplaceGroupTokens(List<FilterExpressionToken> tokens)
         {
             List<SymbolToken> openClosed = tokens.Where(x => x is PrimitiveExpressionToken pet && (pet.Token.IsSymbolToken('(') || pet.Token.IsSymbolToken(')')))
                 .Cast<PrimitiveExpressionToken>()
@@ -240,7 +258,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
                 return tokens;
             }
 
-            List<ExpressionToken> ret = tokens.ToList();
+            List<FilterExpressionToken> ret = tokens.ToList();
             Stack<int> groupIds = new Stack<int>();
 
             for (int i = 0; i < ret.Count; i++)
@@ -250,7 +268,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
                     if (pet.Token.IsSymbolToken('('))
                     {
                         groupIds.Push(i);
-                        ret[i] = new OpenGroupToken(pet.Token.CastToSymbolToken(), i);
+                        ret[i] = new OpenGroupToken(pet.Token.CastToSymbolToken(), i, groupIds.Count);
                     }
                     else if (pet.Token.IsSymbolToken(')'))
                     {
@@ -262,14 +280,14 @@ namespace JsonPathway.Internal.FilterExpressionTokens
             return ret;
         }
 
-        private static List<ExpressionToken> ReplaceMethodCallsTokens(List<ExpressionToken> tokens)
+        private static List<FilterExpressionToken> ReplaceMethodCallsTokens(List<FilterExpressionToken> tokens)
         {
             tokens = ReplaceMethodCallsOnProps(tokens);
             tokens = ReplaceMethodCallsOnConstants(tokens);
             return ReplaceMethodCallsOnMethods(tokens);
         }
 
-        private static List<ExpressionToken> ReplaceMethodCallsOnProps(List<ExpressionToken> tokens)
+        private static List<FilterExpressionToken> ReplaceMethodCallsOnProps(List<FilterExpressionToken> tokens)
         {
             List<PropertyExpressionToken> propTokens = tokens.Where(x => x is PropertyExpressionToken).Cast<PropertyExpressionToken>().ToList();
             var ret = tokens.ToList();
@@ -285,7 +303,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
                     int openIndex = ret.IndexOf(open);
                     int closeIndex = ret.IndexOf(close);
 
-                    List<ExpressionToken> args = new List<ExpressionToken>();
+                    List<FilterExpressionToken> args = new List<FilterExpressionToken>();
                     for (int i = openIndex + 1; i < closeIndex; i++)
                     {
                         args.Add(ret[i]);
@@ -298,7 +316,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
 
                     ret[ptIndex] = new MethodCallExpressionToken(allButLast, methodName, args.ToArray());
 
-                    List<ExpressionToken> toRemove = new List<ExpressionToken>();
+                    List<FilterExpressionToken> toRemove = new List<FilterExpressionToken>();
 
                     for (int i = ptIndex + 1; i <= closeIndex; i++)
                     {
@@ -310,9 +328,9 @@ namespace JsonPathway.Internal.FilterExpressionTokens
             return ret.Where(x => x != null).ToList();
         }
 
-        private static List<ExpressionToken> ReplaceMethodCallsOnConstants(List<ExpressionToken> tokens)
+        private static List<FilterExpressionToken> ReplaceMethodCallsOnConstants(List<FilterExpressionToken> tokens)
         {
-            List<ExpressionToken> ret = tokens.ToList();
+            List<FilterExpressionToken> ret = tokens.ToList();
 
             foreach (ConstantBaseExpressionToken ct in tokens.Where(x => x is ConstantBaseExpressionToken))
             {
@@ -327,7 +345,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
 
                     var methodName = (ret[index + 2] as PrimitiveExpressionToken).Token.CastToPropertyToken().StringValue;
 
-                    var args = new List<ExpressionToken>();
+                    var args = new List<FilterExpressionToken>();
 
                     int closeIndex = ret.IndexOf(close);
                     for (int i = index + 4; i < closeIndex; i++)
@@ -348,7 +366,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
             return ret.Where(x => x != null).ToList();
         }
 
-        private static List<ExpressionToken> ReplaceMethodCallsOnMethods(List<ExpressionToken> tokens)
+        private static List<FilterExpressionToken> ReplaceMethodCallsOnMethods(List<FilterExpressionToken> tokens)
         {
             int callCount = 0;
             int replacedCount;
@@ -362,7 +380,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
             return tokens;
         }
 
-        private static List<ExpressionToken> ReplaceMethodCallsOnMethodsInner(List<ExpressionToken> tokens, ref int callCount, out int replacedCount)
+        private static List<FilterExpressionToken> ReplaceMethodCallsOnMethodsInner(List<FilterExpressionToken> tokens, ref int callCount, out int replacedCount)
         {
             callCount++;
             replacedCount = 0;
@@ -373,7 +391,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
                     "Number of calls to ReplaceMethodCallsOnMethodsInner exceeded max expected number of 10000, possible stack overflow or infinite loop.");
             }
 
-            List<ExpressionToken> ret = tokens.ToList();
+            List<FilterExpressionToken> ret = tokens.ToList();
 
             foreach (MethodCallExpressionToken mc in tokens.Where(x => x is MethodCallExpressionToken))
             {
@@ -388,7 +406,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
 
                     var methodName = (ret[index + 2] as PrimitiveExpressionToken).Token.CastToPropertyToken().StringValue;
 
-                    var args = new List<ExpressionToken>();
+                    var args = new List<FilterExpressionToken>();
 
                     int closeIndex = ret.IndexOf(close);
                     for (int i = index + 4; i < closeIndex; i++)
@@ -411,12 +429,12 @@ namespace JsonPathway.Internal.FilterExpressionTokens
             return ret.Where(x => x != null).ToList();
         }
 
-        private static List<ExpressionToken> FormatAndValidateMethodArgumentTokens(List<ExpressionToken> tokens)
+        private static List<FilterExpressionToken> FormatAndValidateMethodArgumentTokens(List<FilterExpressionToken> tokens)
         {
             if (tokens.Count == 0) return tokens;
 
-            bool IsComma(ExpressionToken t) => t is PrimitiveExpressionToken pt && pt.Token.IsSymbolToken(',');
-            bool IsPartOfGroup(ExpressionToken t)
+            bool IsComma(FilterExpressionToken t) => t is PrimitiveExpressionToken pt && pt.Token.IsSymbolToken(',');
+            bool IsPartOfGroup(FilterExpressionToken t)
             {
                 int index = tokens.IndexOf(t);
                 List<int> openGroups = new List<int>();
@@ -435,7 +453,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
 
                 return openGroups.Any();
             }
-            SymbolToken GetComma(ExpressionToken t) => (t as PrimitiveExpressionToken).Token.CastToSymbolToken();
+            SymbolToken GetComma(FilterExpressionToken t) => (t as PrimitiveExpressionToken).Token.CastToSymbolToken();
 
             if (IsComma(tokens.First()))
             {
@@ -454,14 +472,14 @@ namespace JsonPathway.Internal.FilterExpressionTokens
                 }
             }
 
-            var groups = new List<List<ExpressionToken>>();
-            groups.Add(new List<ExpressionToken>());
+            var groups = new List<List<FilterExpressionToken>>();
+            groups.Add(new List<FilterExpressionToken>());
             
             foreach (var token in tokens)
             {
                 if (IsComma(token) && !IsPartOfGroup(token))
                 {
-                    groups.Add(new List<ExpressionToken>());
+                    groups.Add(new List<FilterExpressionToken>());
                 }
                 else
                 {
@@ -471,7 +489,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
 
             groups = groups.Where(x => x.Count > 0).ToList();
 
-            List<ExpressionToken> ret = new List<ExpressionToken>();
+            List<FilterExpressionToken> ret = new List<FilterExpressionToken>();
 
             foreach (var g in groups)
             {
@@ -486,7 +504,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
             return ret;
         }
 
-        private static List<ExpressionToken> ReplaceNegationTokens(List<ExpressionToken> tokens)
+        private static List<FilterExpressionToken> ReplaceNegationTokens(List<FilterExpressionToken> tokens)
         {
             var ret = tokens.ToList();
 
@@ -501,52 +519,14 @@ namespace JsonPathway.Internal.FilterExpressionTokens
             return ret;
         }
 
-        //internal static List<ExpressionToken> TokenizeInnerTokens(List<ExpressionToken> tokens)
-        //{
-        //    int callCount = 0;
-        //    return TokenizeInnerTokens(tokens, ref callCount);
-        //}
-
-        //internal static List<ExpressionToken> TokenizeInnerTokens(List<ExpressionToken> tokens, ref int numberOfCalls)
-        //{
-        //    numberOfCalls++;
-
-        //    if (numberOfCalls > 10 * 1000)
-        //    {
-        //        throw new InternalJsonPathwayException(
-        //            "Number of calls to TokenizeInnerTokens exceeded max expected number of 10000, possible stack overflow or infinite loop.");
-        //    }
-
-        //    var ret = tokens.ToList();
-
-        //    foreach (MethodCallExpressionToken t in ret.Where(x => x is MethodCallExpressionToken))
-        //    {
-        //        ExpressionToken[] inner = t.Arguments;
-        //        if (inner.Any())
-        //        {
-        //            var replacement1 = Tokenize(inner);
-        //            t.ReplaceArgumentTokens(replacement1);
-        //        }
-
-        //        var calleeMethod = t.CalledOnExpression as MethodCallExpressionToken;
-        //        if (calleeMethod != null && calleeMethod.Arguments.Any())
-        //        {
-        //            var replacement2 = Tokenize(calleeMethod.Arguments);
-        //            calleeMethod.ReplaceArgumentTokens(replacement2);
-        //        }
-        //    }
-
-        //    return ret;
-        //}
-
-        private static void EnsureTokensAreValid(IEnumerable<ExpressionToken> tokens)
+        private static void EnsureTokensAreValid(IEnumerable<FilterExpressionToken> tokens)
         {
             int callCount = 0;
             EnsureTokensAreValidInner(tokens, ref callCount);
             EnsureMethodArgumentsAreValid(tokens);
         }
 
-        private static void EnsureTokensAreValidInner(IEnumerable<ExpressionToken> tokens, ref int numberOfCalls)
+        private static void EnsureTokensAreValidInner(IEnumerable<FilterExpressionToken> tokens, ref int numberOfCalls)
         {
             numberOfCalls++;
 
@@ -578,13 +558,13 @@ namespace JsonPathway.Internal.FilterExpressionTokens
 
         }
 
-        private static void EnsureMethodArgumentsAreValid(IEnumerable<ExpressionToken> tokens)
+        private static void EnsureMethodArgumentsAreValid(IEnumerable<FilterExpressionToken> tokens)
         {
             int callCount = 0;
             EnsureMethodArgumentsAreValid(tokens, ref callCount);
         }
 
-        private static void EnsureMethodArgumentsAreValid(IEnumerable<ExpressionToken> tokens, ref int callCount)
+        private static void EnsureMethodArgumentsAreValid(IEnumerable<FilterExpressionToken> tokens, ref int callCount)
         {
             callCount++;
 

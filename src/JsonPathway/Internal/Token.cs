@@ -44,6 +44,7 @@ namespace JsonPathway.Internal
         public ChildPropertiesToken CastToChildPropertiesToken() => (ChildPropertiesToken)this;
         public RecursivePropertiesToken CastToRecursivePropertiesToken() => (RecursivePropertiesToken)this;
         public ArrayElementsToken CastToArrayElementsToken() => (ArrayElementsToken)this;
+        public AllArrayElementsToken CastToAllArrayElementsToken() => (AllArrayElementsToken)this;
     }
 
     public abstract class MultiCharToken: Token

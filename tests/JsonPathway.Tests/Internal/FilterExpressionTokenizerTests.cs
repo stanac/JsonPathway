@@ -1,4 +1,4 @@
-﻿using JsonPathway.Internal.FilterExpressionTokens;
+﻿using JsonPathway.Internal.Filters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -13,7 +13,7 @@ namespace JsonPathway.Tests.Internal
         {
             string input = "@.price >= 0 && (@.name.first.contains('a') || @['name'].contains(5) || !@.f)";
 
-            IReadOnlyList<ExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
+            IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
 
             Assert.Equal(12, tokens.Count);
 
@@ -41,7 +41,7 @@ namespace JsonPathway.Tests.Internal
         public void ExpressionWithMethodCallOnStringConstant_ReturnsValidTokens()
         {
             string input = "'a'.ToUpper() == 'A'";
-            IReadOnlyList<ExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
+            IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
 
             Assert.Equal(3, tokens.Count);
             Assert.IsType<MethodCallExpressionToken>(tokens[0]);
@@ -59,7 +59,7 @@ namespace JsonPathway.Tests.Internal
         public void ExpressionWithMethodCallOnNonRoot_HasNonEmptyPropertyChain()
         {
             var input = "@.a.Something()";
-            IReadOnlyList<ExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
+            IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
 
             Assert.Single(tokens);
             Assert.IsType<MethodCallExpressionToken>(tokens.Single());
@@ -77,7 +77,7 @@ namespace JsonPathway.Tests.Internal
         public void ExpressionWithMethodCallOnRoot_HasEmptyPropertyChain()
         {
             var input = "@.Something()";
-            IReadOnlyList<ExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
+            IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
 
             Assert.Single(tokens);
             Assert.IsType<MethodCallExpressionToken>(tokens.Single());
@@ -94,7 +94,7 @@ namespace JsonPathway.Tests.Internal
         public void ExpressionWithMethodCallWithMultipleArguments_ReturnsValidTokens()
         {
             string input = "'a'.ToUpper('abc', 123, true, @.CallingMethod())";
-            IReadOnlyList<ExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
+            IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
 
             Assert.Single(tokens);
             Assert.IsType<MethodCallExpressionToken>(tokens.Single());
@@ -133,7 +133,7 @@ namespace JsonPathway.Tests.Internal
         public void ExpressionMethodCallWithMultipleArgs_ReturnsCorrectTokens()
         {
             string input = "'a'.ToUpper0('abc', true, false)";
-            IReadOnlyList<ExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
+            IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
             Assert.Equal(3, (tokens.Single() as MethodCallExpressionToken).Arguments.Length);
             
             input = "'a'.ToUpper0('abc', true, false, 1, 2, 3.3, 4)";
@@ -145,7 +145,7 @@ namespace JsonPathway.Tests.Internal
         public void ExpressionWithChainedMethodCalls_ReturnValidToken()
         {
             string input = "'a'.ToUpper0().ToUpper1(1).ToUpper2(7, 9.12).ToUpper3('abc', true, false, false, 'A') == \"A\"";
-            IReadOnlyList<ExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
+            IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
 
             Assert.Equal(3, tokens.Count);
             Assert.IsType<MethodCallExpressionToken>(tokens.First());
@@ -182,7 +182,7 @@ namespace JsonPathway.Tests.Internal
         {
             string input = "@.a.c.Call1(@.call2(123, false).call3(), true)";
 
-            IReadOnlyList<ExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
+            IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
 
             Assert.Single(tokens);
             Assert.IsType<MethodCallExpressionToken>(tokens.Single());
@@ -220,7 +220,7 @@ namespace JsonPathway.Tests.Internal
         {
             string input = "@.call(@.a.SubString(@.a.b.GetLength(@.a.c.Something())))";
 
-            IReadOnlyList<ExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
+            IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
 
             Assert.Single(tokens);
             Assert.IsType<MethodCallExpressionToken>(tokens[0]);
@@ -272,6 +272,15 @@ namespace JsonPathway.Tests.Internal
             {
                 Assert.IsType(tokenTypes[i], tokens[i]);
             }
+        }
+
+        [Fact]
+        public void ExpressionWithArrayAccess_ReturnsValidTokens()
+        {
+            string input = "@.a[0, 1, 2] > 1 || @.b[2:90:3]";
+            var tokens = FilterExpressionTokenizer.Tokenize(input);
+
+            continue here
         }
     }
 }

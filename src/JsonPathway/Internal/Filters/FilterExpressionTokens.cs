@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace JsonPathway.Internal.FilterExpressionTokens
+namespace JsonPathway.Internal.Filters
 {
-    public abstract class ExpressionToken
+    public abstract class FilterExpressionToken
     {
         public override string ToString() => GetType().Name + ": ";
         public abstract int StartIndex { get; }
     }
 
-    public class PrimitiveExpressionToken: ExpressionToken
+    public class PrimitiveExpressionToken: FilterExpressionToken
     {
         public PrimitiveExpressionToken(Token token)
         {
@@ -24,23 +24,25 @@ namespace JsonPathway.Internal.FilterExpressionTokens
         public override string ToString() => base.ToString() + Token;
     }
 
-    public class OpenGroupToken: ExpressionToken
+    public class OpenGroupToken: FilterExpressionToken
     {
-        public OpenGroupToken(SymbolToken token, int groupId)
+        public OpenGroupToken(SymbolToken token, int groupId, int deptLevel)
         {
             Token = token ?? throw new ArgumentNullException(nameof(token));
             GroupId = groupId;
+            DeptLevel = DeptLevel;
         }
 
         public override int StartIndex => Token.StartIndex;
 
         public SymbolToken Token { get; }
         public int GroupId { get; }
+        public int DeptLevel { get; }
 
         public override string ToString() => base.ToString() + $"{Token} group id: {GroupId}";
     }
 
-    public class CloseGroupToken : ExpressionToken
+    public class CloseGroupToken : FilterExpressionToken
     {
         public CloseGroupToken(SymbolToken token, int groupId)
         {
@@ -56,7 +58,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
         public override string ToString() => base.ToString() + $"{Token} group id: {GroupId}";
     }
 
-    public class PropertyExpressionToken: ExpressionToken
+    public class PropertyExpressionToken: FilterExpressionToken
     {
         public PropertyToken[] PropertyChain { get; }
 
@@ -79,7 +81,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
         }
     }
 
-    public class NegationExpressionToken: ExpressionToken
+    public class NegationExpressionToken: FilterExpressionToken
     {
         public NegationExpressionToken(SymbolToken token)
         {
@@ -93,7 +95,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
         public SymbolToken Token { get; }
     }
 
-    public abstract class OperatorExpressionToken : ExpressionToken
+    public abstract class OperatorExpressionToken : FilterExpressionToken
     {
         public SymbolToken[] Tokens { get; private set; }
         public string StringValue { get; private set; }
@@ -165,7 +167,7 @@ namespace JsonPathway.Internal.FilterExpressionTokens
 
     }
 
-    public abstract class ConstantBaseExpressionToken: ExpressionToken
+    public abstract class ConstantBaseExpressionToken: FilterExpressionToken
     {
         public string StringValue { get; }
 
@@ -220,9 +222,9 @@ namespace JsonPathway.Internal.FilterExpressionTokens
         public override string ToString() => base.ToString() + Token.StringValue;
     }
 
-    public class MethodCallExpressionToken: ExpressionToken
+    public class MethodCallExpressionToken: FilterExpressionToken
     {
-        public MethodCallExpressionToken(ExpressionToken property, string methodName, ExpressionToken[] arguments)
+        public MethodCallExpressionToken(FilterExpressionToken property, string methodName, FilterExpressionToken[] arguments)
         {
             if (string.IsNullOrWhiteSpace(methodName))
             {
@@ -234,18 +236,47 @@ namespace JsonPathway.Internal.FilterExpressionTokens
             Arguments = arguments ?? throw new ArgumentNullException(nameof(arguments));
         }
 
-        public ExpressionToken CalledOnExpression { get; }
+        public FilterExpressionToken CalledOnExpression { get; }
         public string MethodName { get; }
-        public ExpressionToken[] Arguments { get; private set; }
+        public FilterExpressionToken[] Arguments { get; private set; }
         
         public override int StartIndex => CalledOnExpression.StartIndex;
 
-        public void ReplaceArgumentTokens(IEnumerable<ExpressionToken> tokens)
+        public void ReplaceArgumentTokens(IEnumerable<FilterExpressionToken> tokens)
         {
             Arguments = tokens.ToArray();
         }
 
         public override string ToString() => base.ToString() + $"{CalledOnExpression} {MethodName} "
             + string.Join(", ", Arguments.Select(x => x.ToString()));
+    }
+
+    public class ArrayAccessExpressionToken: FilterExpressionToken
+    {
+        public bool IsAllArrayElemets { get; }
+        public int? SliceStart { get; }
+        public int? SliceEnd { get; }
+        public int? SliceStep { get; }
+        public int[] ExactElementsAccess { get; }
+
+        public override int StartIndex { get; }
+
+        public ArrayAccessExpressionToken(AllArrayElementsToken token)
+        {
+            if (token is null) throw new ArgumentNullException(nameof(token));
+            IsAllArrayElemets = true;
+            StartIndex = token.StartIndex;
+        }
+
+        public ArrayAccessExpressionToken(ArrayElementsToken token)
+        {
+            if (token == null) throw new ArgumentNullException(nameof(token));
+
+            SliceStart = token.SliceStart;
+            SliceEnd = token.SliceEnd;
+            SliceStep = token.SliceStep;
+            ExactElementsAccess = token.ExactElementsAccess;
+            StartIndex = token.StartIndex;
+        }
     }
 }

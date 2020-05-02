@@ -1,5 +1,5 @@
 ﻿using JsonPathway.Internal;
-using JsonPathway.Internal.FilterExpressionTokens;
+using JsonPathway.Internal.Filters;
 using System;
 
 namespace JsonPathway
@@ -167,7 +167,7 @@ namespace JsonPathway
         {
         }
 
-        public UnexpectedTokenException(ExpressionToken token)
+        public UnexpectedTokenException(FilterExpressionToken token)
             : this(token, "")
         {
         }
@@ -177,7 +177,7 @@ namespace JsonPathway
         {
         }
 
-        public UnexpectedTokenException(ExpressionToken token, string message)
+        public UnexpectedTokenException(FilterExpressionToken token, string message)
             : this($"Unexpected {token}. {message}")
         {
         }
