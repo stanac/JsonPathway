@@ -16,24 +16,15 @@ namespace JsonPathway.Internal.Filters
                 .Cast<FilterSubExpression>()
                 .ToList();
 
-            return Parse(expressions);
+            var expr = Parse(expressions);
+            expr.ReplaceTruthyExpressions();
+
+            return expr;
         }
 
         public static FilterSubExpression Parse(List<FilterSubExpression> exprs)
         {
-            if (exprs.Count == 1)
-            {
-                if (exprs[0] is PropertyFilterSubExpression pf)
-                {
-                    return new TruthyFilterSubExpression(pf);
-                }
-
-                // todo: add support for truthy array
-            }
-
             int callCount = 0;
-
-
 
             while (exprs.Any(x => x.IsPrimitive()) || exprs.Count != 1)
             {
@@ -199,12 +190,6 @@ namespace JsonPathway.Internal.Filters
         }
 
         private static List<FilterSubExpression> ReplaceNegationExpressions(List<FilterSubExpression> exprs)
-        {
-            // todo: implement
-            return exprs;
-        }
-
-        private static List<FilterSubExpression> ReplaceTruthyExpressions(List<FilterSubExpression> exprs)
         {
             // todo: implement
             return exprs;

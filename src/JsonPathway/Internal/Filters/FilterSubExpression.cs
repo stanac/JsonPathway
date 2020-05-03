@@ -15,6 +15,8 @@ namespace JsonPathway.Internal.Filters
         public T AsPrimitive<T>() where T : FilterExpressionToken => (this as PrimitiveFilterSubExpression)?.Token as T;
 
         public override string ToString() => GetType().Name + ": ";
+
+        public abstract void ReplaceTruthyExpressions();
     }
 
     internal class PrimitiveFilterSubExpression: FilterSubExpression
@@ -29,6 +31,11 @@ namespace JsonPathway.Internal.Filters
         }
 
         public override string ToString() => base.ToString() + Token;
+
+        public override void ReplaceTruthyExpressions()
+        {
+            // do nothing
+        }
     }
 
     internal class GroupFilterSubExpression: FilterSubExpression
@@ -37,12 +44,17 @@ namespace JsonPathway.Internal.Filters
 
         public GroupFilterSubExpression(FilterSubExpression expression)
         {
-            Expression = expression ?? throw new System.ArgumentNullException(nameof(expression));
+            Expression = expression ?? throw new ArgumentNullException(nameof(expression));
         }
 
         public GroupFilterSubExpression(List<FilterSubExpression> expressions)
         {
             Expression = FilterParser.Parse(expressions);
+        }
+
+        public override void ReplaceTruthyExpressions()
+        {
+            Expression.ReplaceTruthyExpressions();
         }
     }
 
@@ -60,14 +72,19 @@ namespace JsonPathway.Internal.Filters
         {
 
         }
+
+        public override void ReplaceTruthyExpressions()
+        {
+            Expression.ReplaceTruthyExpressions();
+        }
     }
 
     internal class LogicalFilterSubExpression: FilterSubExpression
     {
         public bool IsAnd { get; }
         public bool IsOr { get; }
-        public FilterSubExpression LeftSide { get; }
-        public FilterSubExpression RightSide { get; }
+        public FilterSubExpression LeftSide { get; private set; }
+        public FilterSubExpression RightSide { get; private set; }
 
         public LogicalFilterSubExpression(bool isAnd, FilterSubExpression leftSide, FilterSubExpression rightSide)
         {
@@ -82,6 +99,27 @@ namespace JsonPathway.Internal.Filters
             : this (isAnd, FilterParser.Parse(exprLeft), FilterParser.Parse(exprRight))
         {
         }
+
+        public override void ReplaceTruthyExpressions()
+        {
+            if (LeftSide is PropertyFilterSubExpression p1)
+            {
+                LeftSide = new TruthyFilterSubExpression(p1);
+            }
+            else
+            {
+                LeftSide.ReplaceTruthyExpressions();
+            }
+
+            if (RightSide is PropertyFilterSubExpression p2)
+            {
+                RightSide = new TruthyFilterSubExpression(p2);
+            }
+            else
+            {
+                RightSide.ReplaceTruthyExpressions();
+            }
+        }
     }
 
     internal class ComparisonFilterSubExpression: FilterSubExpression
@@ -92,8 +130,8 @@ namespace JsonPathway.Internal.Filters
         public bool IsLessOrEqual { get; }
         public bool IsEqual { get; }
         public bool IsNotEqual { get; }
-        public FilterSubExpression LeftSide { get; }
-        public FilterSubExpression RightSide { get; }
+        public FilterSubExpression LeftSide { get; set; }
+        public FilterSubExpression RightSide { get; set; }
 
         public ComparisonFilterSubExpression(string oper, FilterSubExpression left, FilterSubExpression right)
         {
@@ -121,6 +159,12 @@ namespace JsonPathway.Internal.Filters
         {
 
         }
+
+        public override void ReplaceTruthyExpressions()
+        {
+            // do nothing
+        }
+
     }
 
     internal class PropertyFilterSubExpression: FilterSubExpression
@@ -130,6 +174,11 @@ namespace JsonPathway.Internal.Filters
         public PropertyFilterSubExpression(PropertyExpressionToken token)
         {
             PropertyChain = token?.PropertyChain?.Select(x => x.StringValue)?.ToArray() ?? throw new ArgumentNullException(nameof(token));
+        }
+
+        public override void ReplaceTruthyExpressions()
+        {
+            // do nothing
         }
     }
 
@@ -155,6 +204,11 @@ namespace JsonPathway.Internal.Filters
         }
 
         // todo: add support for arrays
+
+        public override void ReplaceTruthyExpressions()
+        {
+            // do nothing
+        }
     }
 
     internal class MethodCallFilterSubExpression : FilterSubExpression
@@ -179,6 +233,14 @@ namespace JsonPathway.Internal.Filters
 
             Arguments = args;
         }
+
+        public override void ReplaceTruthyExpressions()
+        {
+            foreach (var a in Arguments)
+            {
+                a.ReplaceTruthyExpressions();
+            }
+        }
     }
 
     internal abstract class ConstantBaseFilterSubExpression: FilterSubExpression
@@ -194,6 +256,11 @@ namespace JsonPathway.Internal.Filters
             if (token is ConstantNumberExpressionToken n) return new NumberConstantFilterSubExpression(n.Token.NumberValue);
 
             throw new IndexOutOfRangeException("Unrecognized type: " + token.GetType().Name);
+        }
+
+        public override void ReplaceTruthyExpressions()
+        {
+            // do nothing
         }
     }
 
