@@ -23,10 +23,10 @@ namespace JsonPathway.Internal.Filters
         public static IReadOnlyList<FilterExpressionToken> Tokenize(IReadOnlyList<FilterExpressionToken> tokens)
         {
             var expressionTokens = ReplaceConstantExpressionTokens(tokens.ToList());
-            expressionTokens = ReplaceArrayExpressionTokens(expressionTokens);
             expressionTokens = ReplacePropertyTokens(expressionTokens);
             expressionTokens = ReplaceGroupTokens(expressionTokens);
             expressionTokens = ReplaceMethodCallsTokens(expressionTokens);
+            expressionTokens = ReplaceArrayExpressionTokens(expressionTokens);
             expressionTokens = ReplaceBinaryOperatorTokens(expressionTokens);
             expressionTokens = ReplaceNegationTokens(expressionTokens);
             
@@ -38,18 +38,24 @@ namespace JsonPathway.Internal.Filters
         {
             var ret = tokens.ToList();
 
-            for (int i = 0; i < ret.Count; i++)
+            for (int i = 1; i < ret.Count; i++)
             {
                 if (ret[i] is PrimitiveExpressionToken pet)
                 {
                     if (pet.Token.IsArrayElementToken())
-                        ret[i] = new ArrayAccessExpressionToken(pet.Token.CastToArrayElementsToken());
+                    {
+                        ret[i] = new ArrayAccessExpressionToken(ret[i - 1], pet.Token.CastToArrayElementsToken());
+                        ret[i - 1] = null;
+                    }
                     else if (pet.Token.IsAllArrayElementsToken())
-                        ret[i] = new ArrayAccessExpressionToken(pet.Token.CastToAllArrayElementsToken());
+                    {
+                        ret[i] = new ArrayAccessExpressionToken(ret[i - 1], pet.Token.CastToAllArrayElementsToken());
+                        ret[i - 1] = null;
+                    }
                 }
             }
 
-            return ret;
+            return ret.Where(x => x != null).ToList();
         }
 
         /// <summary>

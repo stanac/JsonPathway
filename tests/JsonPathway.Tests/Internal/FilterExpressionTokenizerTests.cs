@@ -278,9 +278,20 @@ namespace JsonPathway.Tests.Internal
         public void ExpressionWithArrayAccess_ReturnsValidTokens()
         {
             string input = "@.a[0, 1, 2] > 1 || @.b[2:90:3]";
-            var tokens = FilterExpressionTokenizer.Tokenize(input);
+            IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
 
-            continue here
+            Assert.Equal(5, tokens.Count);
+
+            Assert.IsType<ArrayAccessExpressionToken>(tokens[0]);
+            var aa1 = tokens[0] as ArrayAccessExpressionToken;
+            Assert.IsType<PropertyExpressionToken>(aa1.ExecutedOn);
+            Assert.Equal("a", (aa1.ExecutedOn as PropertyExpressionToken).PropertyChain.Single().StringValue);
+            Assert.Equal("0,1,2", aa1.GetIndexValues());
+
+            Assert.IsType<ArrayAccessExpressionToken>(tokens.Last());
+            var aa2 = tokens.Last() as ArrayAccessExpressionToken;
+            Assert.Equal("b", (aa2.ExecutedOn as PropertyExpressionToken).PropertyChain.Single().StringValue);
+            Assert.Equal("2:90:3", aa2.GetIndexValues());
         }
     }
 }

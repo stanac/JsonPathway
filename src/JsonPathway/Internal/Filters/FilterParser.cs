@@ -23,18 +23,17 @@ namespace JsonPathway.Internal.Filters
         {
             if (exprs.Count == 1)
             {
-                if (!exprs[0].IsPrimitive())
+                if (exprs[0] is PropertyFilterSubExpression pf)
                 {
-                    return exprs[0];
+                    return new TruthyFilterSubExpression(pf);
                 }
 
-                // if (exprs[0].IsPrimitive<ArrayElementsToken>())
-                // {
-                // 
-                // }
+                // todo: add support for truthy array
             }
 
             int callCount = 0;
+
+
 
             while (exprs.Any(x => x.IsPrimitive()) || exprs.Count != 1)
             {
@@ -51,14 +50,17 @@ namespace JsonPathway.Internal.Filters
             callCount++;
             if (callCount > 5 * 1000) throw new InternalJsonPathwayException("FilterParser.ParseInner call count exceeded max allowed number of calls");
 
+            exprs = ReplaceConstantAndPropsAndMethodsExpressions(exprs);
+
             bool groupParsed;
             do
             {
                 exprs = ParseTopGroup(exprs, out groupParsed);
             }
-            while (groupParsed && false);
+            while (groupParsed);
 
             exprs = ParseLogicalExpressions(exprs);
+            exprs = ParseComparisonExpressions(exprs);
 
             while (exprs.Any(x => x.IsPrimitive()))
             {
@@ -105,7 +107,7 @@ namespace JsonPathway.Internal.Filters
             return ret.Where(x => x != null).ToList();
         }
 
-        public static List<FilterSubExpression> ParseLogicalExpressions(List<FilterSubExpression> exprs)
+        private static List<FilterSubExpression> ParseLogicalExpressions(List<FilterSubExpression> exprs)
         {
             List<FilterSubExpression> leftSide = new List<FilterSubExpression>();
 
@@ -136,7 +138,7 @@ namespace JsonPathway.Internal.Filters
             return exprs;
         }
 
-        public static List<FilterSubExpression> ParseComparisonExpressions(List<FilterSubExpression> exprs)
+        private static List<FilterSubExpression> ParseComparisonExpressions(List<FilterSubExpression> exprs)
         {
             List<FilterSubExpression> leftSide = new List<FilterSubExpression>();
 
@@ -164,6 +166,47 @@ namespace JsonPathway.Internal.Filters
                 }
             }
 
+            return exprs;
+        }
+
+        private static List<FilterSubExpression> ReplaceConstantAndPropsAndMethodsExpressions(List<FilterSubExpression> exprs)
+        {
+            var ret = exprs.ToList();
+
+            for (int i = 0; i < ret.Count; i++)
+            {
+                if (ret[i].IsPrimitive<ConstantBaseExpressionToken>())
+                {
+                    ret[i] = ConstantBaseFilterSubExpression.Create(ret[i].AsPrimitive<ConstantBaseExpressionToken>());
+                }
+                else if (ret[i].IsPrimitive<PropertyExpressionToken>())
+                {
+                    ret[i] = new PropertyFilterSubExpression(ret[i].AsPrimitive<PropertyExpressionToken>());
+                }
+                else if (ret[i].IsPrimitive<MethodCallExpressionToken>())
+                {
+                    ret[i] = new MethodCallFilterSubExpression(ret[i].AsPrimitive<MethodCallExpressionToken>());
+                }
+            }
+
+            return ret;
+        }
+
+        private static List<FilterSubExpression> ReplaceArrayExpressions(List<FilterSubExpression> exprs)
+        {
+            // todo: implement
+            return exprs;
+        }
+
+        private static List<FilterSubExpression> ReplaceNegationExpressions(List<FilterSubExpression> exprs)
+        {
+            // todo: implement
+            return exprs;
+        }
+
+        private static List<FilterSubExpression> ReplaceTruthyExpressions(List<FilterSubExpression> exprs)
+        {
+            // todo: implement
             return exprs;
         }
     }

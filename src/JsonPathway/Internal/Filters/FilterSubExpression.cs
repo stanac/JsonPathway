@@ -123,6 +123,16 @@ namespace JsonPathway.Internal.Filters
         }
     }
 
+    internal class PropertyFilterSubExpression: FilterSubExpression
+    {
+        public string[] PropertyChain { get; }
+
+        public PropertyFilterSubExpression(PropertyExpressionToken token)
+        {
+            PropertyChain = token?.PropertyChain?.Select(x => x.StringValue)?.ToArray() ?? throw new ArgumentNullException(nameof(token));
+        }
+    }
+
     internal class TruthyFilterSubExpression : FilterSubExpression
     {
         public string[] PropertyChain { get; }
@@ -131,6 +141,12 @@ namespace JsonPathway.Internal.Filters
         public int? ArraySliceEnd { get; }
         public int? ArraySliceStep { get; }
 
+        public TruthyFilterSubExpression(PropertyFilterSubExpression expr)
+        {
+            if (expr == null) throw new ArgumentNullException(nameof(expr));
+            PropertyChain = expr.PropertyChain;
+        }
+
         public TruthyFilterSubExpression(PropertyExpressionToken token)
         {
             if (token is null) throw new ArgumentNullException(nameof(token));
@@ -138,14 +154,76 @@ namespace JsonPathway.Internal.Filters
             PropertyChain = token.PropertyChain.Select(x => x.StringValue).ToArray();
         }
 
-        public TruthyFilterSubExpression(ArrayElementsToken token)
+        // todo: add support for arrays
+    }
+
+    internal class MethodCallFilterSubExpression : FilterSubExpression
+    {
+        public FilterSubExpression CalledOnExpression { get; }
+        public string MethodName { get; }
+        public IReadOnlyList<FilterSubExpression> Arguments { get; }
+
+        public MethodCallFilterSubExpression(MethodCallExpressionToken token)
+        {
+            if (token == null) throw new ArgumentNullException(nameof(token));
+
+            CalledOnExpression = FilterParser.Parse(new List<FilterExpressionToken> { token.CalledOnExpression });
+            MethodName = token.MethodName;
+
+            List<FilterSubExpression> args = new List<FilterSubExpression>();
+
+            foreach (var a in token.Arguments)
+            {
+                args.Add(FilterParser.Parse(new List<FilterExpressionToken> { a }));
+            }
+
+            Arguments = args;
+        }
+    }
+
+    internal abstract class ConstantBaseFilterSubExpression: FilterSubExpression
+    {
+        public static ConstantBaseFilterSubExpression Create(ConstantBaseExpressionToken token)
         {
             if (token is null) throw new ArgumentNullException(nameof(token));
 
-            ArrayExactElementsAccess = token.ExactElementsAccess;
-            ArraySliceStart = token.SliceStart;
-            ArraySliceEnd = token.SliceEnd;
-            ArraySliceStep = token.SliceStep;
+            if (token is ConstantBoolExpressionToken b) return new BooleanConstantFilterSubExpression(b.Token.BoolValue);
+
+            if (token is ConstantStringExpressionToken s) return new StringConstantFilterSubExpression(s.StringValue);
+
+            if (token is ConstantNumberExpressionToken n) return new NumberConstantFilterSubExpression(n.Token.NumberValue);
+
+            throw new IndexOutOfRangeException("Unrecognized type: " + token.GetType().Name);
         }
+    }
+
+    internal class NumberConstantFilterSubExpression: ConstantBaseFilterSubExpression
+    {
+        public NumberConstantFilterSubExpression(double value)
+        {
+            Value = value;
+        }
+
+        public double Value { get; }
+    }
+
+    internal class BooleanConstantFilterSubExpression: ConstantBaseFilterSubExpression
+    {
+        public BooleanConstantFilterSubExpression(bool value)
+        {
+            Value = value;
+        }
+
+        public bool Value { get; }
+    }
+
+    internal class StringConstantFilterSubExpression: ConstantBaseFilterSubExpression
+    {
+        public StringConstantFilterSubExpression(string value)
+        {
+            Value = value ?? throw new ArgumentNullException(nameof(value));
+        }
+
+        public string Value { get; }
     }
 }

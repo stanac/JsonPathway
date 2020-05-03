@@ -260,15 +260,30 @@ namespace JsonPathway.Internal.Filters
         public int[] ExactElementsAccess { get; }
 
         public override int StartIndex { get; }
+        public FilterExpressionToken ExecutedOn { get; }
 
-        public ArrayAccessExpressionToken(AllArrayElementsToken token)
+        private ArrayAccessExpressionToken(FilterExpressionToken executedOn, MultiCharToken arrayToken)
+        {
+            if (arrayToken == null) throw new ArgumentNullException(nameof(arrayToken));
+
+            ExecutedOn = executedOn ?? throw new ArgumentNullException(nameof(executedOn));
+
+            if (!(executedOn is PropertyExpressionToken) && !(executedOn is FilterExpressionToken))
+            {
+                throw new UnexpectedTokenException(arrayToken, "Array access can be applied to property or filter");
+            }
+        }
+
+        public ArrayAccessExpressionToken(FilterExpressionToken executedOn, AllArrayElementsToken token)
+            : this (executedOn, token as MultiCharToken)
         {
             if (token is null) throw new ArgumentNullException(nameof(token));
             IsAllArrayElemets = true;
             StartIndex = token.StartIndex;
         }
 
-        public ArrayAccessExpressionToken(ArrayElementsToken token)
+        public ArrayAccessExpressionToken(FilterExpressionToken executedOn, ArrayElementsToken token)
+            : this(executedOn, token as MultiCharToken)
         {
             if (token == null) throw new ArgumentNullException(nameof(token));
 
@@ -277,6 +292,17 @@ namespace JsonPathway.Internal.Filters
             SliceStep = token.SliceStep;
             ExactElementsAccess = token.ExactElementsAccess;
             StartIndex = token.StartIndex;
+        }
+
+        public override string ToString() => base.ToString() + $"Executed on {ExecutedOn} with index: {GetIndexValues()}";
+
+        public string GetIndexValues()
+        {
+            if (IsAllArrayElemets) return "*";
+
+            if (ExactElementsAccess != null) return string.Join(",", ExactElementsAccess.Select(x => x.ToString()));
+
+            return $"{SliceStart}:{SliceEnd}:{SliceStep}";
         }
     }
 }
