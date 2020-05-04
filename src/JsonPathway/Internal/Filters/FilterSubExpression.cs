@@ -27,7 +27,7 @@ namespace JsonPathway.Internal.Filters
 
         public PrimitiveFilterSubExpression(FilterExpressionToken token)
         {
-            Token = token ?? throw new System.ArgumentNullException(nameof(token));
+            Token = token ?? throw new ArgumentNullException(nameof(token));
         }
 
         public override string ToString() => base.ToString() + Token;
@@ -60,7 +60,7 @@ namespace JsonPathway.Internal.Filters
 
     internal class NegationFilterSubExpression : FilterSubExpression
     {
-        public FilterSubExpression Expression { get; }
+        public FilterSubExpression Expression { get; private set; }
 
         public NegationFilterSubExpression(FilterSubExpression expr)
         {
@@ -75,6 +75,10 @@ namespace JsonPathway.Internal.Filters
 
         public override void ReplaceTruthyExpressions()
         {
+            if (Expression is PropertyFilterSubExpression pet)
+            {
+                Expression = new TruthyFilterSubExpression(pet);
+            }
             Expression.ReplaceTruthyExpressions();
         }
     }
@@ -174,6 +178,35 @@ namespace JsonPathway.Internal.Filters
         public PropertyFilterSubExpression(PropertyExpressionToken token)
         {
             PropertyChain = token?.PropertyChain?.Select(x => x.StringValue)?.ToArray() ?? throw new ArgumentNullException(nameof(token));
+        }
+
+        public override void ReplaceTruthyExpressions()
+        {
+            // do nothing
+        }
+    }
+
+    internal class ArrayAccessFilterSubExpression : FilterSubExpression
+    {
+        public bool IsAllArrayElemets { get; }
+        public int? SliceStart { get; }
+        public int? SliceEnd { get; }
+        public int? SliceStep { get; }
+        public int[] ExactElementsAccess { get; }
+        
+        public FilterSubExpression ExecutedOn { get; }
+        
+        public ArrayAccessFilterSubExpression(ArrayAccessExpressionToken token)
+        {
+            if (token == null) throw new ArgumentNullException(nameof(token));
+
+            IsAllArrayElemets = token.IsAllArrayElemets;
+            SliceStart = token.SliceStart;
+            SliceEnd = token.SliceEnd;
+            SliceStep = token.SliceStep;
+            ExactElementsAccess = token.ExactElementsAccess;
+
+            ExecutedOn = FilterParser.Parse(new List<FilterSubExpression> { new PrimitiveFilterSubExpression(token.ExecutedOn) });
         }
 
         public override void ReplaceTruthyExpressions()

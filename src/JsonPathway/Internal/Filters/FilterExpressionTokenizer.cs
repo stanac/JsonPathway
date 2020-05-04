@@ -25,10 +25,10 @@ namespace JsonPathway.Internal.Filters
             var expressionTokens = ReplaceConstantExpressionTokens(tokens.ToList());
             expressionTokens = ReplacePropertyTokens(expressionTokens);
             expressionTokens = ReplaceGroupTokens(expressionTokens);
-            expressionTokens = ReplaceMethodCallsTokens(expressionTokens);
             expressionTokens = ReplaceArrayExpressionTokens(expressionTokens);
-            expressionTokens = ReplaceBinaryOperatorTokens(expressionTokens);
+            expressionTokens = ReplaceMethodCallsTokens(expressionTokens);
             expressionTokens = ReplaceNegationTokens(expressionTokens);
+            expressionTokens = ReplaceBinaryOperatorTokens(expressionTokens);
             
             EnsureTokensAreValid(expressionTokens);
             return expressionTokens;
@@ -290,6 +290,7 @@ namespace JsonPathway.Internal.Filters
         {
             tokens = ReplaceMethodCallsOnProps(tokens);
             tokens = ReplaceMethodCallsOnConstants(tokens);
+            tokens = ReplaceMethodCallsOnArrayAccess(tokens);
             return ReplaceMethodCallsOnMethods(tokens);
         }
 
@@ -429,6 +430,60 @@ namespace JsonPathway.Internal.Filters
                     }
 
                     replacedCount++;
+                }
+            }
+
+            return ret.Where(x => x != null).ToList();
+        }
+
+        private static List<FilterExpressionToken> ReplaceMethodCallsOnArrayAccess(List<FilterExpressionToken> tokens)
+        {
+            List<ArrayAccessExpressionToken> arrayTokens = tokens.Where(x => x is ArrayAccessExpressionToken).Cast<ArrayAccessExpressionToken>().ToList();
+            var ret = tokens.ToList();
+
+            foreach (ArrayAccessExpressionToken at in arrayTokens)
+            {
+                int arrayIndex = ret.IndexOf(at);
+                int dotIndex = arrayIndex + 1;
+
+                if (dotIndex < ret.Count - 4 && ret[dotIndex] is PrimitiveExpressionToken petDot && petDot.Token.IsSymbolToken('.'))
+                {
+                    var methodNameIndex = dotIndex + 1;
+
+                    if (ret[methodNameIndex] is PrimitiveExpressionToken petMethodName && petMethodName.Token.IsPropertyToken())
+                    {
+                        PropertyToken propToken = petMethodName.Token.CastToPropertyToken();
+                        if (propToken.Escaped) throw new UnexpectedTokenException(propToken, "Expected method call on array element");
+                        string methodName = propToken.StringValue;
+
+                        var openGroupIndex = methodNameIndex + 1;
+
+                        if (openGroupIndex < ret.Count && ret[openGroupIndex] is OpenGroupToken ogt)
+                        {
+                            var closed = ret.FirstOrDefault(x => x is CloseGroupToken cgt && cgt.GroupId == ogt.GroupId);
+
+                            if (closed == null) throw new ParsingException("Failed to find ) for ( at " + ogt.StartIndex);
+
+                            List<FilterExpressionToken> args = new List<FilterExpressionToken>();
+
+                            int startIndex = ret.IndexOf(ogt);
+                            int endIndex = ret.IndexOf(closed);
+
+                            for (int i = startIndex + 1; i < endIndex; i++)
+                            {
+                                args.Add(ret[i]);
+                            }
+
+                            args = FormatAndValidateMethodArgumentTokens(args);
+
+                            ret[arrayIndex] = new MethodCallExpressionToken(at, methodName, args.ToArray());
+
+                            for (int i = arrayIndex + 1; i <= endIndex; i++)
+                            {
+                                ret[i] = null;
+                            }
+                        }
+                    }
                 }
             }
 

@@ -224,14 +224,14 @@ namespace JsonPathway.Internal.Filters
 
     public class MethodCallExpressionToken: FilterExpressionToken
     {
-        public MethodCallExpressionToken(FilterExpressionToken property, string methodName, FilterExpressionToken[] arguments)
+        public MethodCallExpressionToken(FilterExpressionToken calledOnExpression, string methodName, FilterExpressionToken[] arguments)
         {
             if (string.IsNullOrWhiteSpace(methodName))
             {
                 throw new ArgumentException("Value not provided", nameof(methodName));
             }
 
-            CalledOnExpression = property ?? throw new ArgumentNullException(nameof(property));
+            CalledOnExpression = calledOnExpression ?? throw new ArgumentNullException(nameof(calledOnExpression));
             MethodName = methodName;
             Arguments = arguments ?? throw new ArgumentNullException(nameof(arguments));
         }

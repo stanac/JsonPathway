@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 
 namespace JsonPathway.Internal.Filters
@@ -9,7 +8,9 @@ namespace JsonPathway.Internal.Filters
     /// </summary>
     internal static class FilterParser
     {
-        public static FilterSubExpression Parse(List<FilterExpressionToken> tokens)
+        public static FilterSubExpression Parse(IEnumerable<FilterExpressionToken> tokens) => Parse(tokens.ToList());
+
+        private static FilterSubExpression Parse(List<FilterExpressionToken> tokens)
         {
             List<FilterSubExpression> expressions = tokens
                 .Select(x => new PrimitiveFilterSubExpression(x))
@@ -41,7 +42,7 @@ namespace JsonPathway.Internal.Filters
             callCount++;
             if (callCount > 5 * 1000) throw new InternalJsonPathwayException("FilterParser.ParseInner call count exceeded max allowed number of calls");
 
-            exprs = ReplaceConstantAndPropsAndMethodsExpressions(exprs);
+            exprs = ReplaceConstantAndPropsAndMethodsAndArraysExpressions(exprs);
 
             bool groupParsed;
             do
@@ -52,6 +53,7 @@ namespace JsonPathway.Internal.Filters
 
             exprs = ParseLogicalExpressions(exprs);
             exprs = ParseComparisonExpressions(exprs);
+            exprs = ReplaceNegationExpressions(exprs);
 
             while (exprs.Any(x => x.IsPrimitive()))
             {
@@ -160,7 +162,7 @@ namespace JsonPathway.Internal.Filters
             return exprs;
         }
 
-        private static List<FilterSubExpression> ReplaceConstantAndPropsAndMethodsExpressions(List<FilterSubExpression> exprs)
+        private static List<FilterSubExpression> ReplaceConstantAndPropsAndMethodsAndArraysExpressions(List<FilterSubExpression> exprs)
         {
             var ret = exprs.ToList();
 
@@ -178,21 +180,29 @@ namespace JsonPathway.Internal.Filters
                 {
                     ret[i] = new MethodCallFilterSubExpression(ret[i].AsPrimitive<MethodCallExpressionToken>());
                 }
+                else if (ret[i].IsPrimitive<ArrayAccessExpressionToken>())
+                {
+                    ret[i] = new ArrayAccessFilterSubExpression(ret[i].AsPrimitive<ArrayAccessExpressionToken>());
+                }
             }
 
             return ret;
         }
 
-        private static List<FilterSubExpression> ReplaceArrayExpressions(List<FilterSubExpression> exprs)
-        {
-            // todo: implement
-            return exprs;
-        }
-
         private static List<FilterSubExpression> ReplaceNegationExpressions(List<FilterSubExpression> exprs)
         {
-            // todo: implement
-            return exprs;
+            var ret = exprs.ToList();
+
+            for (int i = exprs.Count - 2; i >= 0; i--)
+            {
+                if (ret[i] != null && ret[i].IsPrimitive<NegationExpressionToken>())
+                {
+                    ret[i] = new NegationFilterSubExpression(new List<FilterSubExpression> { ret[i + 1] });
+                    ret[i + 1] = null;
+                }
+            }
+
+            return ret.Where(x => x != null).ToList();
         }
     }
 }
