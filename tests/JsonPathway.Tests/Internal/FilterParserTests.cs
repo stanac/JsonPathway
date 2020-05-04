@@ -138,5 +138,24 @@ namespace JsonPathway.Tests.Internal
             Assert.True(aa.ExactElementsAccess?.Length == 1 && aa.ExactElementsAccess[0] == 2);
             Assert.True(aa.ExecutedOn is PropertyFilterSubExpression p && p.PropertyChain.Length == 1 && p.PropertyChain[0] == "items");
         }
+
+        [Fact]
+        public void TokensWithEscapedPropAccess_Parse_ReturnsCorrectExpression()
+        {
+            string input = "@.items['2'] > 3";
+            IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
+            var expr = FilterParser.Parse(tokens);
+
+            Assert.IsType<ComparisonFilterSubExpression>(expr);
+            var comp = expr as ComparisonFilterSubExpression;
+
+            Assert.IsType<PropertyFilterSubExpression>(comp.LeftSide);
+            Assert.True((comp.RightSide as NumberConstantFilterSubExpression)?.Value == 3.0);
+
+            var aa = comp.LeftSide as PropertyFilterSubExpression;
+            Assert.Equal(2, aa.PropertyChain.Length);
+            Assert.Equal("items", aa.PropertyChain[0]);
+            Assert.Equal("2", aa.PropertyChain[1]);
+        }
     }
 }
