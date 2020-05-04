@@ -144,7 +144,7 @@ namespace JsonPathway.Internal.Filters
                     {
                         PropertyToken prop = pet2.Token.CastToPropertyToken();
 
-                        if (prop.Escaped && isPreviousDot) throw new UnexpectedTokenException(prop);
+                        if (prop.Escaped && isPreviousDot) throw new UnexpectedTokenException(prop, "Unexpected token after \".\" symbol");
 
                         tokensForReplacement.Add(t as PrimitiveExpressionToken);
                         index++;
