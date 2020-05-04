@@ -110,6 +110,10 @@ namespace JsonPathway.Internal.Filters
             {
                 LeftSide = new TruthyFilterSubExpression(p1);
             }
+            else if (LeftSide is ArrayAccessFilterSubExpression a1)
+            {
+                LeftSide = new TruthyFilterSubExpression(a1);
+            }
             else
             {
                 LeftSide.ReplaceTruthyExpressions();
@@ -118,6 +122,11 @@ namespace JsonPathway.Internal.Filters
             if (RightSide is PropertyFilterSubExpression p2)
             {
                 RightSide = new TruthyFilterSubExpression(p2);
+            }
+
+            else if (RightSide is ArrayAccessFilterSubExpression a2)
+            {
+                RightSide = new TruthyFilterSubExpression(a2);
             }
             else
             {
@@ -193,6 +202,7 @@ namespace JsonPathway.Internal.Filters
         public int? SliceEnd { get; }
         public int? SliceStep { get; }
         public int[] ExactElementsAccess { get; }
+        public int StartIndex { get; }
         
         public FilterSubExpression ExecutedOn { get; }
         
@@ -207,6 +217,7 @@ namespace JsonPathway.Internal.Filters
             ExactElementsAccess = token.ExactElementsAccess;
 
             ExecutedOn = FilterParser.Parse(new List<FilterSubExpression> { new PrimitiveFilterSubExpression(token.ExecutedOn) });
+            StartIndex = token.StartIndex;
         }
 
         public override void ReplaceTruthyExpressions()
@@ -218,10 +229,8 @@ namespace JsonPathway.Internal.Filters
     internal class TruthyFilterSubExpression : FilterSubExpression
     {
         public string[] PropertyChain { get; }
-        public int[] ArrayExactElementsAccess { get; }
-        public int? ArraySliceStart { get; }
-        public int? ArraySliceEnd { get; }
-        public int? ArraySliceStep { get; }
+        public int? ArrayElement { get; }
+        public FilterSubExpression ArrayExecutedOn { get; }
 
         public TruthyFilterSubExpression(PropertyFilterSubExpression expr)
         {
@@ -231,12 +240,22 @@ namespace JsonPathway.Internal.Filters
 
         public TruthyFilterSubExpression(PropertyExpressionToken token)
         {
-            if (token is null) throw new ArgumentNullException(nameof(token));
+            if (token == null) throw new ArgumentNullException(nameof(token));
 
             PropertyChain = token.PropertyChain.Select(x => x.StringValue).ToArray();
         }
 
-        // todo: add support for arrays
+        public TruthyFilterSubExpression(ArrayAccessFilterSubExpression expr)
+        {
+            if (expr == null) throw new ArgumentNullException(nameof(expr));
+
+            if (expr.IsAllArrayElemets) throw new ParsingException("AllArrayElements cannot be converted to truthy expression starting at: " + expr.StartIndex);
+            if (expr.SliceStart.HasValue || expr.SliceEnd.HasValue || expr.SliceStart.HasValue) throw new ParsingException("Slice cannot be converted to truthy expression starting at: " + expr.StartIndex);
+            if (expr.ExactElementsAccess.Length > 1) throw new ParsingException("Slice cannot be converted to truthy expression starting at: " + expr.StartIndex);
+
+            ArrayElement = expr.ExactElementsAccess.Single();
+            ArrayExecutedOn = expr.ExecutedOn;
+        }
 
         public override void ReplaceTruthyExpressions()
         {

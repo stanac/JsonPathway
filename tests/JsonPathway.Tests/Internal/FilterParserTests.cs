@@ -157,5 +157,21 @@ namespace JsonPathway.Tests.Internal
             Assert.Equal("items", aa.PropertyChain[0]);
             Assert.Equal("2", aa.PropertyChain[1]);
         }
+
+        [Fact]
+        public void TokensWithTruthyElementAccess_Parse_ReturnsCorrectExpression()
+        {
+            string input = "@.items > 3 || @.b[0]";
+            IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
+            var expr = FilterParser.Parse(tokens);
+
+            Assert.IsType<LogicalFilterSubExpression>(expr);
+            var l = expr as LogicalFilterSubExpression;
+
+            Assert.IsType<TruthyFilterSubExpression>(l.RightSide);
+            Assert.IsType<PropertyFilterSubExpression>((l.RightSide as TruthyFilterSubExpression).ArrayExecutedOn);
+            var prop = (l.RightSide as TruthyFilterSubExpression).ArrayExecutedOn as PropertyFilterSubExpression;
+            Assert.Equal("b", prop.PropertyChain.Single());
+        }
     }
 }
