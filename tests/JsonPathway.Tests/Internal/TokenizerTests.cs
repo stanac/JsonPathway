@@ -75,7 +75,7 @@ namespace JsonPathway.Tests.Internal
         {
             string input = "$[*]";
             IReadOnlyList<Token> tokens = Tokenizer.Tokenize(input);
-            Assert.True(tokens.Count == 2 && tokens.Last().IsAllArrayElementsToken());
+            Assert.True(tokens.Count == 1 && tokens[0].IsAllArrayElementsToken());
 
             input = "[*]";
             tokens = Tokenizer.Tokenize(input);
@@ -89,8 +89,8 @@ namespace JsonPathway.Tests.Internal
 
             IReadOnlyList<Token> tokens = Tokenizer.Tokenize(input);
 
-            Assert.Equal(2, tokens.Count);
-            Assert.IsType<ArrayElementsToken>(tokens[1]);
+            Assert.Equal(1, tokens.Count);
+            Assert.IsType<ArrayElementsToken>(tokens[0]);
 
             ArrayElementsToken t = tokens.Last().CastToArrayElementsToken();
             Assert.NotNull(t.ExactElementsAccess);
@@ -105,10 +105,10 @@ namespace JsonPathway.Tests.Internal
 
             IReadOnlyList<Token> tokens = Tokenizer.Tokenize(input);
 
-            Assert.Equal(2, tokens.Count);
-            Assert.IsType<ArrayElementsToken>(tokens[1]);
+            Assert.Equal(1, tokens.Count);
+            Assert.IsType<ArrayElementsToken>(tokens[0]);
 
-            ArrayElementsToken t = tokens.Last().CastToArrayElementsToken();
+            ArrayElementsToken t = tokens[0].CastToArrayElementsToken();
             Assert.NotNull(t.ExactElementsAccess);
             Assert.Equal(3, t.ExactElementsAccess.Length);
             Assert.Equal(4, t.ExactElementsAccess[0]);
@@ -119,27 +119,27 @@ namespace JsonPathway.Tests.Internal
         [Fact]
         public void Tokenize_InputWithArrayAccessSlice_ReturnsValidTokens()
         {
-            string input = "$[-4:-2:-9]";
+            string input = "$[-4:-2:9]";
 
             IReadOnlyList<Token> tokens = Tokenizer.Tokenize(input);
 
-            Assert.Equal(2, tokens.Count);
-            Assert.IsType<ArrayElementsToken>(tokens[1]);
+            Assert.Equal(1, tokens.Count);
+            Assert.IsType<ArrayElementsToken>(tokens[0]);
 
-            ArrayElementsToken t = tokens.Last().CastToArrayElementsToken();
+            ArrayElementsToken t = tokens[0].CastToArrayElementsToken();
             Assert.Null(t.ExactElementsAccess);
             Assert.Equal(-4, t.SliceStart);
             Assert.Equal(-2, t.SliceEnd);
-            Assert.Equal(-9, t.SliceStep);
+            Assert.Equal(9, t.SliceStep);
 
             input = "$[4:2:9]";
 
             tokens = Tokenizer.Tokenize(input);
 
-            Assert.Equal(2, tokens.Count);
-            Assert.IsType<ArrayElementsToken>(tokens[1]);
+            Assert.Equal(1, tokens.Count);
+            Assert.IsType<ArrayElementsToken>(tokens[0]);
 
-            t = tokens.Last().CastToArrayElementsToken();
+            t = tokens[0].CastToArrayElementsToken();
             Assert.Null(t.ExactElementsAccess);
             Assert.Equal(4, t.SliceStart);
             Assert.Equal(2, t.SliceEnd);
@@ -149,14 +149,21 @@ namespace JsonPathway.Tests.Internal
 
             tokens = Tokenizer.Tokenize(input);
 
-            Assert.Equal(2, tokens.Count);
-            Assert.IsType<ArrayElementsToken>(tokens[1]);
+            Assert.Equal(1, tokens.Count);
+            Assert.IsType<ArrayElementsToken>(tokens[0]);
 
-            t = tokens.Last().CastToArrayElementsToken();
+            t = tokens[0].CastToArrayElementsToken();
             Assert.Null(t.ExactElementsAccess);
             Assert.Equal(4, t.SliceStart);
             Assert.Equal(2, t.SliceEnd);
             Assert.Equal(9, t.SliceStep);
+        }
+
+        [Fact]
+        public void Tokenize_InputWithSliceStepNegative_ThrowsException()
+        {
+            string input = "$[4:2:-1]";
+            Assert.Throws<UnexpectedTokenException>(() => Tokenizer.Tokenize(input));
         }
 
         [Fact]
@@ -178,17 +185,28 @@ namespace JsonPathway.Tests.Internal
             Assert.Equal(-4, token.ExactElementsAccess.Single());
         }
 
-        [Fact]
-        public void Tokenize_InputWithArrayAccessDefaultValues_ReturnsValidToken()
+        [Theory]
+        [InlineData("[:2]", null, 2, null)]
+        [InlineData("[2:]", 2, null, null)]
+        [InlineData("[::2]", null, null, 2)]
+        [InlineData("[1:3:2]", 1, 3, 2)]
+        [InlineData("[1:3:]", 1, 3, null)]
+        [InlineData("[1::3]", 1, null, 3)]
+        [InlineData("[:1:3]", null, 1, 3)]
+        public void Tokenize_InputWithArraySliceDefaultValues_ReturnsValidToken(string input, int? start, int? end, int? step)
         {
-            string input = "[:2]";
-
             ArrayElementsToken token = Tokenizer.Tokenize(input).Single().CastToArrayElementsToken();
 
             Assert.Null(token.ExactElementsAccess);
-            Assert.Equal(0, token.SliceStart);
-            Assert.Equal(2, token.SliceEnd);
-            Assert.Null(token.SliceStep);
+
+            if (!start.HasValue) Assert.False(token.SliceStart.HasValue);
+            else Assert.Equal(start.Value, token.SliceStart);
+
+            if (!end.HasValue) Assert.False(token.SliceEnd.HasValue);
+            else Assert.Equal(end.Value, token.SliceEnd);
+
+            if (!step.HasValue) Assert.False(token.SliceStep.HasValue);
+            else Assert.Equal(step.Value, token.SliceStep);
         }
 
         [Fact]
@@ -197,8 +215,8 @@ namespace JsonPathway.Tests.Internal
             string input = "$['abc', 'efg']";
 
             IReadOnlyList<Token> tokens = Tokenizer.Tokenize(input);
-            Assert.Equal(2, tokens.Count);
-            MultiplePropertiesToken mpt = tokens.Last().CastToMultiplePropertiesToken();
+            Assert.Equal(1, tokens.Count);
+            MultiplePropertiesToken mpt = tokens.First().CastToMultiplePropertiesToken();
             Assert.Equal(2, mpt.Properties.Length);
             Assert.Equal("abc", mpt.Properties[0]);
             Assert.Equal("efg", mpt.Properties[1]);

@@ -51,26 +51,26 @@ namespace JsonPathway
         /// <summary>
         /// Executes JSONPath and returns matching elements
         /// </summary>
-        /// <param name="expression">Parsed JsonPath expression</param>
+        /// <param name="jsonPathExpression">Parsed JsonPath expression</param>
         /// <param name="json">JSON document</param>
         /// <returns>Matching JsonElements</returns>
-        public static IReadOnlyList<JsonElement> ExecutePath(ExpressionList expression, string json)
+        public static IReadOnlyList<JsonElement> ExecutePath(ExpressionList jsonPathExpression, string json)
         {
             JsonDocument doc = JsonDocument.Parse(json);
-            return ExecutePath(expression, doc);
+            return ExecutePath(jsonPathExpression, doc);
         }
 
         /// <summary>
         /// Executes JSONPath and returns matching elements
         /// </summary>
-        /// <param name="expression">Parsed JsonPath expression</param>
+        /// <param name="jsonPathExpression">Parsed JsonPath expression</param>
         /// <param doc="json">Parse JSON document</param>
         /// <returns>Matching JsonElements</returns>
-        public static IReadOnlyList<JsonElement> ExecutePath(ExpressionList expression, JsonDocument doc)
+        public static IReadOnlyList<JsonElement> ExecutePath(ExpressionList jsonPathExpression, JsonDocument doc)
         {
             try
             {
-                return ExpressionInterpreter.Execute(expression, doc);
+                return ExpressionInterpreter.Execute(jsonPathExpression, doc);
             }
             catch (JsonPathwayException)
             {

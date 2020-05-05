@@ -217,7 +217,7 @@ namespace JsonPathway.Internal
             {
                 string[] parts = value.Split(":".ToCharArray(), StringSplitOptions.None);
 
-                if (string.IsNullOrWhiteSpace(parts[0])) SliceStart = 0;
+                if (string.IsNullOrWhiteSpace(parts[0])) SliceStart = null;
                 else if (int.TryParse(parts[0], out int t1)) SliceStart = t1;
                 else throw new UnrecognizedCharSequence("Unexpected value in array slice operator at array element operator starting at " + startIndex);
 
@@ -234,6 +234,11 @@ namespace JsonPathway.Internal
                 else if (parts.Length > 3)
                 {
                     throw new UnrecognizedCharSequence("Value contains more than 2 : which isn't valid syntax for array element starting at " + startIndex);
+                }
+
+                if (SliceStep.HasValue && SliceStep.Value < 1)
+                {
+                    throw new UnexpectedTokenException("Unexpected non-positive value for step in array slice operator starting at " + startIndex);
                 }
             }
             else

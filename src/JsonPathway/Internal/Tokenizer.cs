@@ -21,6 +21,13 @@ namespace JsonPathway.Internal
                 throw new ArgumentException("Value not set", nameof(input));
             }
 
+            input = input.Trim();
+            if (input.StartsWith("$"))
+            {
+                input = input.Substring(1).Trim();
+                if (input.StartsWith(".")) input = input.Substring(1);
+            }
+
             IReadOnlyList<Token> tokens = GetTokensInner(input);
             tokens = RemoveWhiteSpaceTokens(tokens);
             tokens = ConvertStringTokensToPropertyTokens(tokens);
