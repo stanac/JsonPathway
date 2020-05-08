@@ -7,7 +7,25 @@ namespace JsonPathway.Internal
 {
     internal static class Interpreter
     {
-        public static IEnumerable<JsonElement> Execute(Expression expression, JsonElement element)
+        public static IReadOnlyList<JsonElement> Execute(ExpressionList expressions, JsonDocument doc)
+        {
+            if (expressions is null) throw new ArgumentNullException(nameof(expressions));
+            if (doc is null) throw new ArgumentNullException(nameof(doc));
+
+            List<JsonElement> result = new List<JsonElement>();
+            List<JsonElement> input = new List<JsonElement>();
+            input.Add(doc.RootElement);
+
+            foreach (var ex in expressions)
+            {
+                result = input.SelectMany(inp => Execute(ex, inp)).ToList();
+                input = result;
+            }
+
+            return result;
+        }
+
+        internal static IEnumerable<JsonElement> Execute(Expression expression, JsonElement element)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
             
@@ -28,7 +46,20 @@ namespace JsonPathway.Internal
 
         private static IEnumerable<JsonElement> Execute(PropertyAccessExpression expr, JsonElement e)
         {
-            throw new NotImplementedException();
+            if (expr.ChildProperties)
+            {
+                return PropertyAccessor.GetChildPropertyValues(e);
+            }
+            else if (expr.RecursiveProperties)
+            {
+                return PropertyAccessor.GetRecursiveProperties(e);
+            }
+            else if (expr.Properties != null && expr.Properties.Any())
+            {
+                return PropertyAccessor.GetPropertyValueFromChain(e, expr.Properties);
+            }
+
+            throw new InvalidOperationException($"PropertyAccessExpression");
         }
 
         private static IEnumerable<JsonElement> Execute(ArrayElementsExpression expr, JsonElement element)

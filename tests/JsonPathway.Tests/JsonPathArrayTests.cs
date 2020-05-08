@@ -8,13 +8,11 @@ namespace JsonPathway.Tests
     public class JsonPathArrayTests
     {
         [Theory]
-        [InlineData("[0][0]", "[`a`]")]
-        [InlineData("[1][0]", "[`b`]")]
+        [InlineData("[0][0]", "[]")]
         [InlineData("[1]", "[`b`]")]
         [InlineData("[-1]", "[`i`]")]
         [InlineData("[-2]", "[`h`]")]
-        [InlineData("$[0][0]", "[`a`]")]
-        [InlineData("$[1][0]", "[`b`]")]
+        [InlineData("$[1][0]", "[]")]
         [InlineData("$[1]", "[`b`]")]
         [InlineData("$[-1]", "[`i`]")]
         [InlineData("$[-2]", "[`h`]")]

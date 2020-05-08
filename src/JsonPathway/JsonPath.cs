@@ -70,7 +70,7 @@ namespace JsonPathway
         {
             try
             {
-                return ExpressionInterpreter.Execute(jsonPathExpression, doc);
+                return Interpreter.Execute(jsonPathExpression, doc);
             }
             catch (JsonPathwayException)
             {

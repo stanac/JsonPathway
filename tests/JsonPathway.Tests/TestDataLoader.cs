@@ -10,7 +10,7 @@ namespace JsonPathway.Tests
 
         public static string Store() => LoadFile("Store.json");
 
-        private static string LoadFile(string name)
+        public static string LoadFile(string name)
         {
             if (string.IsNullOrWhiteSpace(name))
             {
@@ -21,8 +21,6 @@ namespace JsonPathway.Tests
 
             var names = asm.GetManifestResourceNames();
 
-            if (!name.EndsWith(".json")) name += ".json";
-            
             var foundName = names.FirstOrDefault(x => x.EndsWith("." + name));
 
             if (foundName != null)

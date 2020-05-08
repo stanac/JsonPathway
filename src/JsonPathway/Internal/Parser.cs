@@ -9,7 +9,7 @@ namespace JsonPathway.Internal
         {
             EnsureTokensAreValid(tokens.ToList());
 
-            foreach (Token t in tokens)
+            foreach (Token t in tokens.Where(x => !x.IsSymbolToken('.')))
             {
                 foreach (Expression e in Parse(t))
                 {
@@ -35,9 +35,9 @@ namespace JsonPathway.Internal
                 int index = tokens.IndexOf(pt);
                 var next = tokens[index + 1];
 
-                if (!next.IsPropertyToken()) throw new UnexpectedTokenException(next, "Expected property accessor");
+                if (!next.IsPropertyToken() && !next.IsChildPropertiesToken()) throw new UnexpectedTokenException(next, "Expected property accessor");
 
-                if (next.CastToPropertyToken().Escaped) throw new UnexpectedTokenException(next, "Expected unescaped property accessor");
+                if (next.IsPropertyToken() && next.CastToPropertyToken().Escaped) throw new UnexpectedTokenException(next, "Expected unescaped property accessor");
             }
         }
 
