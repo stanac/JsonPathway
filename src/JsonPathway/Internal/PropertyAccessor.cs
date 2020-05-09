@@ -79,8 +79,8 @@ namespace JsonPathway.Internal
         {
             if (propertyName == "length")
             {
-                if (element.ValueKind == JsonValueKind.String) return JsonElementHelper.CreateNumber(element.GetString().Length);
-                if (element.ValueKind == JsonValueKind.Array) return JsonElementHelper.CreateNumber(element.GetArrayLength());
+                if (element.ValueKind == JsonValueKind.String) return JsonElementFactory.CreateNumber(element.GetString().Length);
+                if (element.ValueKind == JsonValueKind.Array) return JsonElementFactory.CreateNumber(element.GetArrayLength());
             }
 
             if (element.ValueKind == JsonValueKind.Object && element.TryGetProperty(propertyName, out JsonElement result))

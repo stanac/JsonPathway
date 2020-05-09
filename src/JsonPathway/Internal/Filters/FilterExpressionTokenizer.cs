@@ -28,6 +28,7 @@ namespace JsonPathway.Internal.Filters
             expressionTokens = ReplaceArrayExpressionTokens(expressionTokens);
             expressionTokens = ReplaceMethodCallsTokens(expressionTokens);
             expressionTokens = ReplaceNegationTokens(expressionTokens);
+            expressionTokens = ReplaceNegativeNumbersTokens(expressionTokens);
             expressionTokens = ReplaceBinaryOperatorTokens(expressionTokens);
             
             EnsureTokensAreValid(expressionTokens);
@@ -578,6 +579,24 @@ namespace JsonPathway.Internal.Filters
             }
 
             return ret;
+        }
+
+        private static List<FilterExpressionToken> ReplaceNegativeNumbersTokens(List<FilterExpressionToken> tokens)
+        {
+            var ret = tokens.ToList();
+
+            for (int i = tokens.Count - 1; i > 0; i--)
+            {
+                if (ret[i] != null && ret[i - 1] != null
+                    && ret[i - 1] is PrimitiveExpressionToken pet && pet.Token.IsSymbolToken('-')
+                    && ret[i] is ConstantNumberExpressionToken t)
+                {
+                    ret[i - 1] = null;
+                    ret[i] = t.CreateNegativeNumber();
+                }
+            }
+
+            return ret.Where(x => x != null).ToList();
         }
 
         private static void EnsureTokensAreValid(IEnumerable<FilterExpressionToken> tokens)

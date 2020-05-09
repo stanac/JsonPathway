@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 namespace JsonPathway.Internal.Filters
 {
@@ -17,6 +18,8 @@ namespace JsonPathway.Internal.Filters
         public override string ToString() => GetType().Name + ": ";
 
         public abstract void ReplaceTruthyExpressions();
+
+        public abstract JsonElement Execute(JsonElement input);
     }
 
     internal class PrimitiveFilterSubExpression: FilterSubExpression
@@ -35,6 +38,11 @@ namespace JsonPathway.Internal.Filters
         public override void ReplaceTruthyExpressions()
         {
             // do nothing
+        }
+
+        public override JsonElement Execute(JsonElement input)
+        {
+            throw new NotSupportedException($"{nameof(PrimitiveFilterSubExpression)} shouldn't be used in this context");
         }
     }
 
@@ -55,6 +63,11 @@ namespace JsonPathway.Internal.Filters
         public override void ReplaceTruthyExpressions()
         {
             Expression.ReplaceTruthyExpressions();
+        }
+
+        public override JsonElement Execute(JsonElement input)
+        {
+            return Expression.Execute(input);
         }
     }
 
@@ -80,6 +93,13 @@ namespace JsonPathway.Internal.Filters
                 Expression = new TruthyFilterSubExpression(pet);
             }
             Expression.ReplaceTruthyExpressions();
+        }
+
+        public override JsonElement Execute(JsonElement input)
+        {
+            JsonElement innerResult = Expression.Execute(input);
+            bool result = innerResult.IsTruthy();
+            return JsonElementFactory.CreateBool(result);
         }
     }
 
@@ -133,6 +153,27 @@ namespace JsonPathway.Internal.Filters
                 RightSide.ReplaceTruthyExpressions();
             }
         }
+
+        public override JsonElement Execute(JsonElement input)
+        {
+            bool left = LeftSide.Execute(input).IsTruthy();
+
+            if (left && IsOr) return JsonElementFactory.CreateBool(true);
+
+            bool right = RightSide.Execute(input).IsTruthy();
+
+            bool result;
+            if (IsAnd)
+            {
+                result = left && right;
+            }
+            else
+            {
+                result = left || right;
+            }
+
+            return JsonElementFactory.CreateBool(result);
+        }
     }
 
     internal class ComparisonFilterSubExpression: FilterSubExpression
@@ -178,6 +219,37 @@ namespace JsonPathway.Internal.Filters
             // do nothing
         }
 
+        public override JsonElement Execute(JsonElement input)
+        {
+            JsonElement left = LeftSide.Execute(input);
+            JsonElement right = RightSide.Execute(input);
+
+            bool result = false;
+
+            if ((IsEqual || IsGreaterOrEqual || IsLessOrEqual) && JsonElementEqualityComparer.Default.Equals(left, right))
+            {
+                result = true;
+            }
+            else if (IsNotEqual && !JsonElementEqualityComparer.Default.Equals(left, right))
+            {
+                result = true;
+            }
+            else if (left.ValueKind == right.ValueKind)
+            {
+                int r = JsonElementComparer.Default.Compare(left, right);
+
+                if ((IsGreater || IsGreaterOrEqual) && r > 0)
+                {
+                    result = true;
+                }
+                else if ((IsLess || IsLessOrEqual) && r < 0)
+                {
+                    result = true;
+                }
+            }
+
+            return JsonElementFactory.CreateBool(result);
+        }
     }
 
     internal class PropertyFilterSubExpression: FilterSubExpression
@@ -193,6 +265,29 @@ namespace JsonPathway.Internal.Filters
         {
             // do nothing
         }
+
+        public override JsonElement Execute(JsonElement input)
+        {
+            JsonElement result = JsonElementFactory.CreateNull();
+
+            foreach (var p in PropertyChain)
+            {
+                if (p == "length" && input.TryGetArrayOrStringLength(out int length))
+                {
+                    result = JsonElementFactory.CreateNumber(length);
+                }
+                else if (input.ValueKind == JsonValueKind.Object && input.TryGetProperty(p, out JsonElement t))
+                {
+                    result = t;
+                }
+                else
+                {
+                    return JsonElementFactory.CreateNull();
+                }
+            }
+
+            return result;
+        }
     }
 
     internal class ArrayAccessFilterSubExpression : FilterSubExpression
@@ -202,7 +297,7 @@ namespace JsonPathway.Internal.Filters
         public int? SliceEnd { get; }
         public int? SliceStep { get; }
         public int[] ExactElementsAccess { get; }
-        public int StartIndex { get; }
+        public int TokenStartIndex { get; }
         
         public FilterSubExpression ExecutedOn { get; }
         
@@ -217,44 +312,55 @@ namespace JsonPathway.Internal.Filters
             ExactElementsAccess = token.ExactElementsAccess;
 
             ExecutedOn = FilterParser.Parse(new List<FilterSubExpression> { new PrimitiveFilterSubExpression(token.ExecutedOn) });
-            StartIndex = token.StartIndex;
+            TokenStartIndex = token.StartIndex;
         }
 
         public override void ReplaceTruthyExpressions()
         {
             // do nothing
         }
+
+        public override JsonElement Execute(JsonElement input)
+        {
+            input = ExecutedOn.Execute(input);
+
+            if (input.ValueKind != JsonValueKind.Array)
+            {
+                return JsonElementFactory.CreateNull();
+            }
+
+            var array = input.EnumerateArray().ToList();
+
+            if (IsAllArrayElemets)
+            {
+                return input;
+            }
+
+            if (ExactElementsAccess != null && ExactElementsAccess.Any())
+            {
+                var res = array.GetByIndexes(ExactElementsAccess);
+                return JsonElementFactory.CreateArray(res);
+            }
+
+            var result = array.GetSlice(SliceStart, SliceEnd, SliceStep);
+            return JsonElementFactory.CreateArray(result);
+        }
     }
 
     internal class TruthyFilterSubExpression : FilterSubExpression
     {
-        public string[] PropertyChain { get; }
-        public int? ArrayElement { get; }
-        public FilterSubExpression ArrayExecutedOn { get; }
-
-        public TruthyFilterSubExpression(PropertyFilterSubExpression expr)
+        public TruthyFilterSubExpression(FilterSubExpression expression)
         {
-            if (expr == null) throw new ArgumentNullException(nameof(expr));
-            PropertyChain = expr.PropertyChain;
+            Expression = expression ?? throw new ArgumentNullException(nameof(expression));
         }
 
-        public TruthyFilterSubExpression(PropertyExpressionToken token)
+        public FilterSubExpression Expression { get; }
+
+        public override JsonElement Execute(JsonElement input)
         {
-            if (token == null) throw new ArgumentNullException(nameof(token));
-
-            PropertyChain = token.PropertyChain.Select(x => x.StringValue).ToArray();
-        }
-
-        public TruthyFilterSubExpression(ArrayAccessFilterSubExpression expr)
-        {
-            if (expr == null) throw new ArgumentNullException(nameof(expr));
-
-            if (expr.IsAllArrayElemets) throw new ParsingException("AllArrayElements cannot be converted to truthy expression starting at: " + expr.StartIndex);
-            if (expr.SliceStart.HasValue || expr.SliceEnd.HasValue || expr.SliceStart.HasValue) throw new ParsingException("Slice cannot be converted to truthy expression starting at: " + expr.StartIndex);
-            if (expr.ExactElementsAccess.Length > 1) throw new ParsingException("Slice cannot be converted to truthy expression starting at: " + expr.StartIndex);
-
-            ArrayElement = expr.ExactElementsAccess.Single();
-            ArrayExecutedOn = expr.ExecutedOn;
+            input = Expression.Execute(input);
+            bool result = input.IsTruthy();
+            return JsonElementFactory.CreateBool(result);
         }
 
         public override void ReplaceTruthyExpressions()
@@ -293,6 +399,27 @@ namespace JsonPathway.Internal.Filters
                 a.ReplaceTruthyExpressions();
             }
         }
+
+        public override JsonElement Execute(JsonElement input)
+        {
+            if (input.IsNullOrUndefined()) return JsonElementFactory.CreateNull();
+
+            var args = Arguments.Select(x => x.Execute(input)).ToList();
+
+            input = CalledOnExpression.Execute(input);
+
+            if (input.ValueKind == JsonValueKind.String && input.TryExecuteStringMethod(MethodName, args, out JsonElement result1))
+            {
+                return result1;
+            }
+
+            if (input.ValueKind == JsonValueKind.Array && input.TryExecuteArrayMethod(MethodName, args, out JsonElement result2))
+            {
+                return result2;
+            }
+
+            return JsonElementFactory.CreateNull();
+        }
     }
 
     internal abstract class ConstantBaseFilterSubExpression: FilterSubExpression
@@ -318,31 +445,46 @@ namespace JsonPathway.Internal.Filters
 
     internal class NumberConstantFilterSubExpression: ConstantBaseFilterSubExpression
     {
+        private readonly JsonElement _element;
+
         public NumberConstantFilterSubExpression(double value)
         {
             Value = value;
+            _element = JsonElementFactory.CreateNumber(value);
         }
 
         public double Value { get; }
+
+        public override JsonElement Execute(JsonElement input) => _element;
     }
 
     internal class BooleanConstantFilterSubExpression: ConstantBaseFilterSubExpression
     {
+        private readonly JsonElement _element;
+
         public BooleanConstantFilterSubExpression(bool value)
         {
             Value = value;
+            _element = JsonElementFactory.CreateBool(value);
         }
 
         public bool Value { get; }
+
+        public override JsonElement Execute(JsonElement input) => _element;
     }
 
     internal class StringConstantFilterSubExpression: ConstantBaseFilterSubExpression
     {
+        private readonly JsonElement _element;
+
         public StringConstantFilterSubExpression(string value)
         {
             Value = value ?? throw new ArgumentNullException(nameof(value));
+            _element = JsonElementFactory.CreateString(value);
         }
 
         public string Value { get; }
+
+        public override JsonElement Execute(JsonElement input) => _element;
     }
 }

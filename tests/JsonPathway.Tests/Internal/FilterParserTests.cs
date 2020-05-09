@@ -60,7 +60,9 @@ namespace JsonPathway.Tests.Internal
             // || @.f
             Assert.IsType<TruthyFilterSubExpression>(logical3.RightSide);
             var truthy = logical3.RightSide as TruthyFilterSubExpression;
-            Assert.Equal("f", truthy.PropertyChain.Single());
+            Assert.IsType<PropertyFilterSubExpression>(truthy.Expression);
+            var truthyProp = truthy.Expression as PropertyFilterSubExpression;
+            Assert.Equal("f", truthyProp.PropertyChain.Single());
         }
 
         [Fact]
@@ -73,10 +75,11 @@ namespace JsonPathway.Tests.Internal
             Assert.IsType<NegationFilterSubExpression>(expr);
             var neg = expr as NegationFilterSubExpression;
             Assert.IsType<TruthyFilterSubExpression>(neg.Expression);
-            string[] prop = (neg.Expression as TruthyFilterSubExpression).PropertyChain;
-            Assert.Equal(2, prop.Length);
-            Assert.Equal("price", prop[0]);
-            Assert.Equal("count", prop[1]);
+            var truthy = neg.Expression as TruthyFilterSubExpression;
+            var prop = truthy.Expression as PropertyFilterSubExpression;
+
+            Assert.True(prop != null && prop.PropertyChain.Length == 2
+                        && prop.PropertyChain[0] == "price" && prop.PropertyChain[1] == "count");
         }
 
         [Fact]
@@ -90,11 +93,11 @@ namespace JsonPathway.Tests.Internal
             var neg1 = expr as NegationFilterSubExpression;
             Assert.IsType<NegationFilterSubExpression>(neg1.Expression);
             var neg2 = neg1.Expression as NegationFilterSubExpression;
+            Assert.IsType<TruthyFilterSubExpression>(neg2.Expression);
+            Assert.IsType<PropertyFilterSubExpression>((neg2.Expression as TruthyFilterSubExpression).Expression);
+            var prop = (neg2.Expression as TruthyFilterSubExpression).Expression as PropertyFilterSubExpression;
 
-            string[] prop = (neg2.Expression as TruthyFilterSubExpression).PropertyChain;
-            Assert.Equal(2, prop.Length);
-            Assert.Equal("price", prop[0]);
-            Assert.Equal("count", prop[1]);
+            Assert.True(prop.PropertyChain.Length == 2 && prop.PropertyChain[0] == "price" && prop.PropertyChain[1] == "count");
         }
 
         [Fact]
@@ -161,17 +164,26 @@ namespace JsonPathway.Tests.Internal
         [Fact]
         public void TokensWithTruthyElementAccess_Parse_ReturnsCorrectExpression()
         {
-            string input = "@.items > 3 || @.b[0]";
+            string input = "@.items >= 3 || @.b[123]";
             IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
             var expr = FilterParser.Parse(tokens);
 
             Assert.IsType<LogicalFilterSubExpression>(expr);
-            var l = expr as LogicalFilterSubExpression;
+            var logical = expr as LogicalFilterSubExpression;
 
-            Assert.IsType<TruthyFilterSubExpression>(l.RightSide);
-            Assert.IsType<PropertyFilterSubExpression>((l.RightSide as TruthyFilterSubExpression).ArrayExecutedOn);
-            var prop = (l.RightSide as TruthyFilterSubExpression).ArrayExecutedOn as PropertyFilterSubExpression;
-            Assert.Equal("b", prop.PropertyChain.Single());
+            // @.items > 3
+            Assert.IsType<ComparisonFilterSubExpression>(logical.LeftSide);
+            var left = logical.LeftSide as ComparisonFilterSubExpression;
+            Assert.True(left.IsGreaterOrEqual);
+            Assert.True(left.LeftSide is PropertyFilterSubExpression p1 && p1.PropertyChain.Length == 1 && p1.PropertyChain[0] == "items");
+            Assert.True(left.RightSide is NumberConstantFilterSubExpression n1 && n1.Value == 3.0);
+
+            // @.b[0]
+            Assert.IsType<TruthyFilterSubExpression>(logical.RightSide);
+            var tr = logical.RightSide as TruthyFilterSubExpression;
+            Assert.IsType<ArrayAccessFilterSubExpression>(tr.Expression);
+            var ar = tr.Expression as ArrayAccessFilterSubExpression;
+            Assert.True(ar.ExactElementsAccess != null && ar.ExactElementsAccess.Length == 1 && ar.ExactElementsAccess[0] == 123);
         }
     }
 }

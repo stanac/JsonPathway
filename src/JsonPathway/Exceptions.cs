@@ -182,4 +182,19 @@ namespace JsonPathway
         {
         }
     }
+
+    public class JsonPatwayMethodNotSupportedException: TokenizationException
+    {
+        public JsonPatwayMethodNotSupportedException() : base()
+        {
+        }
+
+        public JsonPatwayMethodNotSupportedException(string message) : base(message)
+        {
+        }
+
+        public JsonPatwayMethodNotSupportedException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+    }
 }

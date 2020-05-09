@@ -200,11 +200,16 @@ namespace JsonPathway.Internal.Filters
             Token = token ?? throw new ArgumentNullException(nameof(token));
         }
 
-        public NumberToken Token { get; }
+        public NumberToken Token { get; private set; }
         
         public override int StartIndex => Token.StartIndex;
 
         public override string ToString() => base.ToString() + Token.StringValue;
+
+        public ConstantNumberExpressionToken CreateNegativeNumber()
+        {
+            return new ConstantNumberExpressionToken(new NumberToken(Token.StartIndex, Token.EndIndex, -Token.NumberValue));
+        }
     }
 
     public class ConstantStringExpressionToken: ConstantBaseExpressionToken
