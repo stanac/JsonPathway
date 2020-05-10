@@ -25,7 +25,7 @@ namespace JsonPathway.Internal
             return result;
         }
 
-        internal static IEnumerable<JsonElement> Execute(Expression expression, JsonElement element)
+        internal static IEnumerable<JsonElement> Execute(JsonPathExpression expression, JsonElement element)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
             

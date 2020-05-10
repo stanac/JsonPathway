@@ -5,16 +5,16 @@ using System.Collections.Generic;
 
 namespace JsonPathway
 {
-    public class ExpressionList: IReadOnlyList<Expression>
+    public class ExpressionList: IReadOnlyList<JsonPathExpression>
     {
-        private readonly List<Expression> _expressions = new List<Expression>();
+        private readonly List<JsonPathExpression> _expressions = new List<JsonPathExpression>();
 
         private ExpressionList(IReadOnlyList<Token> tokens)
         {
             _expressions.AddRange(Parser.Parse(tokens));
         }
 
-        public Expression this[int index] => _expressions[index];
+        public JsonPathExpression this[int index] => _expressions[index];
 
         public int Count => _expressions.Count;
 
@@ -26,7 +26,7 @@ namespace JsonPathway
             return Parse(tokens);
         }
 
-        public IEnumerator<Expression> GetEnumerator()
+        public IEnumerator<JsonPathExpression> GetEnumerator()
         {
             foreach (var expr in _expressions) yield return expr;
         }

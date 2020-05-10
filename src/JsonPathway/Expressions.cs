@@ -7,12 +7,17 @@ using System.Text.Json;
 
 namespace JsonPathway
 {
-    public abstract class Expression
+    public abstract class JsonPathExpression
     {
-        
+        public static ExpressionList Parse(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path)) throw new ArgumentException("Value not set", nameof(path));
+
+            return ExpressionList.TokenizeAndParse(path);
+        }
     }
 
-    public class PropertyAccessExpression: Expression
+    public class PropertyAccessExpression: JsonPathExpression
     {
         public List<string> Properties { get; }
         public bool ChildProperties { get; }
@@ -44,7 +49,7 @@ namespace JsonPathway
         }
     }
 
-    public class ArrayElementsExpression : Expression
+    public class ArrayElementsExpression : JsonPathExpression
     {
         public int? SliceStart { get; }
         public int? SliceEnd { get; }
@@ -71,7 +76,7 @@ namespace JsonPathway
         }
     }
 
-    public class FilterExpression : Expression
+    public class FilterExpression : JsonPathExpression
     {
         internal FilterSubExpression Expression { get; }
 

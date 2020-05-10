@@ -5,13 +5,13 @@ namespace JsonPathway.Internal
 {
     internal static class Parser
     {
-        public static IEnumerable<Expression> Parse(IReadOnlyList<Token> tokens)
+        public static IEnumerable<JsonPathExpression> Parse(IReadOnlyList<Token> tokens)
         {
             EnsureTokensAreValid(tokens.ToList());
 
             foreach (Token t in tokens.Where(x => !x.IsSymbolToken('.')))
             {
-                foreach (Expression e in Parse(t))
+                foreach (JsonPathExpression e in Parse(t))
                 {
                     yield return e;
                 }
@@ -41,7 +41,7 @@ namespace JsonPathway.Internal
             }
         }
 
-        private static IEnumerable<Expression> Parse(Token t)
+        private static IEnumerable<JsonPathExpression> Parse(Token t)
         {
             switch (t)
             {
