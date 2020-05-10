@@ -8,7 +8,7 @@ namespace JsonPathway.Tests
     {
         public static string AbcArray() => LoadFile("AbcArray.json");
 
-        public static string Store() => LoadFile("Store.json");
+        public static string Store() => LoadFile("Store.json"); // source: https://goessner.net/articles/JsonPath/
 
         public static string LoadFile(string name)
         {

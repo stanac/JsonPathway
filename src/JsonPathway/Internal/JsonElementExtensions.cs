@@ -53,5 +53,31 @@ namespace JsonPathway.Internal
             throw new ArgumentException($"Value kind {e.ValueKind} not implemented");
         }
 
+        public static List<JsonElement> EnumerateRecursively(this JsonElement e)
+        {
+            var result = new List<JsonElement>();
+            EnumerateRecursively(e, result);
+            return result;
+        }
+
+        private static void EnumerateRecursively(JsonElement e, List<JsonElement> result)
+        {
+            if (e.ValueKind == JsonValueKind.Object)
+            {
+                result.Add(e);
+                foreach (JsonElement c in e.EnumerateObject().Select(x => x.Value))
+                {
+                    EnumerateRecursively(c, result);
+                }
+            }
+            else if (e.ValueKind == JsonValueKind.Array)
+            {
+                result.Add(e);
+                foreach (JsonElement c in e.EnumerateArray())
+                {
+                    EnumerateRecursively(c, result);
+                }
+            }
+        }
     }
 }

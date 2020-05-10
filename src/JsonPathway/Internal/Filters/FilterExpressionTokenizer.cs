@@ -152,15 +152,67 @@ namespace JsonPathway.Internal.Filters
                         continue;
                     }
 
+                    if (t is PrimitiveExpressionToken pet4 && (pet4.Token.IsChildPropertiesToken() || pet4.Token.IsRecursivePropertiesToken()))
+                    {
+                        tokensForReplacement.Add(t as PrimitiveExpressionToken);
+                        index++;
+                        continue;
+                    }
+
                     break;
                 }
 
-                PropertyExpressionToken propEx = new PropertyExpressionToken(
-                    tokensForReplacement.Where(x => !x.Token.IsSymbolToken('@')).Select(x => x.Token.CastToPropertyToken()).ToArray(),
-                    tokensForReplacement.First().StartIndex
-                    );
+                var tokensToRemove = tokensForReplacement.ToList();
+                if (tokensForReplacement.First().Token.IsSymbolToken('@'))
+                {
+                    tokensForReplacement = tokensForReplacement.Skip(1).ToList();
+                }
 
-                replacements.Add((propEx, tokensForReplacement.Cast<FilterExpressionToken>().ToList()));
+                for (int i = 0; i < tokensForReplacement.Count -1; i++)
+                {
+                    if (tokensForReplacement[i].Token.IsChildPropertiesToken() || tokensForReplacement[i].Token.IsRecursivePropertiesToken())
+                    {
+                        // only last property can be wildcard * or recursive ..
+                        string accessor = tokensForReplacement[i].Token.IsChildPropertiesToken() ? "\"*\"" : "\"..\"";
+                        throw new ParsingException($"Unexpected token accessor {accessor} at {tokensForReplacement[i].Token.StartIndex}" +
+                            ", this kind of token is expected to be last in property chain");
+                    }
+                }
+
+                PropertyExpressionToken propEx;
+                var last = tokensForReplacement.Last().Token;
+
+                if (last.IsRecursivePropertiesToken())
+                {
+                    var props = tokensForReplacement.Where(x => !x.Token.IsSymbolToken('@')).ToList();
+                    props = tokensForReplacement.Take(props.Count - 1).ToList();
+                
+                    propEx = new PropertyExpressionToken(
+                        props.Select(x => x.Token.CastToPropertyToken()).ToArray(),
+                        tokensForReplacement.Last().Token.CastToRecursivePropertiesToken(),
+                        tokensForReplacement.First().StartIndex
+                        );
+                }
+                else if (last.IsChildPropertiesToken())
+                {
+                    var props = tokensForReplacement.Where(x => !x.Token.IsSymbolToken('@')).ToList();
+                    props = tokensForReplacement.Take(props.Count - 1).ToList();
+                
+                    propEx = new PropertyExpressionToken(
+                        props.Select(x => x.Token.CastToPropertyToken()).ToArray(),
+                        tokensForReplacement.Last().Token.CastToChildPropertiesToken(),
+                        tokensForReplacement.First().StartIndex
+                        );
+                }
+                else
+                {
+                  propEx = new PropertyExpressionToken(
+                      tokensForReplacement.Where(x => !x.Token.IsSymbolToken('@')).Select(x => x.Token.CastToPropertyToken()).ToArray(),
+                      tokensForReplacement.First().StartIndex
+                      );
+                }
+
+                replacements.Add((propEx, tokensToRemove.Cast<FilterExpressionToken>().ToList()));
             }
 
             var ret = tokens.ToList();
@@ -188,7 +240,7 @@ namespace JsonPathway.Internal.Filters
         private static List<FilterExpressionToken> ReplaceBinaryOperatorTokens(List<FilterExpressionToken> tokens)
         {
             List<List<PrimitiveExpressionToken>> symbolGroups = new List<List<PrimitiveExpressionToken>>();
-
+            
             if (tokens.First() is PrimitiveExpressionToken fpet && fpet.Token.IsSymbolToken()) throw new UnexpectedTokenException(fpet.Token);
             if (tokens.Last() is PrimitiveExpressionToken lpet && lpet.Token.IsSymbolToken()) throw new UnexpectedTokenException(lpet.Token);
 
@@ -196,13 +248,14 @@ namespace JsonPathway.Internal.Filters
             {
                 bool previousWasSymbol = tokens[i - 1] is PrimitiveExpressionToken ppet && ppet.Token.IsSymbolToken();
 
-                if (tokens[i] is PrimitiveExpressionToken pet && pet.Token.IsSymbolToken() && !pet.Token.IsSymbolToken('!'))
+                if (tokens[i] is PrimitiveExpressionToken pet && pet.Token.IsSymbolToken())
                 {
                     if (!previousWasSymbol)
                     {
                         symbolGroups.Add(new List<PrimitiveExpressionToken>());
                     }
 
+                    if (symbolGroups.Count == 0) symbolGroups.Add(new List<PrimitiveExpressionToken>());
                     symbolGroups.Last().Add(pet);
                 }
             }
@@ -574,6 +627,10 @@ namespace JsonPathway.Internal.Filters
             {
                 if (ret[i] is PrimitiveExpressionToken pet && pet.Token.IsSymbolToken('!'))
                 {
+                    if (i < tokens.Count - 1 && ret[i + 1] is PrimitiveExpressionToken pet2 && pet2.Token.IsSymbolToken('='))
+                    {
+                        continue;
+                    }
                     ret[i] = new NegationExpressionToken(pet.Token.CastToSymbolToken());
                 }
             }

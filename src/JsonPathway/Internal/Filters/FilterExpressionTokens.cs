@@ -61,13 +61,31 @@ namespace JsonPathway.Internal.Filters
     public class PropertyExpressionToken: FilterExpressionToken
     {
         public PropertyToken[] PropertyChain { get; }
+        public bool ChildProperties { get; }
+        public bool RecursiveProperties { get; }
 
         public PropertyExpressionToken(PropertyToken[] tokens, int startIndex)
         {
             PropertyChain = tokens ?? throw new ArgumentNullException(nameof(tokens));
             StartIndex = startIndex;
         }
-        
+
+        public PropertyExpressionToken(PropertyToken[] tokens, ChildPropertiesToken last, int startIndex)
+        {
+            if (last is null) throw new ArgumentNullException(nameof(last));
+            PropertyChain = tokens ?? throw new ArgumentNullException(nameof(tokens));
+            StartIndex = startIndex;
+            ChildProperties = true;
+        }
+
+        public PropertyExpressionToken(PropertyToken[] tokens, RecursivePropertiesToken last, int startIndex)
+        {
+            if (last is null) throw new ArgumentNullException(nameof(last));
+            PropertyChain = tokens ?? throw new ArgumentNullException(nameof(tokens));
+            StartIndex = startIndex;
+            RecursiveProperties = true;
+        }
+
         public override int StartIndex { get; }
 
         public override string ToString() => base.ToString() + ToInternalString();

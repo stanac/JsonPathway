@@ -99,7 +99,7 @@ namespace JsonPathway.Internal.Filters
         {
             JsonElement innerResult = Expression.Execute(input);
             bool result = innerResult.IsTruthy();
-            return JsonElementFactory.CreateBool(result);
+            return JsonElementFactory.CreateBool(!result);
         }
     }
 
@@ -255,10 +255,14 @@ namespace JsonPathway.Internal.Filters
     internal class PropertyFilterSubExpression: FilterSubExpression
     {
         public string[] PropertyChain { get; }
+        public bool IsWhildcard { get; }
+        public bool IsRecursive { get; }
 
         public PropertyFilterSubExpression(PropertyExpressionToken token)
         {
             PropertyChain = token?.PropertyChain?.Select(x => x.StringValue)?.ToArray() ?? throw new ArgumentNullException(nameof(token));
+            IsWhildcard = token.ChildProperties;
+            IsRecursive = token.RecursiveProperties;
         }
 
         public override void ReplaceTruthyExpressions()
@@ -270,6 +274,11 @@ namespace JsonPathway.Internal.Filters
         {
             JsonElement result = JsonElementFactory.CreateNull();
 
+            if (PropertyChain.Length == 0)
+            {
+                result = input;
+            }
+
             foreach (var p in PropertyChain)
             {
                 if (p == "length" && input.TryGetArrayOrStringLength(out int length))
@@ -279,11 +288,32 @@ namespace JsonPathway.Internal.Filters
                 else if (input.ValueKind == JsonValueKind.Object && input.TryGetProperty(p, out JsonElement t))
                 {
                     result = t;
+                    input = t;
                 }
                 else
                 {
                     return JsonElementFactory.CreateNull();
                 }
+            }
+
+            if (IsWhildcard)
+            {
+                JsonElement[] resultArray = new JsonElement[0];
+                if (result.ValueKind == JsonValueKind.Object)
+                {
+                    resultArray = result.EnumerateObject().Select(x => x.Value).ToArray();
+                }
+                else if (result.ValueKind == JsonValueKind.Array)
+                {
+                    return result;
+                }
+
+                return JsonElementFactory.CreateArray(resultArray);
+            }
+
+            if (IsRecursive)
+            {
+                return JsonElementFactory.CreateArray(result.EnumerateRecursively());
             }
 
             return result;
