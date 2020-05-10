@@ -83,9 +83,9 @@ namespace JsonPathway.Internal
             return new List<JsonElement>();
         }
 
-        private static IEnumerable<JsonElement> Execute(FilterExpression expr, JsonElement e)
+        private static IEnumerable<JsonElement> Execute(FilterExpression expr, JsonElement element)
         {
-            throw new NotImplementedException();
+            return expr.Execute(element);
         }
     }
 }

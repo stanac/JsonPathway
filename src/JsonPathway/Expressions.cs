@@ -1,7 +1,9 @@
 ﻿using JsonPathway.Internal;
+using JsonPathway.Internal.Filters;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 namespace JsonPathway
 {
@@ -71,9 +73,31 @@ namespace JsonPathway
 
     public class FilterExpression : Expression
     {
+        internal FilterSubExpression Expression { get; }
+
         internal FilterExpression(FilterToken token)
         {
-            IReadOnlyList<Token> tokens = Tokenizer.Tokenize(token.StringValue);
+            Expression = FilterParser.Parse(FilterExpressionTokenizer.Tokenize(token.StringValue));
+        }
+
+        public IEnumerable<JsonElement> Execute(JsonElement json)
+        {
+            if (json.ValueKind == JsonValueKind.Array)
+            {
+                foreach (JsonElement c in json.EnumerateArray())
+                {
+                    JsonElement result = Expression.Execute(c);
+                    if (result.IsTruthy()) yield return c;
+                }
+            }
+            if (json.ValueKind == JsonValueKind.Object)
+            {
+                foreach (JsonElement c in json.EnumerateObject().Select(x => x.Value))
+                {
+                    JsonElement result = Expression.Execute(c);
+                    if (result.IsTruthy()) yield return c;
+                }
+            }
         }
     }
 }

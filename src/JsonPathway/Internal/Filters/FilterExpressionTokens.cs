@@ -167,22 +167,13 @@ namespace JsonPathway.Internal.Filters
     {
         internal ComparisonOperatorExpressionToken(string value)
         {
-            if (value == "==") IsEquals = true;
-            else if (value == "!=") IsNotEqual = true;
-            else if (value == ">") IsGreater = true;
-            else if (value == ">=") IsGreaterOrEqual = true;
-            else if (value == "<") IsLess = true;
-            else if (value == "<=") IsLessOrEqual = true;
-            else throw new ArgumentException($"Unrecognized value {value}", nameof(value));
+            string[] validValues = new[]
+            {
+                "==", "!=", ">", "<", ">=", "<="
+            };
+
+            if (!validValues.Contains(value)) throw new ArgumentException($"Unrecognized value {value}", nameof(value));
         }
-
-        public bool IsEquals { get; }
-        public bool IsNotEqual { get; }
-        public bool IsGreater { get; }
-        public bool IsGreaterOrEqual { get; }
-        public bool IsLess { get; }
-        public bool IsLessOrEqual { get; }
-
     }
 
     public abstract class ConstantBaseExpressionToken: FilterExpressionToken
