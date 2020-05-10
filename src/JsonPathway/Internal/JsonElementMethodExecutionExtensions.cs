@@ -102,7 +102,7 @@ namespace JsonPathway.Internal
                 string executedOn = e.GetString();
                 string argument = arguments[0].GetString();
 
-                if (arguments[1].IsTruthy())
+                if (arguments.Count == 2 && arguments[1].IsTruthy())
                 {
                     executedOn = executedOn.ToLower();
                     argument = argument.ToLower();

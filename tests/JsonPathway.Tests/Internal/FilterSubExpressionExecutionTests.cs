@@ -1,7 +1,5 @@
 ﻿using JsonPathway.Internal;
 using JsonPathway.Internal.Filters;
-using Newtonsoft.Json.Linq;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using Xunit;
