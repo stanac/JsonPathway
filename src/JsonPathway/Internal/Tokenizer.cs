@@ -25,7 +25,7 @@ namespace JsonPathway.Internal
             if (input.StartsWith("$"))
             {
                 input = input.Substring(1).Trim();
-                if (input.StartsWith(".")) input = input.Substring(1);
+                if (input.StartsWith(".") && !input.StartsWith("..")) input = input.Substring(1);
             }
 
             IReadOnlyList<Token> tokens = GetTokensInner(input);

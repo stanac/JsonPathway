@@ -25,7 +25,7 @@ namespace JsonPathway.Internal
             Token unexpectedToken = tokens.FirstOrDefault(x => !x.CanBeConvertedToExpression() && !x.IsSymbolToken('.'));
             if (unexpectedToken != null) throw new UnexpectedTokenException(unexpectedToken);
 
-            if (tokens[0].IsSymbolToken('.')) throw new UnexpectedTokenException(tokens[0]);
+            if (tokens[0].IsSymbolToken('.') && ! tokens[0].IsSymbolToken('.')) throw new UnexpectedTokenException(tokens[0]);
             if (tokens.Last().IsSymbolToken('.')) throw new UnexpectedTokenException(tokens.Last());
 
             var pointTokens = tokens.Where(x => x.IsSymbolToken('.'));

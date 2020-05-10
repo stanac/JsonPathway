@@ -62,5 +62,80 @@ namespace JsonPathway.Tests
                 Assert.Contains(_bookJsons[e], resultJsons);
             }
         }
+
+        [Theory]
+        [InlineData("$..author", "Nigel Rees", "Evelyn Waugh", "Herman Melville", "J. R. R. Tolkien")]
+        [InlineData("$.store.book[*].author", "Nigel Rees", "Evelyn Waugh", "Herman Melville", "J. R. R. Tolkien")]
+        public void RecursiveFilterAndWildcardArrayFilter_ReturnsCorrectResult(string path, params string[] expected)
+        {
+            string input = TestDataLoader.Store();
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(path, input);
+
+            Assert.Equal(expected.Length, result.Count);
+
+            foreach (var r in result)
+            {
+                Assert.Equal(JsonValueKind.String, r.ValueKind);
+                var rString = r.GetString();
+                Assert.Contains(rString, expected);
+            }
+        }
+
+        [Fact]
+        public void FilterWithWildcardPropertyFilter_ReturnsCorrectResult()
+        {
+            string path = "$.store.bicycle.*";
+            string input = TestDataLoader.Store();
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(path, input);
+
+            Assert.Equal(2, result.Count);
+
+            Assert.Contains(result, x => x.ValueKind == JsonValueKind.String && x.GetString() == "red");
+            Assert.Contains(result, x => x.ValueKind == JsonValueKind.Number && x.GetDouble() == 19.95);
+
+            path = "store.*";
+            result = JsonPath.ExecutePath(path, input);
+
+            string resultJson = JsonSerializer.Serialize(result).RemoveWhiteSpace();
+
+            string expected = @"
+                [
+                  [
+                    {
+                      `category`: `reference`,
+                      `author`: `Nigel Rees`,
+                      `title`: `Sayings of the Century`,
+                      `price`: 8.95
+                    },
+                    {
+                      `category`: `fiction`,
+                      `author`: `Evelyn Waugh`,
+                      `title`: `Sword of Honour`,
+                      `price`: 12.99
+                    },
+                    {
+                      `category`: `fiction`,
+                      `author`: `Herman Melville`,
+                      `title`: `Moby Dick`,
+                      `isbn`: `0-553-21311-3`,
+                      `price`: 8.99
+                    },
+                    {
+                      `category`: `fiction`,
+                      `author`: `J. R. R. Tolkien`,
+                      `title`: `The Lord of the Rings`,
+                      `isbn`: `0-395-19395-8`,
+                      `price`: 22.99
+                    }
+                  ],
+                  {
+                    `color`: `red`,
+                    `price`: 19.95
+                  }
+                ]"
+                .Replace("`", "\"").RemoveWhiteSpace();
+
+            Assert.Equal(expected, resultJson);
+        }
     }
 }
