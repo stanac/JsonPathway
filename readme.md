@@ -174,7 +174,7 @@ Array operators:
  - `$.store.book[-1]` returns "The Lord of the Rings" book (last book)
  - `$.store.book[*]` returns all books
  
-Slice operator [start:end:step] `$.store.book[0:4:2]` returns books at indexes [0] and [2]
+Slice operator `[start:end:step]` `$.store.book[0:4:2]` returns books at indexes [0] and [2]
 (second number "end" is exclusive).
 
 Wildcard can be applied to object properties with `.*`:
