@@ -15,7 +15,7 @@ that depends only on [System.Text.Json](https://www.nuget.org/packages/System.Te
 | `*` | Wildcard for properties |
 | `[*]` | Wildcard for array elements (useless?) |
 | `[?()]` | Filter for object properties or array elements |
-| `@` | Current element refernce in filter |
+| `@` | Current element reference in filter |
 
 `()` script expression is not supported in this implementation
 
@@ -46,7 +46,7 @@ IReadOnlyList<JsonElement> ExecutePath(ExpressionList jsonPathExpression, JsonDo
 ```
 
 Both parsed document `JsonDocument` and `ExpressionList` that represents parsed path can be reused
-and should be resued when used multiple times.
+and should be reused when used multiple times.
 ``` csharp
 string json1 = // ...
 string json2 = // ...
