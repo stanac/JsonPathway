@@ -21,7 +21,7 @@ that depends only on [System.Text.Json](https://www.nuget.org/packages/System.Te
 
 ## Usage
 
-Install nuget `JsonPathway`
+Install [nuget](https://www.nuget.org/packages/JsonPathway/) `JsonPathway`
 
 ```csharp
 using JsonPathway;
