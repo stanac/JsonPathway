@@ -351,3 +351,5 @@ MigrationBackup/
 
 *.ncrunch
 *.ncrunchsolution
+
+TestResults/
