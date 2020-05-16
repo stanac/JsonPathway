@@ -17,7 +17,7 @@ namespace JsonPathway
         }
     }
 
-    public class PropertyAccessExpression: JsonPathExpression
+    internal class PropertyAccessExpression: JsonPathExpression
     {
         public List<string> Properties { get; }
         public bool ChildProperties { get; }
@@ -49,7 +49,7 @@ namespace JsonPathway
         }
     }
 
-    public class ArrayElementsExpression : JsonPathExpression
+    internal class ArrayElementsExpression : JsonPathExpression
     {
         public int? SliceStart { get; }
         public int? SliceEnd { get; }
@@ -76,7 +76,7 @@ namespace JsonPathway
         }
     }
 
-    public class FilterExpression : JsonPathExpression
+    internal class FilterExpression : JsonPathExpression
     {
         internal FilterSubExpression Expression { get; }
 

@@ -167,7 +167,7 @@ namespace JsonPathway
         {
         }
 
-        public UnexpectedTokenException(FilterExpressionToken token)
+        internal UnexpectedTokenException(FilterExpressionToken token)
             : this(token, "")
         {
         }
@@ -177,7 +177,7 @@ namespace JsonPathway
         {
         }
 
-        public UnexpectedTokenException(FilterExpressionToken token, string message)
+        internal UnexpectedTokenException(FilterExpressionToken token, string message)
             : this($"Unexpected {token}. {message}")
         {
         }

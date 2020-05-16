@@ -13,10 +13,6 @@ namespace JsonPathway
         /// In case when same jsonPathExpression needs
         /// to be used multiple times it's faster to call <see cref="ExpressionList.TokenizeAndParse(string)"/>
         /// and reuse <see cref="ExpressionList"/> returned by <see cref="ExpressionList.TokenizeAndParse(string)"/>.
-        /// <br/><br/>
-        /// <see cref="ExpressionList"/> has <see cref="ExpressionList.SerializerToJson"/> and
-        /// <see cref="ExpressionList.DeserializeFromJson(string)"/>. Deserializing expression list from JSON
-        /// is a lot faster than parsing expression again.
         /// </summary>
         /// <param name="jsonPathExpression">string representation of JsonPath expression</param>
         /// <param name="json">JSON document</param>
@@ -33,10 +29,6 @@ namespace JsonPathway
         /// In case when same jsonPathExpression needs
         /// to be used multiple times it's faster to call <see cref="ExpressionList.TokenizeAndParse(string)"/>
         /// and reuse <see cref="ExpressionList"/> returned by <see cref="ExpressionList.TokenizeAndParse(string)"/>.
-        /// <br/> <br/>
-        /// <see cref="ExpressionList"/> has <see cref="ExpressionList.SerializerToJson"/> and
-        /// <see cref="ExpressionList.DeserializeFromJson(string)"/>. Deserializing expression list from JSON
-        /// is a lot faster than parsing expression again.
         /// </summary>
         /// <param name="jsonPathExpression">JsonPath expression</param>
         /// <param name="doc">Parsed JSON document</param>

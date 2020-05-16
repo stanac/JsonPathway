@@ -4,13 +4,13 @@ using System.Linq;
 
 namespace JsonPathway.Internal.Filters
 {
-    public abstract class FilterExpressionToken
+    internal abstract class FilterExpressionToken
     {
         public override string ToString() => GetType().Name + ": ";
         public abstract int StartIndex { get; }
     }
 
-    public class PrimitiveExpressionToken: FilterExpressionToken
+    internal class PrimitiveExpressionToken: FilterExpressionToken
     {
         public PrimitiveExpressionToken(Token token)
         {
@@ -24,7 +24,7 @@ namespace JsonPathway.Internal.Filters
         public override string ToString() => base.ToString() + Token;
     }
 
-    public class OpenGroupToken: FilterExpressionToken
+    internal class OpenGroupToken: FilterExpressionToken
     {
         public OpenGroupToken(SymbolToken token, int groupId, int deptLevel)
         {
@@ -42,7 +42,7 @@ namespace JsonPathway.Internal.Filters
         public override string ToString() => base.ToString() + $"{Token} group id: {GroupId}";
     }
 
-    public class CloseGroupToken : FilterExpressionToken
+    internal class CloseGroupToken : FilterExpressionToken
     {
         public CloseGroupToken(SymbolToken token, int groupId)
         {
@@ -58,7 +58,7 @@ namespace JsonPathway.Internal.Filters
         public override string ToString() => base.ToString() + $"{Token} group id: {GroupId}";
     }
 
-    public class PropertyExpressionToken: FilterExpressionToken
+    internal class PropertyExpressionToken: FilterExpressionToken
     {
         public PropertyToken[] PropertyChain { get; }
         public bool ChildProperties { get; }
@@ -99,7 +99,7 @@ namespace JsonPathway.Internal.Filters
         }
     }
 
-    public class NegationExpressionToken: FilterExpressionToken
+    internal class NegationExpressionToken: FilterExpressionToken
     {
         public NegationExpressionToken(SymbolToken token)
         {
@@ -113,7 +113,7 @@ namespace JsonPathway.Internal.Filters
         public SymbolToken Token { get; }
     }
 
-    public abstract class OperatorExpressionToken : FilterExpressionToken
+    internal abstract class OperatorExpressionToken : FilterExpressionToken
     {
         public SymbolToken[] Tokens { get; private set; }
         public string StringValue { get; private set; }
@@ -150,7 +150,7 @@ namespace JsonPathway.Internal.Filters
         public override string ToString() => base.ToString() + $" {StringValue} at {Tokens.First().StartIndex}";
     }
 
-    public class LogicalBinaryOperatorExpressionToken: OperatorExpressionToken
+    internal class LogicalBinaryOperatorExpressionToken: OperatorExpressionToken
     {
         internal LogicalBinaryOperatorExpressionToken(string value)
         {
@@ -163,7 +163,7 @@ namespace JsonPathway.Internal.Filters
         public bool IsAnd { get; }
     }
 
-    public class ComparisonOperatorExpressionToken: OperatorExpressionToken
+    internal class ComparisonOperatorExpressionToken: OperatorExpressionToken
     {
         internal ComparisonOperatorExpressionToken(string value)
         {
@@ -176,7 +176,7 @@ namespace JsonPathway.Internal.Filters
         }
     }
 
-    public abstract class ConstantBaseExpressionToken: FilterExpressionToken
+    internal abstract class ConstantBaseExpressionToken: FilterExpressionToken
     {
         public string StringValue { get; }
 
@@ -185,8 +185,8 @@ namespace JsonPathway.Internal.Filters
             StringValue = value;
         }
     }
-    
-    public class ConstantBoolExpressionToken : ConstantBaseExpressionToken
+
+    internal class ConstantBoolExpressionToken : ConstantBaseExpressionToken
     {
         public ConstantBoolExpressionToken (BoolToken token)
             : base(token.StringValue)
@@ -201,7 +201,7 @@ namespace JsonPathway.Internal.Filters
         public override string ToString() => base.ToString() + Token.StringValue;
     }
 
-    public class ConstantNumberExpressionToken : ConstantBaseExpressionToken
+    internal class ConstantNumberExpressionToken : ConstantBaseExpressionToken
     {
         public ConstantNumberExpressionToken(NumberToken token)
             : base(token.StringValue)
@@ -221,7 +221,7 @@ namespace JsonPathway.Internal.Filters
         }
     }
 
-    public class ConstantStringExpressionToken: ConstantBaseExpressionToken
+    internal class ConstantStringExpressionToken: ConstantBaseExpressionToken
     {
         public ConstantStringExpressionToken(StringToken token)
             : base(token.StringValue)
@@ -236,7 +236,7 @@ namespace JsonPathway.Internal.Filters
         public override string ToString() => base.ToString() + Token.StringValue;
     }
 
-    public class MethodCallExpressionToken: FilterExpressionToken
+    internal class MethodCallExpressionToken: FilterExpressionToken
     {
         public MethodCallExpressionToken(FilterExpressionToken calledOnExpression, string methodName, FilterExpressionToken[] arguments)
         {
@@ -265,7 +265,7 @@ namespace JsonPathway.Internal.Filters
             + string.Join(", ", Arguments.Select(x => x.ToString()));
     }
 
-    public class ArrayAccessExpressionToken: FilterExpressionToken
+    internal class ArrayAccessExpressionToken: FilterExpressionToken
     {
         public bool IsAllArrayElemets { get; }
         public int? SliceStart { get; }
