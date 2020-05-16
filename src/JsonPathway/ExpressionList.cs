@@ -1,5 +1,4 @@
 ﻿using JsonPathway.Internal;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -12,6 +11,14 @@ namespace JsonPathway
         private ExpressionList(IReadOnlyList<Token> tokens)
         {
             _expressions.AddRange(Parser.Parse(tokens));
+
+            foreach (var ex in _expressions)
+            {
+                if (ex is FilterExpression fe)
+                {
+                    fe.EnsureMethodNamesAreValid();
+                }
+            }
         }
 
         public JsonPathExpression this[int index] => _expressions[index];

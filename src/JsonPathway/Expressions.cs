@@ -104,5 +104,15 @@ namespace JsonPathway
                 }
             }
         }
+
+        public void EnsureMethodNamesAreValid()
+        {
+            IReadOnlyList<FilterSubExpression> allExpressions = Expression.GetThisAndDescendants();
+
+            foreach (MethodCallFilterSubExpression mc in allExpressions.Where(x => x is MethodCallFilterSubExpression))
+            {
+                mc.EnsureMethodNameIsValid();
+            }
+        }
     }
 }

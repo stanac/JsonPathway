@@ -5,7 +5,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace JsonPathway
 {
-    [ExcludeFromCodeCoverageAttribute]
+    [ExcludeFromCodeCoverage]
     public abstract class JsonPathwayException : Exception
     {
         public JsonPathwayException()
@@ -21,7 +21,7 @@ namespace JsonPathway
         }
     }
 
-    [ExcludeFromCodeCoverageAttribute]
+    [ExcludeFromCodeCoverage]
     public class InternalJsonPathwayException : JsonPathwayException
     {
         public InternalJsonPathwayException() : base("Unexpected internal exception in the library")
@@ -37,7 +37,7 @@ namespace JsonPathway
         }
     }
 
-    [ExcludeFromCodeCoverageAttribute]
+    [ExcludeFromCodeCoverage]
     public abstract class TokenizationException : JsonPathwayException
     {
         public TokenizationException()
@@ -53,7 +53,7 @@ namespace JsonPathway
         }
     }
 
-    [ExcludeFromCodeCoverageAttribute]
+    [ExcludeFromCodeCoverage]
     public class UnrecognizedCharSequence : TokenizationException
     {
         public UnrecognizedCharSequence() : base()
@@ -79,7 +79,7 @@ namespace JsonPathway
         }
     }
 
-    [ExcludeFromCodeCoverageAttribute]
+    [ExcludeFromCodeCoverage]
     public class UnrecognizedSymbolException : TokenizationException
     {
         public UnrecognizedSymbolException() : base()
@@ -99,7 +99,7 @@ namespace JsonPathway
         }
     }
 
-    [ExcludeFromCodeCoverageAttribute]
+    [ExcludeFromCodeCoverage]
     public class UnescapedCharacterException : TokenizationException
     {
         public UnescapedCharacterException()
@@ -120,7 +120,7 @@ namespace JsonPathway
         }
     }
 
-    [ExcludeFromCodeCoverageAttribute]
+    [ExcludeFromCodeCoverage]
     public class UnclosedStringException : TokenizationException
     {
         public UnclosedStringException()
@@ -141,7 +141,23 @@ namespace JsonPathway
         }
     }
 
-    [ExcludeFromCodeCoverageAttribute]
+    [ExcludeFromCodeCoverage]
+    public class UnrecognizedMethodNameException : TokenizationException
+    {
+        public UnrecognizedMethodNameException() : base()
+        {
+        }
+
+        public UnrecognizedMethodNameException(string message) : base(message)
+        {
+        }
+
+        public UnrecognizedMethodNameException(string message, Exception innerException) : base(message, innerException)
+        {
+        }
+    }
+
+    [ExcludeFromCodeCoverage]
     public class ParsingException : JsonPathwayException
     {
         public ParsingException() : base()
@@ -157,7 +173,7 @@ namespace JsonPathway
         }
     }
 
-    [ExcludeFromCodeCoverageAttribute]
+    [ExcludeFromCodeCoverage]
     public class UnexpectedTokenException : ParsingException
     {
         public UnexpectedTokenException() : base()
@@ -193,7 +209,7 @@ namespace JsonPathway
         }
     }
 
-    [ExcludeFromCodeCoverageAttribute]
+    [ExcludeFromCodeCoverage]
     public class JsonPatwayMethodNotSupportedException : TokenizationException
     {
         public JsonPatwayMethodNotSupportedException() : base()

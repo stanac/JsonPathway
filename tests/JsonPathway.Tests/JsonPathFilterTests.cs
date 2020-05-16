@@ -153,7 +153,8 @@ namespace JsonPathway.Tests
         public void FilterOnBooksObject_ReturnsCorrectResult(string path, params string[] expected)
         {
             string input = TestDataLoader.BooksObject();
-            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(path, input);
+            var expression = ExpressionList.TokenizeAndParse(path);
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
 
             Assert.Equal(expected.Length, result.Count);
             string[] resultJsons = result.Select(x => JsonSerializer.Serialize(x)).Select(x => x.RemoveWhiteSpace()).ToArray();
@@ -162,6 +163,15 @@ namespace JsonPathway.Tests
             {
                 Assert.Contains(_bookJsons[e], resultJsons);
             }
+        }
+
+        [Fact]
+        public void UnrecognizedMethodName_ThrowsException()
+        {
+            string path = "$.store.book[?(@.price.nonExistingMethodName() > 10)]";
+            string input = TestDataLoader.Store();
+
+            Assert.Throws<UnrecognizedMethodNameException>(() => JsonPath.ExecutePath(path, input));
         }
     }
 }

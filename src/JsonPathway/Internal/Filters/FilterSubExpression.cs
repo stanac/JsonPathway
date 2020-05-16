@@ -20,6 +20,28 @@ namespace JsonPathway.Internal.Filters
         public abstract void ReplaceTruthyExpressions();
 
         public abstract JsonElement Execute(JsonElement input);
+
+        public virtual IEnumerable<FilterSubExpression> GetChildExpressions()
+        {
+            yield break;
+        }
+
+        public IReadOnlyList<FilterSubExpression> GetThisAndDescendants()
+        {
+            List<FilterSubExpression> result = new List<FilterSubExpression>();
+            GetThisAndDescendants(this, result);
+            return result;
+        }
+
+        private static void GetThisAndDescendants(FilterSubExpression e, List<FilterSubExpression> resultList)
+        {
+            resultList.Add(e);
+
+            foreach (var c in e.GetChildExpressions())
+            {
+                GetThisAndDescendants(c, resultList);
+            }
+        }
     }
 
     internal class PrimitiveFilterSubExpression: FilterSubExpression
@@ -69,6 +91,11 @@ namespace JsonPathway.Internal.Filters
         {
             return Expression.Execute(input);
         }
+
+        public override IEnumerable<FilterSubExpression> GetChildExpressions()
+        {
+            yield return Expression;
+        }
     }
 
     internal class NegationFilterSubExpression : FilterSubExpression
@@ -100,6 +127,11 @@ namespace JsonPathway.Internal.Filters
             JsonElement innerResult = Expression.Execute(input);
             bool result = innerResult.IsTruthy();
             return JsonElementFactory.CreateBool(!result);
+        }
+
+        public override IEnumerable<FilterSubExpression> GetChildExpressions()
+        {
+            yield return Expression;
         }
     }
 
@@ -173,6 +205,12 @@ namespace JsonPathway.Internal.Filters
             }
 
             return JsonElementFactory.CreateBool(result);
+        }
+
+        public override IEnumerable<FilterSubExpression> GetChildExpressions()
+        {
+            yield return LeftSide;
+            yield return RightSide;
         }
     }
 
@@ -249,6 +287,12 @@ namespace JsonPathway.Internal.Filters
             }
 
             return JsonElementFactory.CreateBool(result);
+        }
+
+        public override IEnumerable<FilterSubExpression> GetChildExpressions()
+        {
+            yield return LeftSide;
+            yield return RightSide;
         }
     }
 
@@ -375,6 +419,11 @@ namespace JsonPathway.Internal.Filters
             var result = array.GetSlice(SliceStart, SliceEnd, SliceStep);
             return JsonElementFactory.CreateArray(result);
         }
+
+        public override IEnumerable<FilterSubExpression> GetChildExpressions()
+        {
+            yield return ExecutedOn;
+        }
     }
 
     internal class TruthyFilterSubExpression : FilterSubExpression
@@ -397,10 +446,21 @@ namespace JsonPathway.Internal.Filters
         {
             // do nothing
         }
+
+        public override IEnumerable<FilterSubExpression> GetChildExpressions()
+        {
+            yield return Expression;
+        }
     }
 
     internal class MethodCallFilterSubExpression : FilterSubExpression
     {
+        private static readonly string[] _validMethodNames = new []
+        {
+            "toUpper", "toUpperCase", "toLower", "toLowerCase",
+            "contains", "startsWith", "endsWith"
+        };
+
         public FilterSubExpression CalledOnExpression { get; }
         public string MethodName { get; }
         public IReadOnlyList<FilterSubExpression> Arguments { get; }
@@ -449,6 +509,36 @@ namespace JsonPathway.Internal.Filters
             }
 
             return JsonElementFactory.CreateNull();
+        }
+
+        public override IEnumerable<FilterSubExpression> GetChildExpressions()
+        {
+            yield return CalledOnExpression;
+
+            foreach (var arg in Arguments)
+            {
+                yield return arg;
+            }
+        }
+
+        internal void EnsureMethodNameIsValid()
+        {
+            if (CalledOnExpression is PropertyFilterSubExpression || CalledOnExpression is ArrayAccessFilterSubExpression
+                || CalledOnExpression is MethodCallFilterSubExpression || CalledOnExpression is StringConstantFilterSubExpression)
+            {
+                if (!_validMethodNames.Contains(MethodName))
+                {
+                    throw new UnrecognizedMethodNameException($"Method name {MethodName} not recognized. Please see: https://github.com/stanac/JsonPathway for supported methods");
+                }
+                return;
+            }
+
+            if (_validMethodNames.Contains(MethodName))
+            {
+                throw new UnrecognizedMethodNameException($"Method name {MethodName} is valid but not supported on expression of type: {CalledOnExpression.GetType()}. Please see: https://github.com/stanac/JsonPathway for supported methods");
+            }
+
+            throw new UnrecognizedMethodNameException($"Method name {MethodName} not recognized on expression of type: {CalledOnExpression.GetType()}. Please see: https://github.com/stanac/JsonPathway for supported methods");
         }
     }
 
