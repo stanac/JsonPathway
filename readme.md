@@ -3,7 +3,7 @@
 [JsonPath](https://goessner.net/articles/JsonPath/) implementation in .NET standard 2.0 
 that depends only on [System.Text.Json](https://www.nuget.org/packages/System.Text.Json/4.7.1).
 
-[![.NET Core](https://github.com/stanac/JsonPathway/workflows/.NET%20Core/badge.svg)](https://github.com/stanac/JsonPathway/actions?query=workflow%3A%22.NET+Core%22)      [![Nuget (with prereleases)](https://img.shields.io/nuget/vpre/jsonpathway)](https://www.nuget.org/packages/JsonPathway/)      [![Coverage Status](https://coveralls.io/repos/github/stanac/JsonPathway/badge.svg?branch=master)](https://coveralls.io/github/stanac/JsonPathway?branch=master)
+[![.NET Core](https://github.com/stanac/JsonPathway/workflows/.NET%20Core/badge.svg)](https://github.com/stanac/JsonPathway/actions?query=workflow%3A%22.NET+Core%22)      [![Nuget](https://img.shields.io/nuget/vpre/jsonpathway)](https://www.nuget.org/packages/JsonPathway/)      [![Coverage Status](https://coveralls.io/repos/github/stanac/JsonPathway/badge.svg?branch=master)](https://coveralls.io/github/stanac/JsonPathway?branch=master)
 
 ## Suported operators
 
