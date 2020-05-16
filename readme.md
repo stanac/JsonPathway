@@ -3,6 +3,10 @@
 [JsonPath](https://goessner.net/articles/JsonPath/) implementation in .NET standard 2.0 
 that depends only on [System.Text.Json](https://www.nuget.org/packages/System.Text.Json/4.7.1).
 
+![.NET Core](https://github.com/stanac/JsonPathway/workflows/.NET%20Core/badge.svg)
+
+
+
 ## Suported operators
 
 | JSONPath | Description |
