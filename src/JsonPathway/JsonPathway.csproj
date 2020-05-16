@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Description>JsonPath implementation in .NET standard 2.0 with support for methods that depends only on System.Text.Json</Description>
-    <Version>1.0.0-b1</Version>
+    <Version>1.0.100</Version>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryUrl>https://github.com/stanac/JsonPathway</RepositoryUrl>
   </PropertyGroup>
