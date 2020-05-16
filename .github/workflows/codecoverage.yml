@@ -29,4 +29,6 @@ jobs:
         dotnet test /p:CollectCoverage=true /p:CoverletOutput=TestResults/ /p:CoverletOutputFormat=lcov
     - name: Publish to coveralls.io
       uses: coverallsapp/github-action@v1.0.1
-      path-to-lcov: ./tests/JsonPathway.Tests/TestResults/coverage.info
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        path-to-lcov: ./tests/JsonPathway.Tests/TestResults/coverage.info
