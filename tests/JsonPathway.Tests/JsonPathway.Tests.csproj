@@ -8,12 +8,14 @@
 
   <ItemGroup>
     <None Remove="TestData\AbcArray.json" />
+    <None Remove="TestData\BooksObject.json" />
     <None Remove="TestData\PropertiesData.txt" />
     <None Remove="TestData\Store.json" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="TestData\AbcArray.json" />
+    <EmbeddedResource Include="TestData\BooksObject.json" />
     <EmbeddedResource Include="TestData\PropertiesData.txt" />
     <EmbeddedResource Include="TestData\Store.json" />
   </ItemGroup>

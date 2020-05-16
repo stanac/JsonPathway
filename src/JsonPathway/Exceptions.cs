@@ -1,9 +1,11 @@
 ﻿using JsonPathway.Internal;
 using JsonPathway.Internal.Filters;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace JsonPathway
 {
+    [ExcludeFromCodeCoverageAttribute]
     public abstract class JsonPathwayException : Exception
     {
         public JsonPathwayException()
@@ -19,6 +21,7 @@ namespace JsonPathway
         }
     }
 
+    [ExcludeFromCodeCoverageAttribute]
     public class InternalJsonPathwayException : JsonPathwayException
     {
         public InternalJsonPathwayException() : base("Unexpected internal exception in the library")
@@ -34,6 +37,7 @@ namespace JsonPathway
         }
     }
 
+    [ExcludeFromCodeCoverageAttribute]
     public abstract class TokenizationException : JsonPathwayException
     {
         public TokenizationException()
@@ -49,6 +53,7 @@ namespace JsonPathway
         }
     }
 
+    [ExcludeFromCodeCoverageAttribute]
     public class UnrecognizedCharSequence : TokenizationException
     {
         public UnrecognizedCharSequence() : base()
@@ -74,6 +79,7 @@ namespace JsonPathway
         }
     }
 
+    [ExcludeFromCodeCoverageAttribute]
     public class UnrecognizedSymbolException : TokenizationException
     {
         public UnrecognizedSymbolException() : base()
@@ -93,6 +99,7 @@ namespace JsonPathway
         }
     }
 
+    [ExcludeFromCodeCoverageAttribute]
     public class UnescapedCharacterException : TokenizationException
     {
         public UnescapedCharacterException()
@@ -113,6 +120,7 @@ namespace JsonPathway
         }
     }
 
+    [ExcludeFromCodeCoverageAttribute]
     public class UnclosedStringException : TokenizationException
     {
         public UnclosedStringException()
@@ -133,7 +141,8 @@ namespace JsonPathway
         }
     }
 
-    public class ParsingException: JsonPathwayException
+    [ExcludeFromCodeCoverageAttribute]
+    public class ParsingException : JsonPathwayException
     {
         public ParsingException() : base()
         {
@@ -148,7 +157,8 @@ namespace JsonPathway
         }
     }
 
-    public class UnexpectedTokenException: ParsingException
+    [ExcludeFromCodeCoverageAttribute]
+    public class UnexpectedTokenException : ParsingException
     {
         public UnexpectedTokenException() : base()
         {
@@ -183,7 +193,8 @@ namespace JsonPathway
         }
     }
 
-    public class JsonPatwayMethodNotSupportedException: TokenizationException
+    [ExcludeFromCodeCoverageAttribute]
+    public class JsonPatwayMethodNotSupportedException : TokenizationException
     {
         public JsonPatwayMethodNotSupportedException() : base()
         {

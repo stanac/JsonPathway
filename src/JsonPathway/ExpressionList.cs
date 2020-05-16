@@ -31,16 +31,6 @@ namespace JsonPathway
             foreach (var expr in _expressions) yield return expr;
         }
 
-        public string SerializerToJson()
-        {
-            throw new NotImplementedException();
-        }
-
-        public static ExpressionList DeserializeFromJson(string json)
-        {
-            throw new NotImplementedException();
-        }
-
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

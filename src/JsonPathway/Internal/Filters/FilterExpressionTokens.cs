@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace JsonPathway.Internal.Filters
@@ -255,11 +254,6 @@ namespace JsonPathway.Internal.Filters
         public FilterExpressionToken[] Arguments { get; private set; }
         
         public override int StartIndex => CalledOnExpression.StartIndex;
-
-        public void ReplaceArgumentTokens(IEnumerable<FilterExpressionToken> tokens)
-        {
-            Arguments = tokens.ToArray();
-        }
 
         public override string ToString() => base.ToString() + $"{CalledOnExpression} {MethodName} "
             + string.Join(", ", Arguments.Select(x => x.ToString()));

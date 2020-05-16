@@ -137,5 +137,31 @@ namespace JsonPathway.Tests
 
             Assert.Equal(expected, resultJson);
         }
+
+        [Theory]
+        [InlineData("$.store.books[?(@.price > 10)]", "soh", "lotr")]
+        [InlineData("$.store.books[?(@.price >= 8.99)]", "soh", "lotr", "md")]
+        [InlineData("$.store.books[?(@.price > 8.99)]", "soh", "lotr")]
+        [InlineData("$.store.books[?(@.price > 22.99)]")]
+        [InlineData("$.store.books[?(@.price >= 22.99)]", "lotr")]
+        [InlineData("$.store.books[?(@.price == 8.95)]", "sotc")]
+        [InlineData("$.store.books[?(@.price != 8.95)]", "lotr", "soh", "md")]
+        [InlineData("$.store.books[?(@.price < 9)]", "sotc", "md")]
+        [InlineData("$.store.books[?(@.price <= 8.99)]", "sotc", "md")]
+        [InlineData("$.store.books[?(@.price < 8.99)]", "sotc")]
+        [InlineData("$.store.books[?(@.isbn)]", "lotr", "md")]
+        public void FilterOnBooksObject_ReturnsCorrectResult(string path, params string[] expected)
+        {
+            string input = TestDataLoader.BooksObject();
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(path, input);
+
+            Assert.Equal(expected.Length, result.Count);
+            string[] resultJsons = result.Select(x => JsonSerializer.Serialize(x)).Select(x => x.RemoveWhiteSpace()).ToArray();
+
+            foreach (string e in expected)
+            {
+                Assert.Contains(_bookJsons[e], resultJsons);
+            }
+        }
     }
 }
