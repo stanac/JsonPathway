@@ -73,5 +73,33 @@ namespace JsonPathway
                 throw new InternalJsonPathwayException("Unexpected internal exception", ex);
             }
         }
+
+        /// <summary>
+        /// Checks if parameter jsonPathExpression is valid JSONPath, returns true if it's valid
+        /// </summary>
+        /// <param name="jsonPathExpression">Expression string to check</param>
+        /// <param name="error">Error message if any</param>
+        /// <returns>True if provided string is valid JSONPath</returns>
+        public static bool IsPathValid(string jsonPathExpression, out string error)
+        {
+            error = null;
+
+            try
+            {
+                var tokens = Tokenizer.Tokenize(jsonPathExpression);
+                ExpressionList.Parse(tokens);
+            }
+            catch (JsonPathwayException ex)
+            {
+                error = ex.Message;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                throw new InternalJsonPathwayException("Unexpected internal exception", ex);
+            }
+
+            return true;
+        }
     }
 }

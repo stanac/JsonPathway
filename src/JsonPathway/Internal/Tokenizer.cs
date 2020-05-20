@@ -21,13 +21,6 @@ namespace JsonPathway.Internal
                 throw new ArgumentException("Value not set", nameof(input));
             }
 
-            input = input.Trim();
-            if (input.StartsWith("$"))
-            {
-                input = input.Substring(1).Trim();
-                if (input.StartsWith(".") && !input.StartsWith("..")) input = input.Substring(1);
-            }
-
             IReadOnlyList<Token> tokens = GetTokensInner(input);
             tokens = RemoveWhiteSpaceTokens(tokens);
             tokens = ConvertStringTokensToPropertyTokens(tokens);
@@ -35,6 +28,16 @@ namespace JsonPathway.Internal
             tokens = ConvertWildcardTokens(tokens.ToList());
             tokens = ConvertMultiplePropertyTokens(tokens);
             tokens = ConvertArrayAccessTokens(tokens);
+
+            if (tokens.Count > 2 && tokens.First() is PropertyToken pt2 && pt2.StringValue == "$"
+                && tokens[1].IsSymbolToken('.') && tokens[2].IsPropertyToken())
+            {
+                tokens = tokens.Skip(2).ToList();
+            }
+            else if (tokens.Count > 1 && tokens.First() is PropertyToken pt && pt.StringValue == "$")
+            {
+                tokens = tokens.Skip(1).ToArray();
+            }
 
             return tokens;
         }

@@ -63,6 +63,11 @@ IReadOnlyList<JsonElement> result2 = JsonPath.ExecutePath(expression, json2);
 IReadOnlyList<JsonElement> result3 = JsonPath.ExecutePath(pathString, json3);
 ```
 
+Validating input can be done with:
+```csharp
+bool valid = JsonPath.IsPathValid(path, out string error);
+```
+
 ### Examples
 
 For all examples following JSON will be used as input (taken from
