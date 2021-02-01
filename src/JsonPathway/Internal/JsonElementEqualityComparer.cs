@@ -10,6 +10,7 @@ namespace JsonPathway.Internal
         public bool Equals(JsonElement x, JsonElement y)
         {
             if (x.ValueKind != y.ValueKind) return false;
+            if (x.ValueKind == JsonValueKind.Number) return x.GetDouble() == y.GetDouble();
             return x.ToString() == y.ToString();
         }
 

@@ -173,5 +173,107 @@ namespace JsonPathway.Tests
 
             Assert.Throws<UnrecognizedMethodNameException>(() => JsonPath.ExecutePath(path, input));
         }
+
+        [Fact]
+        public void EqualFilterOnDecimalWithInt_ReturnsCorrectResult()
+        {
+            string input = @"
+                {
+                    ""object"": {
+                        ""arrays"": [ { ""amount"": 10.0 } ]
+                    }
+                }
+            ";
+
+            var expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount == 10)]");
+
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
+            Assert.Equal(1, result.Count);
+        }
+
+        [Fact]
+        public void EqualFilterOnIntWithDecimal_ReturnsCorrectResult()
+        {
+            string input = @"
+                {
+                    ""object"": {
+                        ""arrays"": [ { ""amount"": 10 } ]
+                    }
+                }
+            ";
+
+            var expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount == 10.0)]");
+
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
+            Assert.Equal(1, result.Count);
+        }
+
+        [Fact]
+        public void GreaterThanOrEqualFilterOnDecimalWithInt_ReturnsCorrectResult()
+        {
+            string input = @"
+                {
+                    ""object"": {
+                        ""arrays"": [ { ""amount"": 10.0 } ]
+                    }
+                }
+            ";
+
+            var expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount >= 10)]");
+
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
+            Assert.Equal(1, result.Count);
+        }
+
+        [Fact]
+        public void GreaterThanOrEqualFilterOnIntWithDecimal_ReturnsCorrectResult()
+        {
+            string input = @"
+                {
+                    ""object"": {
+                        ""arrays"": [ { ""amount"": 10 } ]
+                    }
+                }
+            ";
+
+            var expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount >= 10.0)]");
+
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
+            Assert.Equal(1, result.Count);
+        }
+
+        [Fact]
+        public void LessThanOrEqualFilterOnDecimalWithInt_ReturnsCorrectResult()
+        {
+            string input = @"
+                {
+                    ""object"": {
+                        ""arrays"": [ { ""amount"": 10.0 } ]
+                    }
+                }
+            ";
+
+            var expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount >= 10)]");
+
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
+            Assert.Equal(1, result.Count);
+        }
+
+        [Fact]
+        public void LessThanOrEqualFilterOnIntWithDecimal_ReturnsCorrectResult()
+        {
+            string input = @"
+                {
+                    ""object"": {
+                        ""arrays"": [ { ""amount"": 10 } ]
+                    }
+                }
+            ";
+
+            var expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount >= 10.0)]");
+
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
+            Assert.Equal(1, result.Count);
+        }
     }
 }
