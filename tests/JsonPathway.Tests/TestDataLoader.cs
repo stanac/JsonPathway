@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace JsonPathway.Tests
 {
@@ -19,16 +20,16 @@ namespace JsonPathway.Tests
                 throw new ArgumentException("Value not set", nameof(name));
             }
 
-            var asm = typeof(TestDataLoader).Assembly;
+            Assembly asm = typeof(TestDataLoader).Assembly;
 
-            var names = asm.GetManifestResourceNames();
+            string[] names = asm.GetManifestResourceNames();
 
-            var foundName = names.FirstOrDefault(x => x.EndsWith("." + name));
+            string foundName = names.FirstOrDefault(x => x.EndsWith("." + name));
 
             if (foundName != null)
             {
-                using (var s = asm.GetManifestResourceStream(foundName))
-                using (var reader = new StreamReader(s))
+                using (Stream s = asm.GetManifestResourceStream(foundName))
+                using (StreamReader reader = new StreamReader(s))
                 {
                     return reader.ReadToEnd();
                 }

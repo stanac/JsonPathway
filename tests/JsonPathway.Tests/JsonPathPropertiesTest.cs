@@ -1,4 +1,5 @@
-﻿using JsonPathway.Tests.TestData;
+﻿using System.Collections.Generic;
+using JsonPathway.Tests.TestData;
 using System.Text.Json;
 using Xunit;
 
@@ -12,8 +13,8 @@ namespace JsonPathway.Tests
         {
             string json = TestDataLoader.Store();
 
-            var result = JsonPath.ExecutePath(path, json);
-            var resultJson = JsonSerializer.Serialize(result).RemoveWhiteSpace();
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(path, json);
+            string resultJson = JsonSerializer.Serialize(result).RemoveWhiteSpace();
 
 			Assert.Equal(expected, resultJson);
 		}

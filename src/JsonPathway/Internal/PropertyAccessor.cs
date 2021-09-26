@@ -12,7 +12,7 @@ namespace JsonPathway.Internal
 
             JsonElement? result = element;
 
-            foreach (var p in propertyChain)
+            foreach (string p in propertyChain)
             {
                 if (result.HasValue)
                 {
@@ -39,14 +39,14 @@ namespace JsonPathway.Internal
         {
             if (element.ValueKind == JsonValueKind.Object)
             {
-                foreach (var p in element.EnumerateObject())
+                foreach (JsonProperty p in element.EnumerateObject())
                 {
                     yield return p.Value;
                 }
             }
             else if (element.ValueKind == JsonValueKind.Array)
             {
-                foreach (var e in element.EnumerateArray())
+                foreach (JsonElement e in element.EnumerateArray())
                 {
                     yield return e;
                 }
@@ -59,7 +59,7 @@ namespace JsonPathway.Internal
             {
                 elements.Add(element);
 
-                foreach (var c in element.EnumerateObject())
+                foreach (JsonProperty c in element.EnumerateObject())
                 {
                     GetRecursivePropertiesInner(c.Value, elements);
                 }
@@ -68,7 +68,7 @@ namespace JsonPathway.Internal
             {
                 elements.Add(element);
 
-                foreach (var c in element.EnumerateArray())
+                foreach (JsonElement c in element.EnumerateArray())
                 {
                     GetRecursivePropertiesInner(c, elements);
                 }

@@ -12,16 +12,16 @@ namespace JsonPathway.Tests.Internal
         {
             string input = "@.price.count >= 0 && (@.name.first.contains('a') || @['name'].contains(5) || @.f)";
             IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
-            var expr = FilterParser.Parse(tokens);
+            FilterSubExpression expr = FilterParser.Parse(tokens);
 
             Assert.IsType<LogicalFilterSubExpression>(expr);
-            var e1 = expr as LogicalFilterSubExpression;
+            LogicalFilterSubExpression e1 = expr as LogicalFilterSubExpression;
 
             Assert.True(e1.IsAnd);
             Assert.IsType<ComparisonFilterSubExpression>(e1.LeftSide);
 
             // @.price.count >= 0
-            var comp1 = e1.LeftSide as ComparisonFilterSubExpression;
+            ComparisonFilterSubExpression comp1 = e1.LeftSide as ComparisonFilterSubExpression;
             Assert.True(comp1.IsGreaterOrEqual);
             Assert.IsType<PropertyFilterSubExpression>(comp1.LeftSide);
             Assert.True(comp1.LeftSide is PropertyFilterSubExpression p1
@@ -34,34 +34,34 @@ namespace JsonPathway.Tests.Internal
                         );
 
             // @.name.first.contains('a') || @['name'].contains(5) || @.f
-            var comp2 = (e1.RightSide as GroupFilterSubExpression).Expression as LogicalFilterSubExpression;
+            LogicalFilterSubExpression comp2 = (e1.RightSide as GroupFilterSubExpression).Expression as LogicalFilterSubExpression;
             Assert.NotNull(comp2);
 
             // @.name.first.contains('a')
             Assert.IsType<MethodCallFilterSubExpression>(comp2.LeftSide);
-            var mc1 = comp2.LeftSide as MethodCallFilterSubExpression;
+            MethodCallFilterSubExpression mc1 = comp2.LeftSide as MethodCallFilterSubExpression;
             Assert.Equal("contains", mc1.MethodName);
             Assert.True(mc1.Arguments.Count == 1 && (mc1.Arguments.Single() as StringConstantFilterSubExpression).Value == "a");
-            var calledOn1 = mc1.CalledOnExpression as PropertyFilterSubExpression;
+            PropertyFilterSubExpression calledOn1 = mc1.CalledOnExpression as PropertyFilterSubExpression;
             Assert.True(calledOn1.PropertyChain.Length == 2 && calledOn1.PropertyChain.First() == "name" && calledOn1.PropertyChain.Last() == "first");
 
             // @['name'].contains(5) || @.f
             Assert.IsType<LogicalFilterSubExpression>(comp2.RightSide);
-            var logical3 = comp2.RightSide as LogicalFilterSubExpression;
+            LogicalFilterSubExpression logical3 = comp2.RightSide as LogicalFilterSubExpression;
             Assert.True(logical3.IsOr);
 
             // @['name'].contains(5)
             Assert.IsType<MethodCallFilterSubExpression>(logical3.LeftSide);
-            var mc2 = logical3.LeftSide as MethodCallFilterSubExpression;
+            MethodCallFilterSubExpression mc2 = logical3.LeftSide as MethodCallFilterSubExpression;
             Assert.Equal("contains", mc2.MethodName);
             Assert.Equal(5.0, (mc2.Arguments.Single() as NumberConstantFilterSubExpression).Value);
             Assert.Equal("name", (mc2.CalledOnExpression as PropertyFilterSubExpression).PropertyChain.Single());
 
             // || @.f
             Assert.IsType<TruthyFilterSubExpression>(logical3.RightSide);
-            var truthy = logical3.RightSide as TruthyFilterSubExpression;
+            TruthyFilterSubExpression truthy = logical3.RightSide as TruthyFilterSubExpression;
             Assert.IsType<PropertyFilterSubExpression>(truthy.Expression);
-            var truthyProp = truthy.Expression as PropertyFilterSubExpression;
+            PropertyFilterSubExpression truthyProp = truthy.Expression as PropertyFilterSubExpression;
             Assert.Equal("f", truthyProp.PropertyChain.Single());
         }
 
@@ -70,13 +70,13 @@ namespace JsonPathway.Tests.Internal
         {
             string input = "!@.price.count";
             IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
-            var expr = FilterParser.Parse(tokens);
+            FilterSubExpression expr = FilterParser.Parse(tokens);
 
             Assert.IsType<NegationFilterSubExpression>(expr);
-            var neg = expr as NegationFilterSubExpression;
+            NegationFilterSubExpression neg = expr as NegationFilterSubExpression;
             Assert.IsType<TruthyFilterSubExpression>(neg.Expression);
-            var truthy = neg.Expression as TruthyFilterSubExpression;
-            var prop = truthy.Expression as PropertyFilterSubExpression;
+            TruthyFilterSubExpression truthy = neg.Expression as TruthyFilterSubExpression;
+            PropertyFilterSubExpression prop = truthy.Expression as PropertyFilterSubExpression;
 
             Assert.True(prop != null && prop.PropertyChain.Length == 2
                         && prop.PropertyChain[0] == "price" && prop.PropertyChain[1] == "count");
@@ -87,15 +87,15 @@ namespace JsonPathway.Tests.Internal
         {
             string input = "!!@.price.count";
             IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
-            var expr = FilterParser.Parse(tokens);
+            FilterSubExpression expr = FilterParser.Parse(tokens);
 
             Assert.IsType<NegationFilterSubExpression>(expr);
-            var neg1 = expr as NegationFilterSubExpression;
+            NegationFilterSubExpression neg1 = expr as NegationFilterSubExpression;
             Assert.IsType<NegationFilterSubExpression>(neg1.Expression);
-            var neg2 = neg1.Expression as NegationFilterSubExpression;
+            NegationFilterSubExpression neg2 = neg1.Expression as NegationFilterSubExpression;
             Assert.IsType<TruthyFilterSubExpression>(neg2.Expression);
             Assert.IsType<PropertyFilterSubExpression>((neg2.Expression as TruthyFilterSubExpression).Expression);
-            var prop = (neg2.Expression as TruthyFilterSubExpression).Expression as PropertyFilterSubExpression;
+            PropertyFilterSubExpression prop = (neg2.Expression as TruthyFilterSubExpression).Expression as PropertyFilterSubExpression;
 
             Assert.True(prop.PropertyChain.Length == 2 && prop.PropertyChain[0] == "price" && prop.PropertyChain[1] == "count");
         }
@@ -105,20 +105,20 @@ namespace JsonPathway.Tests.Internal
         {
             string input = "@.items.next[-1].contains(2.123)";
             IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
-            var expr = FilterParser.Parse(tokens);
+            FilterSubExpression expr = FilterParser.Parse(tokens);
 
             Assert.IsType<MethodCallFilterSubExpression>(expr);
-            var mc = expr as MethodCallFilterSubExpression;
+            MethodCallFilterSubExpression mc = expr as MethodCallFilterSubExpression;
             Assert.Equal(1, mc.Arguments.Count);
             Assert.Equal(2.123, (mc.Arguments[0] as NumberConstantFilterSubExpression)?.Value ?? double.MinValue, 8);
 
             Assert.IsType<ArrayAccessFilterSubExpression>(mc.CalledOnExpression);
-            var aa = mc.CalledOnExpression as ArrayAccessFilterSubExpression;
+            ArrayAccessFilterSubExpression aa = mc.CalledOnExpression as ArrayAccessFilterSubExpression;
 
             Assert.Equal(-1, aa.ExactElementsAccess.Single());
 
             Assert.IsType<PropertyFilterSubExpression>(aa.ExecutedOn);
-            var prop = aa.ExecutedOn as PropertyFilterSubExpression;
+            PropertyFilterSubExpression prop = aa.ExecutedOn as PropertyFilterSubExpression;
             Assert.Equal(2, prop.PropertyChain.Length);
             Assert.Equal("items", prop.PropertyChain[0]);
             Assert.Equal("next", prop.PropertyChain[1]);
@@ -129,15 +129,15 @@ namespace JsonPathway.Tests.Internal
         {
             string input = "@.items[2] > 3";
             IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
-            var expr = FilterParser.Parse(tokens);
+            FilterSubExpression expr = FilterParser.Parse(tokens);
 
             Assert.IsType<ComparisonFilterSubExpression>(expr);
-            var comp = expr as ComparisonFilterSubExpression;
+            ComparisonFilterSubExpression comp = expr as ComparisonFilterSubExpression;
 
             Assert.IsType<ArrayAccessFilterSubExpression>(comp.LeftSide);
             Assert.True((comp.RightSide as NumberConstantFilterSubExpression)?.Value == 3.0);
 
-            var aa = comp.LeftSide as ArrayAccessFilterSubExpression;
+            ArrayAccessFilterSubExpression aa = comp.LeftSide as ArrayAccessFilterSubExpression;
             Assert.True(aa.ExactElementsAccess?.Length == 1 && aa.ExactElementsAccess[0] == 2);
             Assert.True(aa.ExecutedOn is PropertyFilterSubExpression p && p.PropertyChain.Length == 1 && p.PropertyChain[0] == "items");
         }
@@ -147,15 +147,15 @@ namespace JsonPathway.Tests.Internal
         {
             string input = "@.items['2'] > 3";
             IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
-            var expr = FilterParser.Parse(tokens);
+            FilterSubExpression expr = FilterParser.Parse(tokens);
 
             Assert.IsType<ComparisonFilterSubExpression>(expr);
-            var comp = expr as ComparisonFilterSubExpression;
+            ComparisonFilterSubExpression comp = expr as ComparisonFilterSubExpression;
 
             Assert.IsType<PropertyFilterSubExpression>(comp.LeftSide);
             Assert.True((comp.RightSide as NumberConstantFilterSubExpression)?.Value == 3.0);
 
-            var aa = comp.LeftSide as PropertyFilterSubExpression;
+            PropertyFilterSubExpression aa = comp.LeftSide as PropertyFilterSubExpression;
             Assert.Equal(2, aa.PropertyChain.Length);
             Assert.Equal("items", aa.PropertyChain[0]);
             Assert.Equal("2", aa.PropertyChain[1]);
@@ -166,23 +166,23 @@ namespace JsonPathway.Tests.Internal
         {
             string input = "@.items >= 3 || @.b[123]";
             IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
-            var expr = FilterParser.Parse(tokens);
+            FilterSubExpression expr = FilterParser.Parse(tokens);
 
             Assert.IsType<LogicalFilterSubExpression>(expr);
-            var logical = expr as LogicalFilterSubExpression;
+            LogicalFilterSubExpression logical = expr as LogicalFilterSubExpression;
 
             // @.items > 3
             Assert.IsType<ComparisonFilterSubExpression>(logical.LeftSide);
-            var left = logical.LeftSide as ComparisonFilterSubExpression;
+            ComparisonFilterSubExpression left = logical.LeftSide as ComparisonFilterSubExpression;
             Assert.True(left.IsGreaterOrEqual);
             Assert.True(left.LeftSide is PropertyFilterSubExpression p1 && p1.PropertyChain.Length == 1 && p1.PropertyChain[0] == "items");
             Assert.True(left.RightSide is NumberConstantFilterSubExpression n1 && n1.Value == 3.0);
 
             // @.b[0]
             Assert.IsType<TruthyFilterSubExpression>(logical.RightSide);
-            var tr = logical.RightSide as TruthyFilterSubExpression;
+            TruthyFilterSubExpression tr = logical.RightSide as TruthyFilterSubExpression;
             Assert.IsType<ArrayAccessFilterSubExpression>(tr.Expression);
-            var ar = tr.Expression as ArrayAccessFilterSubExpression;
+            ArrayAccessFilterSubExpression ar = tr.Expression as ArrayAccessFilterSubExpression;
             Assert.True(ar.ExactElementsAccess != null && ar.ExactElementsAccess.Length == 1 && ar.ExactElementsAccess[0] == 123);
         }
     }

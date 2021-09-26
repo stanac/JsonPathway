@@ -28,12 +28,12 @@ namespace JsonPathway.Internal
             if (tokens[0].IsSymbolToken('.') && ! tokens[0].IsSymbolToken('.')) throw new UnexpectedTokenException(tokens[0]);
             if (tokens.Last().IsSymbolToken('.')) throw new UnexpectedTokenException(tokens.Last());
 
-            var pointTokens = tokens.Where(x => x.IsSymbolToken('.'));
+            IEnumerable<Token> pointTokens = tokens.Where(x => x.IsSymbolToken('.'));
             
             foreach (SymbolToken pt in pointTokens)
             {
                 int index = tokens.IndexOf(pt);
-                var next = tokens[index + 1];
+                Token next = tokens[index + 1];
 
                 if (!next.IsPropertyToken() && !next.IsChildPropertiesToken()) throw new UnexpectedTokenException(next, "Expected property accessor");
 

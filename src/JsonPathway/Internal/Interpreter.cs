@@ -16,7 +16,7 @@ namespace JsonPathway.Internal
             List<JsonElement> input = new List<JsonElement>();
             input.Add(doc.RootElement);
 
-            foreach (var ex in expressions)
+            foreach (JsonPathExpression ex in expressions)
             {
                 result = input.SelectMany(inp => Execute(ex, inp)).ToList();
                 input = result;

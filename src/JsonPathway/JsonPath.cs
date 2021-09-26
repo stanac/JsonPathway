@@ -35,8 +35,8 @@ namespace JsonPathway
         /// <returns>Matching JsonElements</returns>
         public static IReadOnlyList<JsonElement> ExecutePath(string jsonPathExpression, JsonDocument doc)
         {
-            var tokens = Tokenizer.Tokenize(jsonPathExpression);
-            var exprList = ExpressionList.Parse(tokens);
+            IReadOnlyList<Token> tokens = Tokenizer.Tokenize(jsonPathExpression);
+            ExpressionList exprList = ExpressionList.Parse(tokens);
             return ExecutePath(exprList, doc);
         }
 
@@ -86,7 +86,7 @@ namespace JsonPathway
 
             try
             {
-                var tokens = Tokenizer.Tokenize(jsonPathExpression);
+                IReadOnlyList<Token> tokens = Tokenizer.Tokenize(jsonPathExpression);
                 ExpressionList.Parse(tokens);
             }
             catch (JsonPathwayException ex)

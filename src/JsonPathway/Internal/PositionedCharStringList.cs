@@ -42,7 +42,7 @@ namespace JsonPathway.Internal
         {
             if (_chars.Any(x => x.IsEscapeSymbol && !x.IsEscaped))
             {
-                var unescaped = _chars.First(x => x.IsEscapeSymbol && !x.IsEscaped);
+                PositionedChar unescaped = _chars.First(x => x.IsEscapeSymbol && !x.IsEscaped);
                 throw new UnescapedCharacterException(unescaped);
             }
             
@@ -53,10 +53,10 @@ namespace JsonPathway.Internal
         {
             if (_chars.Any())
             {
-                var last = _chars.Last();
+                PositionedChar last = _chars.Last();
                 if (last.IsEscapeSymbol && !last.IsEscaped)
                 {
-                    var escaped = PositionedChar.Escape(c);
+                    PositionedChar escaped = PositionedChar.Escape(c);
                     _chars.Remove(last);
                     _chars.Add(escaped);
                 }

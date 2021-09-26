@@ -37,7 +37,7 @@ namespace JsonPathway.Internal.Filters
         {
             resultList.Add(e);
 
-            foreach (var c in e.GetChildExpressions())
+            foreach (FilterSubExpression c in e.GetChildExpressions())
             {
                 GetThisAndDescendants(c, resultList);
             }
@@ -323,7 +323,7 @@ namespace JsonPathway.Internal.Filters
                 result = input;
             }
 
-            foreach (var p in PropertyChain)
+            foreach (string p in PropertyChain)
             {
                 if (p == "length" && input.TryGetArrayOrStringLength(out int length))
                 {
@@ -403,7 +403,7 @@ namespace JsonPathway.Internal.Filters
                 return JsonElementFactory.CreateNull();
             }
 
-            var array = input.EnumerateArray().ToList();
+            List<JsonElement> array = input.EnumerateArray().ToList();
 
             if (IsAllArrayElemets)
             {
@@ -412,11 +412,11 @@ namespace JsonPathway.Internal.Filters
 
             if (ExactElementsAccess != null && ExactElementsAccess.Any())
             {
-                var res = array.GetByIndexes(ExactElementsAccess);
+                IEnumerable<JsonElement> res = array.GetByIndexes(ExactElementsAccess);
                 return JsonElementFactory.CreateArray(res);
             }
 
-            var result = array.GetSlice(SliceStart, SliceEnd, SliceStep);
+            List<JsonElement> result = array.GetSlice(SliceStart, SliceEnd, SliceStep);
             return JsonElementFactory.CreateArray(result);
         }
 
@@ -474,7 +474,7 @@ namespace JsonPathway.Internal.Filters
 
             List<FilterSubExpression> args = new List<FilterSubExpression>();
 
-            foreach (var a in token.Arguments)
+            foreach (FilterExpressionToken a in token.Arguments)
             {
                 args.Add(FilterParser.Parse(new List<FilterExpressionToken> { a }));
             }
@@ -484,7 +484,7 @@ namespace JsonPathway.Internal.Filters
 
         public override void ReplaceTruthyExpressions()
         {
-            foreach (var a in Arguments)
+            foreach (FilterSubExpression a in Arguments)
             {
                 a.ReplaceTruthyExpressions();
             }
@@ -494,7 +494,7 @@ namespace JsonPathway.Internal.Filters
         {
             if (input.IsNullOrUndefined()) return JsonElementFactory.CreateNull();
 
-            var args = Arguments.Select(x => x.Execute(input)).ToList();
+            List<JsonElement> args = Arguments.Select(x => x.Execute(input)).ToList();
 
             input = CalledOnExpression.Execute(input);
 
@@ -515,7 +515,7 @@ namespace JsonPathway.Internal.Filters
         {
             yield return CalledOnExpression;
 
-            foreach (var arg in Arguments)
+            foreach (FilterSubExpression arg in Arguments)
             {
                 yield return arg;
             }

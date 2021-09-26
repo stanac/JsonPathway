@@ -89,7 +89,7 @@ namespace JsonPathway.Tests.Internal
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("true || @.b"));
             Assert.IsType<LogicalFilterSubExpression>(exp);
             
-            var truthy = (exp as LogicalFilterSubExpression).RightSide;
+            FilterSubExpression truthy = (exp as LogicalFilterSubExpression).RightSide;
             Assert.IsType<TruthyFilterSubExpression>(truthy);
 
             JsonElement data = JsonDocument.Parse("{ \"b\" : 3 }").RootElement;
@@ -340,7 +340,7 @@ namespace JsonPathway.Tests.Internal
             exp = (exp as ComparisonFilterSubExpression).LeftSide as PropertyFilterSubExpression;
             Assert.NotNull(exp);
 
-            var expected = JsonElementFactory.CreateNumber(3);
+            JsonElement expected = JsonElementFactory.CreateNumber(3);
             JsonElement result = exp.Execute(data);
             Assert.Equal(expected, result, JsonElementEqualityComparer.Default);
         }
@@ -355,7 +355,7 @@ namespace JsonPathway.Tests.Internal
             exp = (exp as ComparisonFilterSubExpression).LeftSide as PropertyFilterSubExpression;
             Assert.NotNull(exp);
 
-            var expected = JsonElementFactory.CreateNumber(1);
+            JsonElement expected = JsonElementFactory.CreateNumber(1);
             JsonElement result = exp.Execute(data);
             Assert.Equal(expected, result, JsonElementEqualityComparer.Default);
         }
@@ -382,7 +382,7 @@ namespace JsonPathway.Tests.Internal
             exp = (exp as ComparisonFilterSubExpression).LeftSide as PropertyFilterSubExpression;
             Assert.NotNull(exp);
 
-            var expected = JsonElementFactory.CreateNumber(4);
+            JsonElement expected = JsonElementFactory.CreateNumber(4);
             JsonElement result = exp.Execute(data);
             Assert.Equal(expected, result, JsonElementEqualityComparer.Default);
         }

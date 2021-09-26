@@ -17,7 +17,7 @@ namespace JsonPathway.Tests.Internal
 
             Assert.True(tokens.All(x => x.IsWhiteSpaceToken() || x.IsNumberToken()));
 
-            var numberTokens = tokens.Where(x => x.IsNumberToken()).Cast<NumberToken>().ToList();
+            List<NumberToken> numberTokens = tokens.Where(x => x.IsNumberToken()).Cast<NumberToken>().ToList();
 
             Assert.Equal(4, numberTokens.Count);
             Assert.Equal(4, numberTokens[0].NumberValue, 10);

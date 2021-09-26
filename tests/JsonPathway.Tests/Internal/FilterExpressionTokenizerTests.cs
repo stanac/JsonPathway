@@ -24,7 +24,7 @@ namespace JsonPathway.Tests.Internal
             Assert.IsType<OpenGroupToken>(tokens[4]);
             
             Assert.IsType<MethodCallExpressionToken>(tokens[5]);
-            var mct = tokens[5] as MethodCallExpressionToken;
+            MethodCallExpressionToken mct = tokens[5] as MethodCallExpressionToken;
             Assert.Single(mct.Arguments);
             Assert.IsType<ConstantStringExpressionToken>(mct.Arguments.Single());
             Assert.Equal("a", (mct.Arguments.Single() as ConstantStringExpressionToken).StringValue);
@@ -46,11 +46,11 @@ namespace JsonPathway.Tests.Internal
             Assert.Equal(3, tokens.Count);
             Assert.IsType<MethodCallExpressionToken>(tokens[0]);
 
-            var mct = tokens[0] as MethodCallExpressionToken;
+            MethodCallExpressionToken mct = tokens[0] as MethodCallExpressionToken;
 
             Assert.Empty(mct.Arguments);
             Assert.IsType<ConstantStringExpressionToken>(mct.CalledOnExpression);
-            var constant = mct.CalledOnExpression as ConstantStringExpressionToken;
+            ConstantStringExpressionToken constant = mct.CalledOnExpression as ConstantStringExpressionToken;
 
             Assert.Equal("a", constant.StringValue);
         }
@@ -58,12 +58,12 @@ namespace JsonPathway.Tests.Internal
         [Fact]
         public void ExpressionWithMethodCallOnNonRoot_HasNonEmptyPropertyChain()
         {
-            var input = "@.a.Something()";
+            string input = "@.a.Something()";
             IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
 
             Assert.Single(tokens);
             Assert.IsType<MethodCallExpressionToken>(tokens.Single());
-            var mct = tokens.Single() as MethodCallExpressionToken;
+            MethodCallExpressionToken mct = tokens.Single() as MethodCallExpressionToken;
 
             Assert.Equal("Something", mct.MethodName);
             Assert.Empty(mct.Arguments);
@@ -76,12 +76,12 @@ namespace JsonPathway.Tests.Internal
         [Fact]
         public void ExpressionWithMethodCallOnRoot_HasEmptyPropertyChain()
         {
-            var input = "@.Something()";
+            string input = "@.Something()";
             IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
 
             Assert.Single(tokens);
             Assert.IsType<MethodCallExpressionToken>(tokens.Single());
-            var mct = tokens.Single() as MethodCallExpressionToken;
+            MethodCallExpressionToken mct = tokens.Single() as MethodCallExpressionToken;
 
             Assert.Equal("Something", mct.MethodName);
             Assert.Empty(mct.Arguments);
@@ -99,7 +99,7 @@ namespace JsonPathway.Tests.Internal
             Assert.Single(tokens);
             Assert.IsType<MethodCallExpressionToken>(tokens.Single());
             
-            var mct = tokens.Single() as MethodCallExpressionToken;
+            MethodCallExpressionToken mct = tokens.Single() as MethodCallExpressionToken;
             
             Assert.IsType<ConstantStringExpressionToken>(mct.CalledOnExpression);
             Assert.Equal(4, mct.Arguments.Length);
@@ -114,7 +114,7 @@ namespace JsonPathway.Tests.Internal
             Assert.True((mct.Arguments[2] as ConstantBoolExpressionToken).Token.BoolValue);
 
             Assert.IsType<MethodCallExpressionToken>(mct.Arguments[3]);
-            var innerMct = mct.Arguments[3] as MethodCallExpressionToken;
+            MethodCallExpressionToken innerMct = mct.Arguments[3] as MethodCallExpressionToken;
             Assert.IsType<PropertyExpressionToken>(innerMct.CalledOnExpression);
             Assert.Empty((innerMct.CalledOnExpression as PropertyExpressionToken).PropertyChain);
             Assert.Equal("CallingMethod", innerMct.MethodName);
@@ -150,10 +150,10 @@ namespace JsonPathway.Tests.Internal
             Assert.Equal(3, tokens.Count);
             Assert.IsType<MethodCallExpressionToken>(tokens.First());
 
-            var toUpper3 = tokens.First() as MethodCallExpressionToken;
-            var toUpper2 = toUpper3.CalledOnExpression as MethodCallExpressionToken;
-            var toUpper1 = toUpper2.CalledOnExpression as MethodCallExpressionToken;
-            var toUpper0 = toUpper1.CalledOnExpression as MethodCallExpressionToken;
+            MethodCallExpressionToken toUpper3 = tokens.First() as MethodCallExpressionToken;
+            MethodCallExpressionToken toUpper2 = toUpper3.CalledOnExpression as MethodCallExpressionToken;
+            MethodCallExpressionToken toUpper1 = toUpper2.CalledOnExpression as MethodCallExpressionToken;
+            MethodCallExpressionToken toUpper0 = toUpper1.CalledOnExpression as MethodCallExpressionToken;
 
             Assert.Equal("ToUpper0", toUpper0.MethodName);
             Assert.Equal("ToUpper1", toUpper1.MethodName);
@@ -187,9 +187,9 @@ namespace JsonPathway.Tests.Internal
             Assert.Single(tokens);
             Assert.IsType<MethodCallExpressionToken>(tokens.Single());
 
-            var call1 = tokens.Single() as MethodCallExpressionToken;
+            MethodCallExpressionToken call1 = tokens.Single() as MethodCallExpressionToken;
             Assert.IsType<PropertyExpressionToken>(call1.CalledOnExpression);
-            var prop1 = call1.CalledOnExpression as PropertyExpressionToken;
+            PropertyExpressionToken prop1 = call1.CalledOnExpression as PropertyExpressionToken;
             Assert.Equal(2, prop1.PropertyChain.Length);
             Assert.Equal("a", prop1.PropertyChain[0].StringValue);
             Assert.Equal("c", prop1.PropertyChain[1].StringValue);
@@ -200,12 +200,12 @@ namespace JsonPathway.Tests.Internal
             Assert.True(call1.Arguments.Last() is ConstantBoolExpressionToken cbt && cbt.Token.BoolValue);
 
             Assert.IsType<MethodCallExpressionToken>(call1.Arguments.First());
-            var call3 = call1.Arguments.First() as MethodCallExpressionToken;
+            MethodCallExpressionToken call3 = call1.Arguments.First() as MethodCallExpressionToken;
             Assert.Equal("call3", call3.MethodName);
             Assert.Empty(call3.Arguments);
 
             Assert.IsType<MethodCallExpressionToken>(call3.CalledOnExpression);
-            var call2 = call3.CalledOnExpression as MethodCallExpressionToken;
+            MethodCallExpressionToken call2 = call3.CalledOnExpression as MethodCallExpressionToken;
             Assert.Equal("call2", call2.MethodName);
             Assert.IsType<PropertyExpressionToken>(call2.CalledOnExpression);
             Assert.Empty((call2.CalledOnExpression as PropertyExpressionToken).PropertyChain);
@@ -225,22 +225,22 @@ namespace JsonPathway.Tests.Internal
             Assert.Single(tokens);
             Assert.IsType<MethodCallExpressionToken>(tokens[0]);
 
-            var mct = tokens[0] as MethodCallExpressionToken;
+            MethodCallExpressionToken mct = tokens[0] as MethodCallExpressionToken;
             Assert.Single(mct.Arguments);
             Assert.IsType<MethodCallExpressionToken>(mct.Arguments.Single());
             Assert.IsType<PropertyExpressionToken>(mct.CalledOnExpression);
 
-            var arg = mct.Arguments[0] as MethodCallExpressionToken;
+            MethodCallExpressionToken arg = mct.Arguments[0] as MethodCallExpressionToken;
             Assert.Single(arg.Arguments);
             Assert.IsType<MethodCallExpressionToken>(arg.Arguments[0]);
             Assert.IsType<PropertyExpressionToken>(arg.CalledOnExpression);
 
-            var innerArg = arg.Arguments[0] as MethodCallExpressionToken;
+            MethodCallExpressionToken innerArg = arg.Arguments[0] as MethodCallExpressionToken;
             Assert.Single(innerArg.Arguments);
             Assert.IsType<MethodCallExpressionToken>(innerArg.Arguments[0]);
             Assert.IsType<PropertyExpressionToken>(innerArg.CalledOnExpression);
 
-            var innerInnerArg = innerArg.Arguments[0] as MethodCallExpressionToken;
+            MethodCallExpressionToken innerInnerArg = innerArg.Arguments[0] as MethodCallExpressionToken;
             Assert.Empty(innerInnerArg.Arguments);
             Assert.IsType<PropertyExpressionToken>(innerInnerArg.CalledOnExpression);
         }
@@ -249,7 +249,7 @@ namespace JsonPathway.Tests.Internal
         public void ExpressionWithLogicalOperators_ReturnsTokensOfValidTypes()
         {
             string input = "@.a || (@.b > 3 && @.b <= 5)";
-            var tokens = FilterExpressionTokenizer.Tokenize(input);
+            IReadOnlyList<FilterExpressionToken> tokens = FilterExpressionTokenizer.Tokenize(input);
 
             Type[] tokenTypes = new[]
             {
@@ -283,13 +283,13 @@ namespace JsonPathway.Tests.Internal
             Assert.Equal(5, tokens.Count);
 
             Assert.IsType<ArrayAccessExpressionToken>(tokens[0]);
-            var aa1 = tokens[0] as ArrayAccessExpressionToken;
+            ArrayAccessExpressionToken aa1 = tokens[0] as ArrayAccessExpressionToken;
             Assert.IsType<PropertyExpressionToken>(aa1.ExecutedOn);
             Assert.Equal("a", (aa1.ExecutedOn as PropertyExpressionToken).PropertyChain.Single().StringValue);
             Assert.Equal("0,1,2", aa1.GetIndexValues());
 
             Assert.IsType<ArrayAccessExpressionToken>(tokens.Last());
-            var aa2 = tokens.Last() as ArrayAccessExpressionToken;
+            ArrayAccessExpressionToken aa2 = tokens.Last() as ArrayAccessExpressionToken;
             Assert.Equal("b", (aa2.ExecutedOn as PropertyExpressionToken).PropertyChain.Single().StringValue);
             Assert.Equal("2:90:3", aa2.GetIndexValues());
         }

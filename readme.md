@@ -5,6 +5,12 @@ that depends only on [System.Text.Json](https://www.nuget.org/packages/System.Te
 
 [![.NET Core](https://github.com/stanac/JsonPathway/workflows/.NET%20Core/badge.svg)](https://github.com/stanac/JsonPathway/actions?query=workflow%3A%22.NET+Core%22)      [![Nuget](https://img.shields.io/nuget/vpre/jsonpathway)](https://www.nuget.org/packages/JsonPathway/)      [![Coverage Status](https://coveralls.io/repos/github/stanac/JsonPathway/badge.svg?branch=master)](https://coveralls.io/github/stanac/JsonPathway?branch=master)
 
+## Changes
+
+- 1.100.1 - fix nuget package
+- 1.100.2 - fix bug #1
+- 2.0.100 - Update System.Text.Json to 5.0.2 and update tests to use .NET 5
+
 ## Suported operators
 
 | JSONPath | Description |

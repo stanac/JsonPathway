@@ -12,7 +12,7 @@ namespace JsonPathway
         {
             _expressions.AddRange(Parser.Parse(tokens));
 
-            foreach (var ex in _expressions)
+            foreach (JsonPathExpression ex in _expressions)
             {
                 if (ex is FilterExpression fe)
                 {
@@ -29,13 +29,13 @@ namespace JsonPathway
 
         internal static ExpressionList TokenizeAndParse(string jsonPathExpression)
         {
-            var tokens = Tokenizer.Tokenize(jsonPathExpression);
+            IReadOnlyList<Token> tokens = Tokenizer.Tokenize(jsonPathExpression);
             return Parse(tokens);
         }
 
         public IEnumerator<JsonPathExpression> GetEnumerator()
         {
-            foreach (var expr in _expressions) yield return expr;
+            foreach (JsonPathExpression expr in _expressions) yield return expr;
         }
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();

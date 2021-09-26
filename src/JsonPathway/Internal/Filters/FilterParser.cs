@@ -17,7 +17,7 @@ namespace JsonPathway.Internal.Filters
                 .Cast<FilterSubExpression>()
                 .ToList();
 
-            var expr = Parse(expressions);
+            FilterSubExpression expr = Parse(expressions);
             expr.ReplaceTruthyExpressions();
 
             return expr;
@@ -73,14 +73,14 @@ namespace JsonPathway.Internal.Filters
                 return exprs;
             }
 
-            var ret = exprs.ToList();
+            List<FilterSubExpression> ret = exprs.ToList();
 
             parsed = true;
 
             int topGroupLevel = groups.Max(x => x.AsPrimitive<OpenGroupToken>().DeptLevel);
-            var open = groups.First(x => x.AsPrimitive<OpenGroupToken>().DeptLevel == topGroupLevel);
+            FilterSubExpression open = groups.First(x => x.AsPrimitive<OpenGroupToken>().DeptLevel == topGroupLevel);
             int topGroupId = open.AsPrimitive<OpenGroupToken>().GroupId;
-            var closed = exprs.First(x => x.AsPrimitive<CloseGroupToken>()?.GroupId == topGroupId);
+            FilterSubExpression closed = exprs.First(x => x.AsPrimitive<CloseGroupToken>()?.GroupId == topGroupId);
 
             List<FilterSubExpression> groupExpr = new List<FilterSubExpression>();
 
@@ -164,7 +164,7 @@ namespace JsonPathway.Internal.Filters
 
         private static List<FilterSubExpression> ReplaceConstantAndPropsAndMethodsAndArraysExpressions(List<FilterSubExpression> exprs)
         {
-            var ret = exprs.ToList();
+            List<FilterSubExpression> ret = exprs.ToList();
 
             for (int i = 0; i < ret.Count; i++)
             {
@@ -191,7 +191,7 @@ namespace JsonPathway.Internal.Filters
 
         private static List<FilterSubExpression> ReplaceNegationExpressions(List<FilterSubExpression> exprs)
         {
-            var ret = exprs.ToList();
+            List<FilterSubExpression> ret = exprs.ToList();
 
             for (int i = exprs.Count - 2; i >= 0; i--)
             {

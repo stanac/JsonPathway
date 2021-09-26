@@ -5,7 +5,7 @@ using System.Linq;
 namespace JsonPathway.Internal
 {
     /// <summary>
-    /// Represent single token in json path
+    /// Represent single token in JSON path
     /// </summary>
     public abstract class Token
     {

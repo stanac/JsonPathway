@@ -53,7 +53,7 @@ namespace JsonPathway.Internal
 
             List<Token> tokens = new List<Token>();
 
-            foreach (var value in stringsAndStringTokens)
+            foreach (Either<StringToken, PositionedChar[]> value in stringsAndStringTokens)
             {
                 if (value.Is<StringToken>())
                 {
@@ -88,7 +88,7 @@ namespace JsonPathway.Internal
 
             for (int i = 0; i < s.Length; i++)
             {
-                var intersectingToken = stringTokens.FirstOrDefault(x => x.IntersectesInclusive(i));
+                StringToken intersectingToken = stringTokens.FirstOrDefault(x => x.IntersectesInclusive(i));
                 if (intersectingToken != null)
                 {
                     if (currentString.Any())
@@ -142,9 +142,9 @@ namespace JsonPathway.Internal
 
             List<Token> ret = new List<Token>();
             
-            foreach (var token in tokens)
+            foreach (Token token in tokens)
             {
-                var intersecting = propTokens.FirstOrDefault(x => x.IntersectesInclusive(token.StartIndex));
+                PropertyToken intersecting = propTokens.FirstOrDefault(x => x.IntersectesInclusive(token.StartIndex));
                 if (intersecting != null)
                 {
                     if (!ret.Contains(intersecting)) ret.Add(intersecting);
@@ -182,11 +182,11 @@ namespace JsonPathway.Internal
             {
                 if (tokens[i].IsSymbolToken('[') && tokens[i+1].IsSymbolToken('?') && tokens[i+2].IsSymbolToken('('))
                 {
-                    var closedSquareBracket = tokens.FirstOrDefault(x => x.StartIndex > tokens[i + 1].StartIndex && x.IsSymbolToken(']'));
+                    Token closedSquareBracket = tokens.FirstOrDefault(x => x.StartIndex > tokens[i + 1].StartIndex && x.IsSymbolToken(']'));
 
                     if (closedSquareBracket != null)
                     {
-                        var previousToken = tokens[tokens.IndexOf(closedSquareBracket) - 1];
+                        Token previousToken = tokens[tokens.IndexOf(closedSquareBracket) - 1];
                         if (previousToken.IsSymbolToken(')'))
                         {
                             open = i;
@@ -256,8 +256,8 @@ namespace JsonPathway.Internal
             {
                 if (ret[i].IsSymbolToken('.') && ret[i - 1].IsSymbolToken('.'))
                 {
-                    var toRemove1 = ret[i - 1];
-                    var toRemove2 = ret[i];
+                    Token toRemove1 = ret[i - 1];
+                    Token toRemove2 = ret[i];
 
                     ret.Insert(i - 1, new RecursivePropertiesToken(toRemove1.StartIndex, toRemove2.StartIndex));
                     ret.Remove(toRemove1);
@@ -269,9 +269,9 @@ namespace JsonPathway.Internal
             {
                 if (i < ret.Count && ret[i].IsSymbolToken(']') && ret[i - 1].IsChildPropertiesToken() && ret[i - 2].IsSymbolToken('['))
                 {
-                    var toRemove1 = ret[i - 2];
-                    var toRemove2 = ret[i - 1];
-                    var toRemove3 = ret[i];
+                    Token toRemove1 = ret[i - 2];
+                    Token toRemove2 = ret[i - 1];
+                    Token toRemove3 = ret[i];
 
                     ret.Insert(i - 2, new AllArrayElementsToken(toRemove1.StartIndex, toRemove3.StartIndex));
                     ret.Remove(toRemove1);
@@ -290,14 +290,14 @@ namespace JsonPathway.Internal
 
             List<MultiplePropertiesToken> converted = new List<MultiplePropertiesToken>();
 
-            foreach (var oc in openCloseIndexes)
+            foreach ((int start, int end) oc in openCloseIndexes)
             {
-                var tokensToConvert = ret.Where(x => x.StartIndex > oc.start && x.StartIndex < oc.end).ToList();
+                List<Token> tokensToConvert = ret.Where(x => x.StartIndex > oc.start && x.StartIndex < oc.end).ToList();
 
                 if (tokensToConvert.All(x => x.IsSymbolToken(',') || x.IsStringToken()))
                 {
                     ValidateMultiPropertyTokenOrder(tokensToConvert);
-                    var stringTokens = tokensToConvert.Where(x => x.IsStringToken()).Select(x => x.CastToStringToken()).ToArray();
+                    StringToken[] stringTokens = tokensToConvert.Where(x => x.IsStringToken()).Select(x => x.CastToStringToken()).ToArray();
 
                     converted.Add(new MultiplePropertiesToken(oc.start, oc.end, stringTokens));
                 }
@@ -305,9 +305,9 @@ namespace JsonPathway.Internal
 
             List<Token> ret2 = new List<Token>();
 
-            foreach (var token in tokens)
+            foreach (Token token in tokens)
             {
-                var intersecting = converted.FirstOrDefault(x => x.IntersectesInclusive(token.StartIndex));
+                MultiplePropertiesToken intersecting = converted.FirstOrDefault(x => x.IntersectesInclusive(token.StartIndex));
 
                 if (intersecting != null)
                 {
@@ -327,7 +327,7 @@ namespace JsonPathway.Internal
             List<Token> ret = tokens.ToList();
             List<(int start, int end)> openCloseIndexes = FindOpenClosedTokens(ret);
 
-            var arrayAccessTokens = openCloseIndexes.Select(x =>
+            List<ArrayElementsToken> arrayAccessTokens = openCloseIndexes.Select(x =>
             {
                 IEnumerable<string> toConvert = ret
                     .Where(t => t.StartIndex >= x.start && t.StartIndex <= x.end)
@@ -341,9 +341,9 @@ namespace JsonPathway.Internal
 
             List<Token> retList = new List<Token>();
 
-            foreach (var t in ret)
+            foreach (Token t in ret)
             {
-                var intersecting = arrayAccessTokens.FirstOrDefault(x => x.IntersectesInclusive(t.StartIndex));
+                ArrayElementsToken intersecting = arrayAccessTokens.FirstOrDefault(x => x.IntersectesInclusive(t.StartIndex));
 
                 if (intersecting != null)
                 {
@@ -360,13 +360,13 @@ namespace JsonPathway.Internal
 
         private static List<(int start, int end)> FindOpenClosedTokens(IReadOnlyList<Token> ret)
         {
-            var openTokens = ret.Where(x => x.IsSymbolToken('[')).ToList();
+            List<Token> openTokens = ret.Where(x => x.IsSymbolToken('[')).ToList();
 
             List<(int start, int end)> openCloseIndexes = new List<(int, int)>();
 
-            foreach (var ot in openTokens)
+            foreach (Token ot in openTokens)
             {
-                var ct = ret.FirstOrDefault(x => x.StartIndex > ot.StartIndex && x.IsSymbolToken(']'));
+                Token ct = ret.FirstOrDefault(x => x.StartIndex > ot.StartIndex && x.IsSymbolToken(']'));
 
                 if (ct != null && ret.Any(x => x.StartIndex > ot.StartIndex && x.StartIndex < ct.StartIndex
                                            && (x.IsNumberToken() || x.IsSymbolToken(',') || x.IsSymbolToken(':'))

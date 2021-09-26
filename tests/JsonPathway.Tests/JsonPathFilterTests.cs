@@ -73,10 +73,10 @@ namespace JsonPathway.Tests
 
             Assert.Equal(expected.Length, result.Count);
 
-            foreach (var r in result)
+            foreach (JsonElement r in result)
             {
                 Assert.Equal(JsonValueKind.String, r.ValueKind);
-                var rString = r.GetString();
+                string rString = r.GetString();
                 Assert.Contains(rString, expected);
             }
         }
@@ -153,7 +153,7 @@ namespace JsonPathway.Tests
         public void FilterOnBooksObject_ReturnsCorrectResult(string path, params string[] expected)
         {
             string input = TestDataLoader.BooksObject();
-            var expression = ExpressionList.TokenizeAndParse(path);
+            ExpressionList expression = ExpressionList.TokenizeAndParse(path);
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
 
             Assert.Equal(expected.Length, result.Count);
@@ -185,7 +185,7 @@ namespace JsonPathway.Tests
                 }
             ";
 
-            var expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount == 10)]");
+            ExpressionList expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount == 10)]");
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
             Assert.Equal(1, result.Count);
@@ -202,7 +202,7 @@ namespace JsonPathway.Tests
                 }
             ";
 
-            var expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount == 10.0)]");
+            ExpressionList expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount == 10.0)]");
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
             Assert.Equal(1, result.Count);
@@ -219,7 +219,7 @@ namespace JsonPathway.Tests
                 }
             ";
 
-            var expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount >= 10)]");
+            ExpressionList expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount >= 10)]");
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
             Assert.Equal(1, result.Count);
@@ -236,7 +236,7 @@ namespace JsonPathway.Tests
                 }
             ";
 
-            var expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount >= 10.0)]");
+            ExpressionList expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount >= 10.0)]");
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
             Assert.Equal(1, result.Count);
@@ -253,7 +253,7 @@ namespace JsonPathway.Tests
                 }
             ";
 
-            var expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount >= 10)]");
+            ExpressionList expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount >= 10)]");
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
             Assert.Equal(1, result.Count);
@@ -270,7 +270,7 @@ namespace JsonPathway.Tests
                 }
             ";
 
-            var expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount >= 10.0)]");
+            ExpressionList expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount >= 10.0)]");
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
             Assert.Equal(1, result.Count);

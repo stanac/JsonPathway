@@ -12,13 +12,13 @@ namespace JsonPathway.Internal
 
             List<int> normalizedIndexes = new List<int>();
 
-            foreach (var i in indexes)
+            foreach (int i in indexes)
             {
                 if (i >= 0 && i < list.Count) normalizedIndexes.Add(i);
 
                 if (i < 0)
                 {
-                    var index = i;
+                    int index = i;
                     while (index < 0)
                     {
                         index += list.Count;
@@ -27,7 +27,7 @@ namespace JsonPathway.Internal
                 }
             }
 
-            foreach (var i in normalizedIndexes.Distinct())
+            foreach (int i in normalizedIndexes.Distinct())
             {
                 yield return list[i];
             }

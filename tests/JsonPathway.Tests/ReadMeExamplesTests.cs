@@ -23,7 +23,7 @@ namespace JsonPathway.Tests
         public void StringLength_ReturnsCorrectResult()
         {
             string path = "$.store.bicycle.color.length";
-            var result = JsonPath.ExecutePath(path, _json);
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(path, _json);
             Assert.Equal(3, result.Single().GetInt32());
         }
 
@@ -31,7 +31,7 @@ namespace JsonPathway.Tests
         public void ArrayLength_ReturnsCorrectResult()
         {
             string path = "$.store.book.length";
-            var result = JsonPath.ExecutePath(path, _json);
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(path, _json);
             Assert.Equal(4, result.Single().GetInt32());
         }
 
@@ -39,7 +39,7 @@ namespace JsonPathway.Tests
         public void StringLengthInFilter_ReturnsCorrectResult()
         {
             string path = "$.store.book[?(@.title.length == 21)]";
-            var result = JsonPath.ExecutePath(path, _json);
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(path, _json);
             Assert.Single(result);
             string resultString = JsonSerializer.Serialize(result.Single());
             Assert.Equal(_lotr, resultString);

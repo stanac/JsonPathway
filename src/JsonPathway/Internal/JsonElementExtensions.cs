@@ -55,7 +55,7 @@ namespace JsonPathway.Internal
 
         public static List<JsonElement> EnumerateRecursively(this JsonElement e)
         {
-            var result = new List<JsonElement>();
+            List<JsonElement> result = new List<JsonElement>();
             EnumerateRecursively(e, result);
             return result;
         }

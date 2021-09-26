@@ -24,7 +24,7 @@ namespace JsonPathway.Tests
             string json = TestDataLoader.AbcArray();
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(path, json);
-            var resultJson = JsonSerializer.Serialize(result);
+            string resultJson = JsonSerializer.Serialize(result);
 
             Assert.Equal(expectedJson, resultJson);
         }
@@ -36,7 +36,7 @@ namespace JsonPathway.Tests
             string json = TestDataLoader.AbcArray();
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(path, json);
-            var resultJson = JsonSerializer.Serialize(result);
+            string resultJson = JsonSerializer.Serialize(result);
 
             json = new string(json.Where(x => !char.IsWhiteSpace(x)).ToArray());
 
@@ -54,7 +54,7 @@ namespace JsonPathway.Tests
             string json = TestDataLoader.AbcArray();
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(path, json);
-            var resultJson = JsonSerializer.Serialize(result);
+            string resultJson = JsonSerializer.Serialize(result);
 
             Assert.Equal(expectedJson, resultJson);
         }

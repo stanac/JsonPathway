@@ -60,7 +60,7 @@ namespace JsonPathway.Tests.Internal
                 "\""
             };
 
-            foreach (var i in inputs)
+            foreach (string i in inputs)
             {
                 Assert.Throws<UnclosedStringException>(() => StringTokenizerHelper.GetStringTokens(i));
             }
@@ -75,7 +75,7 @@ namespace JsonPathway.Tests.Internal
                 "\"\\a\""
             };
 
-            foreach (var i in inputs)
+            foreach (string i in inputs)
             {
                 Assert.Throws<UnescapedCharacterException>(() => StringTokenizerHelper.GetStringTokens(i));
             }

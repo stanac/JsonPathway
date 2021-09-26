@@ -179,7 +179,7 @@ namespace JsonPathway.Tests.Internal
         {
             string input = "$[-4]";
 
-            var token = Tokenizer.Tokenize(input).Last().CastToArrayElementsToken();
+            ArrayElementsToken token = Tokenizer.Tokenize(input).Last().CastToArrayElementsToken();
 
             Assert.Single(token.ExactElementsAccess);
             Assert.Equal(-4, token.ExactElementsAccess.Single());

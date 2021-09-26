@@ -75,7 +75,7 @@ namespace JsonPathway.Internal
 
         private static bool TryReadSymbolToken(PositionedChar[] chars, int index, out SymbolToken token)
         {
-            var c = chars[index].Value;
+            char c = chars[index].Value;
 
             if (SymbolToken.IsCharSupported(c))
             {

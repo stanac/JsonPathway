@@ -8,14 +8,14 @@ namespace JsonPathway.Tests.TestData
     {
         public IEnumerator<object[]> GetEnumerator()
         {
-            var text = TestDataLoader.LoadFile("PropertiesData.txt");
+            string text = TestDataLoader.LoadFile("PropertiesData.txt");
 
-            var lines = text.Split(Environment.NewLine);
+            string[] lines = text.Split(Environment.NewLine);
 
             string path = null;
             List<string> current = new List<string>();
 
-            foreach (var l in lines)
+            foreach (string l in lines)
             {
                 if (!l.StartsWith("/*"))
                 {
