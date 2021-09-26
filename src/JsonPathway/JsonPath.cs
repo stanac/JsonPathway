@@ -1,6 +1,7 @@
 ﻿using JsonPathway.Internal;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 
 namespace JsonPathway
@@ -19,8 +20,10 @@ namespace JsonPathway
         /// <returns>Matching JsonElements</returns>
         public static IReadOnlyList<JsonElement> ExecutePath(string jsonPathExpression, string json)
         {
-            JsonDocument doc = JsonDocument.Parse(json);
-            return ExecutePath(jsonPathExpression, doc);
+            using (JsonDocument doc = JsonDocument.Parse(json))
+            {
+                return ExecutePath(jsonPathExpression, doc);
+            }
         }
 
         /// <summary>
@@ -37,7 +40,7 @@ namespace JsonPathway
         {
             IReadOnlyList<Token> tokens = Tokenizer.Tokenize(jsonPathExpression);
             ExpressionList exprList = ExpressionList.Parse(tokens);
-            return ExecutePath(exprList, doc);
+            return ExecutePath(exprList, doc).Select(x => x.Clone()).ToList();
         }
 
         /// <summary>
@@ -48,8 +51,10 @@ namespace JsonPathway
         /// <returns>Matching JsonElements</returns>
         public static IReadOnlyList<JsonElement> ExecutePath(ExpressionList jsonPathExpression, string json)
         {
-            JsonDocument doc = JsonDocument.Parse(json);
-            return ExecutePath(jsonPathExpression, doc);
+            using (JsonDocument doc = JsonDocument.Parse(json))
+            {
+                return ExecutePath(jsonPathExpression, doc).Select(x => x.Clone()).ToList();
+            }
         }
 
         /// <summary>
@@ -57,6 +62,7 @@ namespace JsonPathway
         /// </summary>
         /// <param name="jsonPathExpression">Parsed JsonPath expression</param>
         /// <param doc="json">Parse JSON document</param>
+        /// <param name="doc">JSON document</param>
         /// <returns>Matching JsonElements</returns>
         public static IReadOnlyList<JsonElement> ExecutePath(ExpressionList jsonPathExpression, JsonDocument doc)
         {
