@@ -11,6 +11,7 @@ that depends only on [System.Text.Json](https://www.nuget.org/packages/System.Te
 - 1.100.2 - fix bug #1
 - 2.0.100 - Update System.Text.Json to 5.0.2 and update tests to use .NET 5
 - 2.1.100 - Return clones of JsonElements when executing path so it's safe to dispose JsonDocument
+- 2.1.101 - Fix filter expressions when comparing with `null` values
 
 ## Supported operators
 
