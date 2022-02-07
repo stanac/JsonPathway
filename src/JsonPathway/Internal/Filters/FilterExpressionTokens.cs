@@ -261,7 +261,7 @@ namespace JsonPathway.Internal.Filters
 
     internal class ArrayAccessExpressionToken: FilterExpressionToken
     {
-        public bool IsAllArrayElemets { get; }
+        public bool IsAllArrayElements { get; }
         public int? SliceStart { get; }
         public int? SliceEnd { get; }
         public int? SliceStep { get; }
@@ -286,7 +286,7 @@ namespace JsonPathway.Internal.Filters
             : this (executedOn, token as MultiCharToken)
         {
             if (token is null) throw new ArgumentNullException(nameof(token));
-            IsAllArrayElemets = true;
+            IsAllArrayElements = true;
             StartIndex = token.StartIndex;
         }
 
@@ -306,11 +306,21 @@ namespace JsonPathway.Internal.Filters
 
         public string GetIndexValues()
         {
-            if (IsAllArrayElemets) return "*";
+            if (IsAllArrayElements) return "*";
 
             if (ExactElementsAccess != null) return string.Join(",", ExactElementsAccess.Select(x => x.ToString()));
 
             return $"{SliceStart}:{SliceEnd}:{SliceStep}";
         }
+    }
+
+    internal class NullExpressionToken: FilterExpressionToken
+    {
+        public NullExpressionToken(int startIndex)
+        {
+            StartIndex = startIndex;
+        }
+
+        public override int StartIndex { get; }
     }
 }

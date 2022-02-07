@@ -379,7 +379,7 @@ namespace JsonPathway.Internal.Filters
         {
             if (token == null) throw new ArgumentNullException(nameof(token));
 
-            IsAllArrayElemets = token.IsAllArrayElemets;
+            IsAllArrayElemets = token.IsAllArrayElements;
             SliceStart = token.SliceStart;
             SliceEnd = token.SliceEnd;
             SliceStep = token.SliceStep;
@@ -557,6 +557,13 @@ namespace JsonPathway.Internal.Filters
             throw new IndexOutOfRangeException("Unrecognized type: " + token.GetType().Name);
         }
 
+        public static ConstantBaseFilterSubExpression Create(NullExpressionToken token)
+        {
+            if (token is null) throw new ArgumentNullException(nameof(token));
+
+            return new NullConstantFilterSubExpression();
+        }
+
         public override void ReplaceTruthyExpressions()
         {
             // do nothing
@@ -606,5 +613,20 @@ namespace JsonPathway.Internal.Filters
         public string Value { get; }
 
         public override JsonElement Execute(JsonElement input) => _element;
+    }
+
+    internal class NullConstantFilterSubExpression: ConstantBaseFilterSubExpression
+    {
+        private static readonly JsonElement NullElement = CreateNullElement();
+
+        private static JsonElement CreateNullElement()
+        {
+            using (JsonDocument doc = JsonDocument.Parse("null"))
+            {
+                return doc.RootElement.Clone();
+            }
+        }
+
+        public override JsonElement Execute(JsonElement input) => NullElement;
     }
 }

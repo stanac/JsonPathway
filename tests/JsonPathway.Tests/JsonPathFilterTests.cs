@@ -275,5 +275,93 @@ namespace JsonPathway.Tests
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
             Assert.Equal(1, result.Count);
         }
+
+        [Fact]
+        public void FilterOnStringEqualNull_ReturnsCorrectResult()
+        {
+            string input = TestDataLoader.BooksWithNulls();
+
+            ExpressionList expression = ExpressionList.TokenizeAndParse("$.books[?(@.category == null)]");
+
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
+
+            Assert.Equal(1, result.Count);
+            Assert.Equal(JsonValueKind.Object, result[0].ValueKind);
+            Assert.Equal("Sword of Honour", result[0].EnumerateObject().FirstOrDefault(x => x.Name == "title").Value.GetString());
+        }
+
+        [Fact]
+        public void FilterOnStringNotEqualNull_ReturnsCorrectResult()
+        {
+            string input = TestDataLoader.BooksWithNulls();
+
+            ExpressionList expression = ExpressionList.TokenizeAndParse("$.books[?(@.category != null)]");
+
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
+
+            Assert.Equal(3, result.Count);
+        }
+
+        [Fact]
+        public void FilterOnNumberEqualNull_ReturnsCorrectResult()
+        {
+            string input = TestDataLoader.BooksWithNulls();
+
+            ExpressionList expression = ExpressionList.TokenizeAndParse("$.books[?(@.price== null)]");
+
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
+
+            Assert.Equal(1, result.Count);
+            Assert.Equal(JsonValueKind.Object, result[0].ValueKind);
+            Assert.Equal("Sayings of the Century", result[0].EnumerateObject().FirstOrDefault(x => x.Name == "title").Value.GetString());
+        }
+
+        [Fact]
+        public void FilterOnNumberNotEqualNull_ReturnsCorrectResult()
+        {
+            string input = TestDataLoader.BooksWithNulls();
+
+            ExpressionList expression = ExpressionList.TokenizeAndParse("$.books[?(@.price !=null)]");
+
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
+
+            Assert.Equal(3, result.Count);
+        }
+
+        [Fact]
+        public void FilterOnStringEqualNull_WhereNoPropertyIsNull_ReturnsCorrectResult()
+        {
+            string input = TestDataLoader.BooksWithNulls();
+
+            ExpressionList expression = ExpressionList.TokenizeAndParse("$.books[?(@.title == null)]");
+
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
+
+            Assert.Equal(0, result.Count);
+        }
+
+        [Fact]
+        public void FilterOnStringNotEqualNull_WhereNoPropertyIsNull_ReturnsCorrectResult()
+        {
+            string input = TestDataLoader.BooksWithNulls();
+
+            ExpressionList expression = ExpressionList.TokenizeAndParse("$.books[?(@.title != null)]");
+
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
+
+            Assert.Equal(4, result.Count);
+        }
+
+        [Fact]
+        public void FilterOnNonExistingPropertyEqualNull_ReturnsCorrectResult()
+        {
+            string input = TestDataLoader.BooksWithNulls();
+
+            ExpressionList expression = ExpressionList.TokenizeAndParse("$.books[?(@.plumbus == null)]");
+
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
+
+            Assert.Equal(4, result.Count);
+        }
     }
 }

@@ -30,6 +30,7 @@ namespace JsonPathway.Internal.Filters
             expressionTokens = ReplaceNegationTokens(expressionTokens);
             expressionTokens = ReplaceNegativeNumbersTokens(expressionTokens);
             expressionTokens = ReplaceBinaryOperatorTokens(expressionTokens);
+            expressionTokens = ReplaceNullTokens(expressionTokens);
             
             EnsureTokensAreValid(expressionTokens);
             return expressionTokens;
@@ -288,6 +289,22 @@ namespace JsonPathway.Internal.Filters
             }
 
             return ret.Where(x => x != null).ToList();
+        }
+
+        private static List<FilterExpressionToken> ReplaceNullTokens(List<FilterExpressionToken> tokens)
+        {
+            List<FilterExpressionToken> retList = tokens.AsEnumerable().ToList();
+
+            for (int i = 0; i < retList.Count; i++)
+            {
+                if (retList[i] is PrimitiveExpressionToken pet && pet.Token is PropertyToken pt &&
+                    pt.StringValue == "null")
+                {
+                    retList[i] = new NullExpressionToken(tokens[i].StartIndex);
+                }
+            }
+
+            return retList;
         }
 
         /// <summary>

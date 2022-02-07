@@ -13,6 +13,8 @@ namespace JsonPathway.Tests
 
         public static string BooksObject() => LoadFile("BooksObject.json"); // modified, source: https://goessner.net/articles/JsonPath/
 
+        public static string BooksWithNulls() => LoadFile("BooksWithNulls.json"); // modified, source: https://goessner.net/articles/JsonPath/
+
         public static string LoadFile(string name)
         {
             if (string.IsNullOrWhiteSpace(name))

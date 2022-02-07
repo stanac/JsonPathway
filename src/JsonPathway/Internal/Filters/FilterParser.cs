@@ -40,7 +40,7 @@ namespace JsonPathway.Internal.Filters
         private static List<FilterSubExpression> ParseInner(List<FilterSubExpression> exprs, ref int callCount)
         {
             callCount++;
-            if (callCount > 5 * 1000) throw new InternalJsonPathwayException("FilterParser.ParseInner call count exceeded max allowed number of calls");
+            if (callCount > 5_000) throw new InternalJsonPathwayException("FilterParser.ParseInner call count exceeded max allowed number of calls");
 
             exprs = ReplaceConstantAndPropsAndMethodsAndArraysExpressions(exprs);
 
@@ -130,7 +130,7 @@ namespace JsonPathway.Internal.Filters
 
             return exprs;
         }
-
+        
         private static List<FilterSubExpression> ParseComparisonExpressions(List<FilterSubExpression> exprs)
         {
             List<FilterSubExpression> leftSide = new List<FilterSubExpression>();
@@ -171,6 +171,10 @@ namespace JsonPathway.Internal.Filters
                 if (ret[i].IsPrimitive<ConstantBaseExpressionToken>())
                 {
                     ret[i] = ConstantBaseFilterSubExpression.Create(ret[i].AsPrimitive<ConstantBaseExpressionToken>());
+                }
+                else if (ret[i].IsPrimitive<NullExpressionToken>())
+                {
+                    ret[i] = ConstantBaseFilterSubExpression.Create(ret[i].AsPrimitive<NullExpressionToken>());
                 }
                 else if (ret[i].IsPrimitive<PropertyExpressionToken>())
                 {
