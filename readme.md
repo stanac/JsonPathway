@@ -47,7 +47,7 @@ IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(path, jsonInput);
 string resultJson = JsonSerializer.Serialize(result);
 ```
 
-Overrides:
+Overloads:
 ```csharp
 IReadOnlyList<JsonElement> ExecutePath(string jsonPathExpression, string json)
 IReadOnlyList<JsonElement> ExecutePath(string jsonPathExpression, JsonDocument doc)
