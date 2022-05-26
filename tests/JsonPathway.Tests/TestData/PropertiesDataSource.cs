@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace JsonPathway.Tests.TestData
 {
+    [ExcludeFromCodeCoverage]
     public class PropertiesDataSource : IEnumerable<object[]>
     {
         public IEnumerator<object[]> GetEnumerator()

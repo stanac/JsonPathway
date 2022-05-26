@@ -89,7 +89,7 @@ namespace JsonPathway.Tests.Internal
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("true || @.b"));
             Assert.IsType<LogicalFilterSubExpression>(exp);
             
-            FilterSubExpression truthy = (exp as LogicalFilterSubExpression).RightSide;
+            FilterSubExpression truthy = ((LogicalFilterSubExpression) exp).RightSide;
             Assert.IsType<TruthyFilterSubExpression>(truthy);
 
             JsonElement data = JsonDocument.Parse("{ \"b\" : 3 }").RootElement;
@@ -126,7 +126,7 @@ namespace JsonPathway.Tests.Internal
             json = json.Replace("`", "\"");
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.a || @.b"));
             Assert.IsType<LogicalFilterSubExpression>(exp);
-            Assert.True((exp as LogicalFilterSubExpression).IsOr);
+            Assert.True(((LogicalFilterSubExpression) exp).IsOr);
 
             JsonElement data = JsonDocument.Parse(json).RootElement;
             JsonElement result = exp.Execute(data);
@@ -151,7 +151,7 @@ namespace JsonPathway.Tests.Internal
             json = json.Replace("`", "\"");
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.a && @.b"));
             Assert.IsType<LogicalFilterSubExpression>(exp);
-            Assert.True((exp as LogicalFilterSubExpression).IsAnd);
+            Assert.True(((LogicalFilterSubExpression) exp).IsAnd);
 
             JsonElement data = JsonDocument.Parse(json).RootElement;
             JsonElement result = exp.Execute(data);
@@ -183,7 +183,7 @@ namespace JsonPathway.Tests.Internal
             json = json.Replace("`", "\"");
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.a == @.b"));
             Assert.IsType<ComparisonFilterSubExpression>(exp);
-            Assert.True((exp as ComparisonFilterSubExpression).IsEqual);
+            Assert.True(((ComparisonFilterSubExpression) exp).IsEqual);
 
             JsonElement data = JsonDocument.Parse(json).RootElement;
             JsonElement result = exp.Execute(data);
@@ -215,7 +215,7 @@ namespace JsonPathway.Tests.Internal
             json = json.Replace("`", "\"");
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.a != @.b"));
             Assert.IsType<ComparisonFilterSubExpression>(exp);
-            Assert.True((exp as ComparisonFilterSubExpression).IsNotEqual);
+            Assert.True(((ComparisonFilterSubExpression) exp).IsNotEqual);
 
             JsonElement data = JsonDocument.Parse(json).RootElement;
             JsonElement result = exp.Execute(data);
@@ -240,7 +240,7 @@ namespace JsonPathway.Tests.Internal
             json = json.Replace("`", "\"");
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.a > @.b"));
             Assert.IsType<ComparisonFilterSubExpression>(exp);
-            Assert.True((exp as ComparisonFilterSubExpression).IsGreater);
+            Assert.True(((ComparisonFilterSubExpression) exp).IsGreater);
 
             JsonElement data = JsonDocument.Parse(json).RootElement;
             JsonElement result = exp.Execute(data);
@@ -265,7 +265,7 @@ namespace JsonPathway.Tests.Internal
             json = json.Replace("`", "\"");
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.a >= @.b"));
             Assert.IsType<ComparisonFilterSubExpression>(exp);
-            Assert.True((exp as ComparisonFilterSubExpression).IsGreaterOrEqual);
+            Assert.True(((ComparisonFilterSubExpression) exp).IsGreaterOrEqual);
 
             JsonElement data = JsonDocument.Parse(json).RootElement;
             JsonElement result = exp.Execute(data);
@@ -290,7 +290,7 @@ namespace JsonPathway.Tests.Internal
             json = json.Replace("`", "\"");
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.a < @.b"));
             Assert.IsType<ComparisonFilterSubExpression>(exp);
-            Assert.True((exp as ComparisonFilterSubExpression).IsLess);
+            Assert.True(((ComparisonFilterSubExpression) exp).IsLess);
 
             JsonElement data = JsonDocument.Parse(json).RootElement;
             JsonElement result = exp.Execute(data);
@@ -315,7 +315,7 @@ namespace JsonPathway.Tests.Internal
             json = json.Replace("`", "\"");
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.a <= @.b"));
             Assert.IsType<ComparisonFilterSubExpression>(exp);
-            Assert.True((exp as ComparisonFilterSubExpression).IsLessOrEqual);
+            Assert.True(((ComparisonFilterSubExpression) exp).IsLessOrEqual);
 
             JsonElement data = JsonDocument.Parse(json).RootElement;
             JsonElement result = exp.Execute(data);
@@ -337,7 +337,7 @@ namespace JsonPathway.Tests.Internal
             JsonElement data = JsonDocument.Parse(json).RootElement;
 
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.a.length == @.b"));
-            exp = (exp as ComparisonFilterSubExpression).LeftSide as PropertyFilterSubExpression;
+            exp = (exp as ComparisonFilterSubExpression)?.LeftSide as PropertyFilterSubExpression;
             Assert.NotNull(exp);
 
             JsonElement expected = JsonElementFactory.CreateNumber(3);
@@ -352,7 +352,7 @@ namespace JsonPathway.Tests.Internal
             JsonElement data = JsonDocument.Parse(json).RootElement;
 
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.a.length == @.b"));
-            exp = (exp as ComparisonFilterSubExpression).LeftSide as PropertyFilterSubExpression;
+            exp = (exp as ComparisonFilterSubExpression)?.LeftSide as PropertyFilterSubExpression;
             Assert.NotNull(exp);
 
             JsonElement expected = JsonElementFactory.CreateNumber(1);
@@ -379,7 +379,7 @@ namespace JsonPathway.Tests.Internal
             JsonElement data = JsonDocument.Parse(json).RootElement;
 
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.a.b.c.d.e == @.b"));
-            exp = (exp as ComparisonFilterSubExpression).LeftSide as PropertyFilterSubExpression;
+            exp = (exp as ComparisonFilterSubExpression)?.LeftSide as PropertyFilterSubExpression;
             Assert.NotNull(exp);
 
             JsonElement expected = JsonElementFactory.CreateNumber(4);
@@ -401,7 +401,7 @@ namespace JsonPathway.Tests.Internal
                 ".Replace("`", "\"");
 
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.x.y.z.* == @.b"));
-            exp = (exp as ComparisonFilterSubExpression).LeftSide as PropertyFilterSubExpression;
+            exp = (exp as ComparisonFilterSubExpression)?.LeftSide as PropertyFilterSubExpression;
             Assert.NotNull(exp);
 
             JsonElement result = exp.Execute(JsonDocument.Parse(json).RootElement);
@@ -425,7 +425,7 @@ namespace JsonPathway.Tests.Internal
                 ".Replace("`", "\"");
 
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.. == @.b"));
-            exp = (exp as ComparisonFilterSubExpression).LeftSide as PropertyFilterSubExpression;
+            exp = (exp as ComparisonFilterSubExpression)?.LeftSide as PropertyFilterSubExpression;
             Assert.NotNull(exp);
 
             string expectedJson = @"
@@ -477,7 +477,7 @@ namespace JsonPathway.Tests.Internal
                 ".Replace("`", "\"");
 
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.. == @.b"));
-            exp = (exp as ComparisonFilterSubExpression).LeftSide as PropertyFilterSubExpression;
+            exp = (exp as ComparisonFilterSubExpression)?.LeftSide as PropertyFilterSubExpression;
             Assert.NotNull(exp);
 
             string expectedJson = @"
@@ -537,7 +537,7 @@ namespace JsonPathway.Tests.Internal
                 ".Replace("`", "\"");
 
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.x[2] == @.b"));
-            exp = (exp as ComparisonFilterSubExpression).LeftSide as ArrayAccessFilterSubExpression;
+            exp = (exp as ComparisonFilterSubExpression)?.LeftSide as ArrayAccessFilterSubExpression;
             Assert.NotNull(exp);
 
             JsonElement data = JsonDocument.Parse(json).RootElement;
@@ -555,7 +555,7 @@ namespace JsonPathway.Tests.Internal
                 ".Replace("`", "\"");
 
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.x[-2] == @.b"));
-            exp = (exp as ComparisonFilterSubExpression).LeftSide as ArrayAccessFilterSubExpression;
+            exp = (exp as ComparisonFilterSubExpression)?.LeftSide as ArrayAccessFilterSubExpression;
             Assert.NotNull(exp);
 
             JsonElement data = JsonDocument.Parse(json).RootElement;
@@ -564,7 +564,7 @@ namespace JsonPathway.Tests.Internal
         }
 
         [Fact]
-        public void ArrayAccessFilterSubExpression_MultiplenIdexes_ReturnsCorrectValue()
+        public void ArrayAccessFilterSubExpression_MultipleIdexes_ReturnsCorrectValue()
         {
             string json = @"
                 {
@@ -573,7 +573,7 @@ namespace JsonPathway.Tests.Internal
                 ".Replace("`", "\"");
 
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.x[4, -2, -12, 0] == @.b"));
-            exp = (exp as ComparisonFilterSubExpression).LeftSide as ArrayAccessFilterSubExpression;
+            exp = (exp as ComparisonFilterSubExpression)?.LeftSide as ArrayAccessFilterSubExpression;
             Assert.NotNull(exp);
 
             JsonElement data = JsonDocument.Parse(json).RootElement;
@@ -591,7 +591,7 @@ namespace JsonPathway.Tests.Internal
                 ".Replace("`", "\"");
 
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.x[*] == @.b"));
-            exp = (exp as ComparisonFilterSubExpression).LeftSide as ArrayAccessFilterSubExpression;
+            exp = (exp as ComparisonFilterSubExpression)?.LeftSide as ArrayAccessFilterSubExpression;
             Assert.NotNull(exp);
 
             JsonElement data = JsonDocument.Parse(json).RootElement;
@@ -609,7 +609,7 @@ namespace JsonPathway.Tests.Internal
                 ".Replace("`", "\"");
 
             FilterSubExpression exp = FilterParser.Parse(FilterExpressionTokenizer.Tokenize("@.x[0:7:2] == @.b"));
-            exp = (exp as ComparisonFilterSubExpression).LeftSide as ArrayAccessFilterSubExpression;
+            exp = (exp as ComparisonFilterSubExpression)?.LeftSide as ArrayAccessFilterSubExpression;
             Assert.NotNull(exp);
 
             JsonElement data = JsonDocument.Parse(json).RootElement;

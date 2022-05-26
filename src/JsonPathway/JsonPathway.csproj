@@ -3,8 +3,10 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	<IncludeSymbols>true</IncludeSymbols>
+	<SymbolPackageFormat>snupkg</SymbolPackageFormat>
     <Description>JsonPath implementation in .NET standard 2.0 with support for methods that depends only on System.Text.Json</Description>
-    <Version>2.1.101</Version>
+    <Version>2.2.100</Version>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <RepositoryUrl>https://github.com/stanac/JsonPathway</RepositoryUrl>
   </PropertyGroup>

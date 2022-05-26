@@ -12,39 +12,48 @@ namespace JsonPathway.Internal
             if (expressions is null) throw new ArgumentNullException(nameof(expressions));
             if (doc is null) throw new ArgumentNullException(nameof(doc));
 
+            return Execute(expressions, doc.RootElement);
+        }
+
+        public static IReadOnlyList<JsonElement> Execute(ExpressionList expressions, JsonElement element)
+        {
+            if (expressions is null) throw new ArgumentNullException(nameof(expressions));
+            
             List<JsonElement> result = new List<JsonElement>();
-            List<JsonElement> input = new List<JsonElement>();
-            input.Add(doc.RootElement);
+            List<JsonElement> input = new List<JsonElement>
+            {
+                element
+            };
 
             foreach (JsonPathExpression ex in expressions)
             {
-                result = input.SelectMany(inp => Execute(ex, inp)).ToList();
+                result = input.SelectMany(inp => ExecuteInternal(ex, inp)).ToList();
                 input = result;
             }
 
             return result;
         }
 
-        internal static IEnumerable<JsonElement> Execute(JsonPathExpression expression, JsonElement element)
+        internal static IEnumerable<JsonElement> ExecuteInternal(JsonPathExpression expression, JsonElement element)
         {
             if (expression == null) throw new ArgumentNullException(nameof(expression));
             
             switch (expression)
             {
                 case PropertyAccessExpression pae:
-                    return Execute(pae, element);
+                    return ExecuteInternal(pae, element);
 
                 case ArrayElementsExpression aee:
-                    return Execute(aee, element);
+                    return ExecuteInternal(aee, element);
 
                 case FilterExpression fe:
-                    return Execute(fe, element);
+                    return ExecuteInternal(fe, element);
             }
 
             throw new ArgumentOutOfRangeException($"No interpreter implementation found for {expression.GetType()}");
         }
 
-        private static IEnumerable<JsonElement> Execute(PropertyAccessExpression expr, JsonElement e)
+        private static IEnumerable<JsonElement> ExecuteInternal(PropertyAccessExpression expr, JsonElement e)
         {
             if (expr.ChildProperties)
             {
@@ -62,7 +71,7 @@ namespace JsonPathway.Internal
             throw new InvalidOperationException($"PropertyAccessExpression");
         }
 
-        private static IEnumerable<JsonElement> Execute(ArrayElementsExpression expr, JsonElement element)
+        private static IEnumerable<JsonElement> ExecuteInternal(ArrayElementsExpression expr, JsonElement element)
         {
             if (element.ValueKind == JsonValueKind.Array)
             {
@@ -83,7 +92,7 @@ namespace JsonPathway.Internal
             return new List<JsonElement>();
         }
 
-        private static IEnumerable<JsonElement> Execute(FilterExpression expr, JsonElement element)
+        private static IEnumerable<JsonElement> ExecuteInternal(FilterExpression expr, JsonElement element)
         {
             return expr.Execute(element);
         }

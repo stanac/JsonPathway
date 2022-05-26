@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 
 namespace JsonPathway.Tests
 {
+    [ExcludeFromCodeCoverage]
     public static class TestDataLoader
     {
         public static string AbcArray() => LoadFile("AbcArray.json");

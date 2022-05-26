@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.Json;
 
@@ -10,11 +11,10 @@ namespace JsonPathway.Internal.Filters
         public virtual bool IsPrimitive() => false;
 
         public bool IsPrimitive<T>() where T : FilterExpressionToken => IsPrimitive() && AsPrimitive<T>() != null;
-
-        public PrimitiveFilterSubExpression AsPrimitive() => this as PrimitiveFilterSubExpression;
-
+        
         public T AsPrimitive<T>() where T : FilterExpressionToken => (this as PrimitiveFilterSubExpression)?.Token as T;
 
+        [ExcludeFromCodeCoverage]
         public override string ToString() => GetType().Name + ": ";
 
         public abstract void ReplaceTruthyExpressions();
@@ -55,6 +55,7 @@ namespace JsonPathway.Internal.Filters
             Token = token ?? throw new ArgumentNullException(nameof(token));
         }
 
+        [ExcludeFromCodeCoverage]
         public override string ToString() => base.ToString() + Token;
 
         public override void ReplaceTruthyExpressions()
@@ -62,6 +63,7 @@ namespace JsonPathway.Internal.Filters
             // do nothing
         }
 
+        [ExcludeFromCodeCoverage]
         public override JsonElement Execute(JsonElement input)
         {
             throw new NotSupportedException($"{nameof(PrimitiveFilterSubExpression)} shouldn't be used in this context");
@@ -71,12 +73,7 @@ namespace JsonPathway.Internal.Filters
     internal class GroupFilterSubExpression: FilterSubExpression
     {
         public FilterSubExpression Expression { get; }
-
-        public GroupFilterSubExpression(FilterSubExpression expression)
-        {
-            Expression = expression ?? throw new ArgumentNullException(nameof(expression));
-        }
-
+        
         public GroupFilterSubExpression(List<FilterSubExpression> expressions)
         {
             Expression = FilterParser.Parse(expressions);

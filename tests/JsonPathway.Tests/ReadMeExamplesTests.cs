@@ -8,13 +8,17 @@ namespace JsonPathway.Tests
 {
     public class ReadMeExamplesTests
     {
-        private string _json;
+        private readonly string _json;
+        private readonly JsonDocument _jsonDoc;
+        private readonly JsonElement _jsonDocElement;
 
-        private string _lotr;
+        private readonly string _lotr;
 
         public ReadMeExamplesTests()
         {
             _json = TestDataLoader.Store();
+            _jsonDoc = JsonDocument.Parse(_json);
+            _jsonDocElement = _jsonDoc.RootElement;
 
             _lotr = @"{""category"":""fiction"",""author"":""J. R. R. Tolkien"",""title"":""The Lord of the Rings"",""isbn"":""0-395-19395-8"",""price"":22.99}";
         }
@@ -24,6 +28,22 @@ namespace JsonPathway.Tests
         {
             string path = "$.store.bicycle.color.length";
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(path, _json);
+            Assert.Equal(3, result.Single().GetInt32());
+        }
+
+        [Fact]
+        public void StringLengthOnJsonDoc_ReturnsCorrectResult()
+        {
+            string path = "$.store.bicycle.color.length";
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(path, _jsonDoc);
+            Assert.Equal(3, result.Single().GetInt32());
+        }
+
+        [Fact]
+        public void StringLengthOnElement_ReturnsCorrectResult()
+        {
+            string path = "$.store.bicycle.color.length";
+            IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(path, _jsonDocElement);
             Assert.Equal(3, result.Single().GetInt32());
         }
 

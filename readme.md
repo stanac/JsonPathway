@@ -1,9 +1,11 @@
 # JsonPathway
 
+[![.NET Core](https://github.com/stanac/JsonPathway/workflows/.NET%20Core/badge.svg)](https://github.com/stanac/JsonPathway/actions?query=workflow%3A%22.NET+Core%22)      [![Nuget](https://img.shields.io/nuget/vpre/jsonpathway)](https://www.nuget.org/packages/JsonPathway/)      [![Coverage Status](https://coveralls.io/repos/github/stanac/JsonPathway/badge.svg?branch=master)](https://coveralls.io/github/stanac/JsonPathway?branch=master)
+
+---
+
 [JsonPath](https://goessner.net/articles/JsonPath/) implementation in .NET standard 2.0 
 that depends only on [System.Text.Json](https://www.nuget.org/packages/System.Text.Json/4.7.1).
-
-[![.NET Core](https://github.com/stanac/JsonPathway/workflows/.NET%20Core/badge.svg)](https://github.com/stanac/JsonPathway/actions?query=workflow%3A%22.NET+Core%22)      [![Nuget](https://img.shields.io/nuget/vpre/jsonpathway)](https://www.nuget.org/packages/JsonPathway/)      [![Coverage Status](https://coveralls.io/repos/github/stanac/JsonPathway/badge.svg?branch=master)](https://coveralls.io/github/stanac/JsonPathway?branch=master)
 
 ## Changes
 
@@ -12,6 +14,7 @@ that depends only on [System.Text.Json](https://www.nuget.org/packages/System.Te
 - 2.0.100 - Update System.Text.Json to 5.0.2 and update tests to use .NET 5
 - 2.1.100 - Return clones of JsonElements when executing path so it's safe to dispose JsonDocument
 - 2.1.101 - Fix filter expressions when comparing with `null` values
+- 2.2.100 - Overloads to execute JsonPath on JsonElement and symbols package
 
 ## Supported operators
 
@@ -51,8 +54,10 @@ Overloads:
 ```csharp
 IReadOnlyList<JsonElement> ExecutePath(string jsonPathExpression, string json)
 IReadOnlyList<JsonElement> ExecutePath(string jsonPathExpression, JsonDocument doc)
+IReadOnlyList<JsonElement> ExecutePath(string jsonPathExpression, JsonElement element)
 IReadOnlyList<JsonElement> ExecutePath(ExpressionList jsonPathExpression, string json)
 IReadOnlyList<JsonElement> ExecutePath(ExpressionList jsonPathExpression, JsonDocument doc)
+IReadOnlyList<JsonElement> ExecutePath(ExpressionList jsonPathExpression, JsonElement element)
 ```
 
 Both parsed document `JsonDocument` and `ExpressionList` that represents parsed path can be reused

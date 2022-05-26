@@ -34,6 +34,23 @@ namespace JsonPathway
         /// and reuse <see cref="ExpressionList"/> returned by <see cref="ExpressionList.TokenizeAndParse(string)"/>.
         /// </summary>
         /// <param name="jsonPathExpression">JsonPath expression</param>
+        /// <param name="element">Element on which to execute path</param>
+        /// <returns>Matching JsonElements</returns>
+        public static IReadOnlyList<JsonElement> ExecutePath(string jsonPathExpression, JsonElement element)
+        {
+            IReadOnlyList<Token> tokens = Tokenizer.Tokenize(jsonPathExpression);
+            ExpressionList exprList = ExpressionList.Parse(tokens);
+            return ExecutePath(exprList, element).Select(x => x.Clone()).ToList();
+        }
+
+        /// <summary>
+        /// Executes JSONPath and returns matching elements.
+        /// <br/><br/>
+        /// In case when same jsonPathExpression needs
+        /// to be used multiple times it's faster to call <see cref="ExpressionList.TokenizeAndParse(string)"/>
+        /// and reuse <see cref="ExpressionList"/> returned by <see cref="ExpressionList.TokenizeAndParse(string)"/>.
+        /// </summary>
+        /// <param name="jsonPathExpression">JsonPath expression</param>
         /// <param name="doc">Parsed JSON document</param>
         /// <returns>Matching JsonElements</returns>
         public static IReadOnlyList<JsonElement> ExecutePath(string jsonPathExpression, JsonDocument doc)
@@ -69,6 +86,29 @@ namespace JsonPathway
             try
             {
                 return Interpreter.Execute(jsonPathExpression, doc);
+            }
+            catch (JsonPathwayException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                throw new InternalJsonPathwayException("Unexpected internal exception", ex);
+            }
+        }
+
+        /// <summary>
+        /// Executes JSONPath and returns matching elements
+        /// </summary>
+        /// <param name="jsonPathExpression">Parsed JsonPath expression</param>
+        /// <param doc="json">Parse JSON document</param>
+        /// <param name="element">JSON element on which to execute path</param>
+        /// <returns>Matching JsonElements</returns>
+        public static IReadOnlyList<JsonElement> ExecutePath(ExpressionList jsonPathExpression, JsonElement element)
+        {
+            try
+            {
+                return Interpreter.Execute(jsonPathExpression, element);
             }
             catch (JsonPathwayException)
             {
