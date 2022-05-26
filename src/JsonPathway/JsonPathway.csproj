@@ -11,11 +11,11 @@
     <RepositoryUrl>https://github.com/stanac/JsonPathway</RepositoryUrl>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="System.Text.Json" Version="5.0.2" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="System.Text.Json" Version="[5,6.99]" />
+	</ItemGroup>
 
-  <ItemGroup>
+	<ItemGroup>
     <None Include="..\..\LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
