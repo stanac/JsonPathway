@@ -16,6 +16,7 @@ that depends only on [System.Text.Json](https://www.nuget.org/packages/System.Te
 - 2.1.101 - Fix filter expressions when comparing with `null` values
 - 2.2.100 - Overloads to execute JsonPath on JsonElement and symbols package
 - 2.3.100 - Support 5.x.x - 6.x.x System.Text.Json versions
+- 2.4.000 - Support 5.x.x - 7.x.x System.Text.Json versions
 
 ## Supported operators
 
