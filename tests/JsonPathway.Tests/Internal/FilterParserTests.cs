@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
+// ReSharper disable CompareOfFloatsByEqualityOperator
 
 namespace JsonPathway.Tests.Internal
 {
@@ -90,12 +91,12 @@ namespace JsonPathway.Tests.Internal
             FilterSubExpression expr = FilterParser.Parse(tokens);
 
             Assert.IsType<NegationFilterSubExpression>(expr);
-            NegationFilterSubExpression neg1 = expr as NegationFilterSubExpression;
+            NegationFilterSubExpression neg1 = (NegationFilterSubExpression)expr;
             Assert.IsType<NegationFilterSubExpression>(neg1.Expression);
-            NegationFilterSubExpression neg2 = neg1.Expression as NegationFilterSubExpression;
+            NegationFilterSubExpression neg2 = (NegationFilterSubExpression)neg1.Expression;
             Assert.IsType<TruthyFilterSubExpression>(neg2.Expression);
-            Assert.IsType<PropertyFilterSubExpression>((neg2.Expression as TruthyFilterSubExpression).Expression);
-            PropertyFilterSubExpression prop = (neg2.Expression as TruthyFilterSubExpression).Expression as PropertyFilterSubExpression;
+            Assert.IsType<PropertyFilterSubExpression>(((TruthyFilterSubExpression)neg2.Expression).Expression);
+            PropertyFilterSubExpression prop = ((TruthyFilterSubExpression)neg2.Expression).Expression as PropertyFilterSubExpression;
 
             Assert.True(prop.PropertyChain.Length == 2 && prop.PropertyChain[0] == "price" && prop.PropertyChain[1] == "count");
         }
@@ -108,8 +109,8 @@ namespace JsonPathway.Tests.Internal
             FilterSubExpression expr = FilterParser.Parse(tokens);
 
             Assert.IsType<MethodCallFilterSubExpression>(expr);
-            MethodCallFilterSubExpression mc = expr as MethodCallFilterSubExpression;
-            Assert.Equal(1, mc.Arguments.Count);
+            MethodCallFilterSubExpression mc = (MethodCallFilterSubExpression)expr;
+            Assert.Single(mc.Arguments);
             Assert.Equal(2.123, (mc.Arguments[0] as NumberConstantFilterSubExpression)?.Value ?? double.MinValue, 8);
 
             Assert.IsType<ArrayAccessFilterSubExpression>(mc.CalledOnExpression);
@@ -135,7 +136,7 @@ namespace JsonPathway.Tests.Internal
             ComparisonFilterSubExpression comp = expr as ComparisonFilterSubExpression;
 
             Assert.IsType<ArrayAccessFilterSubExpression>(comp.LeftSide);
-            Assert.True((comp.RightSide as NumberConstantFilterSubExpression)?.Value == 3.0);
+            Assert.True(((NumberConstantFilterSubExpression)comp.RightSide)?.Value == 3.0);
 
             ArrayAccessFilterSubExpression aa = comp.LeftSide as ArrayAccessFilterSubExpression;
             Assert.True(aa.ExactElementsAccess?.Length == 1 && aa.ExactElementsAccess[0] == 2);

@@ -9,31 +9,26 @@ namespace JsonPathway.Tests
     {
         private readonly IReadOnlyDictionary<string, string> _bookJsons;
 
-        private readonly string _bookSayingsOfTheCentury;
-        private readonly string _bookSwordOfHonour;
-        private readonly string _bookMobiDick;
-        private readonly string _bookTheLordOfTheRings;
-
         public JsonPathFilterTests()
         {
-            _bookSayingsOfTheCentury = "{ `category`: `reference`, `author`: `Nigel Rees`, `title`: `Sayings of the Century`, `price`: 8.95 }"
+            string bookSayingsOfTheCentury = "{ `category`: `reference`, `author`: `Nigel Rees`, `title`: `Sayings of the Century`, `price`: 8.95 }"
                 .Replace("`", "\"").RemoveWhiteSpace();
 
-            _bookSwordOfHonour = "{ `category`: `fiction`, `author`: `Evelyn Waugh`, `title`: `Sword of Honour`, `price`: 12.99 }"
+            string bookSwordOfHonour = "{ `category`: `fiction`, `author`: `Evelyn Waugh`, `title`: `Sword of Honour`, `price`: 12.99 }"
                 .Replace("`", "\"").RemoveWhiteSpace();
 
-            _bookMobiDick = "{ `category`: `fiction`, `author`: `Herman Melville`, `title`: `Moby Dick`, `isbn`: `0-553-21311-3`, `price`: 8.99 }"
+            string bookMobiDick = "{ `category`: `fiction`, `author`: `Herman Melville`, `title`: `Moby Dick`, `isbn`: `0-553-21311-3`, `price`: 8.99 }"
                 .Replace("`", "\"").RemoveWhiteSpace();
                 
-            _bookTheLordOfTheRings = "{ `category`: `fiction`, `author`: `J. R. R. Tolkien`, `title`: `The Lord of the Rings`, `isbn`: `0-395-19395-8`, `price`: 22.99 }"
+            string bookTheLordOfTheRings = "{ `category`: `fiction`, `author`: `J. R. R. Tolkien`, `title`: `The Lord of the Rings`, `isbn`: `0-395-19395-8`, `price`: 22.99 }"
                 .Replace("`", "\"").RemoveWhiteSpace();
 
             _bookJsons = new Dictionary<string, string>
             {
-                { "sotc", _bookSayingsOfTheCentury },
-                { "soh", _bookSwordOfHonour },
-                { "md", _bookMobiDick },
-                { "lotr", _bookTheLordOfTheRings }
+                { "sotc", bookSayingsOfTheCentury },
+                { "soh", bookSwordOfHonour },
+                { "md", bookMobiDick },
+                { "lotr", bookTheLordOfTheRings }
             };
         }
 
@@ -91,6 +86,7 @@ namespace JsonPathway.Tests
             Assert.Equal(2, result.Count);
 
             Assert.Contains(result, x => x.ValueKind == JsonValueKind.String && x.GetString() == "red");
+            // ReSharper disable once CompareOfFloatsByEqualityOperator
             Assert.Contains(result, x => x.ValueKind == JsonValueKind.Number && x.GetDouble() == 19.95);
 
             path = "store.*";
@@ -188,7 +184,7 @@ namespace JsonPathway.Tests
             ExpressionList expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount == 10)]");
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
-            Assert.Equal(1, result.Count);
+            Assert.Single(result);
         }
 
         [Fact]
@@ -205,7 +201,7 @@ namespace JsonPathway.Tests
             ExpressionList expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount == 10.0)]");
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
-            Assert.Equal(1, result.Count);
+            Assert.Single(result);
         }
 
         [Fact]
@@ -222,7 +218,7 @@ namespace JsonPathway.Tests
             ExpressionList expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount >= 10)]");
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
-            Assert.Equal(1, result.Count);
+            Assert.Single(result);
         }
 
         [Fact]
@@ -239,7 +235,7 @@ namespace JsonPathway.Tests
             ExpressionList expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount >= 10.0)]");
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
-            Assert.Equal(1, result.Count);
+            Assert.Single(result);
         }
 
         [Fact]
@@ -256,7 +252,7 @@ namespace JsonPathway.Tests
             ExpressionList expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount >= 10)]");
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
-            Assert.Equal(1, result.Count);
+            Assert.Single(result);
         }
 
         [Fact]
@@ -273,7 +269,7 @@ namespace JsonPathway.Tests
             ExpressionList expression = ExpressionList.TokenizeAndParse("$.object.arrays[?(@.amount >= 10.0)]");
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
-            Assert.Equal(1, result.Count);
+            Assert.Single(result);
         }
 
         [Fact]
@@ -285,7 +281,7 @@ namespace JsonPathway.Tests
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
 
-            Assert.Equal(1, result.Count);
+            Assert.Single(result);
             Assert.Equal(JsonValueKind.Object, result[0].ValueKind);
             Assert.Equal("Sword of Honour", result[0].EnumerateObject().FirstOrDefault(x => x.Name == "title").Value.GetString());
         }
@@ -311,7 +307,7 @@ namespace JsonPathway.Tests
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
 
-            Assert.Equal(1, result.Count);
+            Assert.Single(result);
             Assert.Equal(JsonValueKind.Object, result[0].ValueKind);
             Assert.Equal("Sayings of the Century", result[0].EnumerateObject().FirstOrDefault(x => x.Name == "title").Value.GetString());
         }
@@ -337,7 +333,7 @@ namespace JsonPathway.Tests
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
 
-            Assert.Equal(0, result.Count);
+            Assert.Single(result);
         }
 
         [Fact]

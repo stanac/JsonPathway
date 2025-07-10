@@ -17,6 +17,8 @@ namespace JsonPathway.Internal
 
         public static JsonElement CreateNumber(double number)
         {
+            var num = JsonDocument.Parse(JsonSerializer.Serialize(number));
+            return num.RootElement;
             return JsonDocument.Parse(JsonSerializer.Serialize(number)).RootElement;
         }
 

@@ -89,7 +89,7 @@ namespace JsonPathway.Tests.Internal
 
             IReadOnlyList<Token> tokens = Tokenizer.Tokenize(input);
 
-            Assert.Equal(1, tokens.Count);
+            Assert.Single(tokens);
             Assert.IsType<ArrayElementsToken>(tokens[0]);
 
             ArrayElementsToken t = tokens.Last().CastToArrayElementsToken();
@@ -105,7 +105,7 @@ namespace JsonPathway.Tests.Internal
 
             IReadOnlyList<Token> tokens = Tokenizer.Tokenize(input);
 
-            Assert.Equal(1, tokens.Count);
+            Assert.Single(tokens);
             Assert.IsType<ArrayElementsToken>(tokens[0]);
 
             ArrayElementsToken t = tokens[0].CastToArrayElementsToken();
@@ -123,7 +123,7 @@ namespace JsonPathway.Tests.Internal
 
             IReadOnlyList<Token> tokens = Tokenizer.Tokenize(input);
 
-            Assert.Equal(1, tokens.Count);
+            Assert.Single(tokens);
             Assert.IsType<ArrayElementsToken>(tokens[0]);
 
             ArrayElementsToken t = tokens[0].CastToArrayElementsToken();
@@ -136,7 +136,7 @@ namespace JsonPathway.Tests.Internal
 
             tokens = Tokenizer.Tokenize(input);
 
-            Assert.Equal(1, tokens.Count);
+            Assert.Single(tokens);
             Assert.IsType<ArrayElementsToken>(tokens[0]);
 
             t = tokens[0].CastToArrayElementsToken();
@@ -149,7 +149,7 @@ namespace JsonPathway.Tests.Internal
 
             tokens = Tokenizer.Tokenize(input);
 
-            Assert.Equal(1, tokens.Count);
+            Assert.Single(tokens);
             Assert.IsType<ArrayElementsToken>(tokens[0]);
 
             t = tokens[0].CastToArrayElementsToken();
@@ -215,7 +215,7 @@ namespace JsonPathway.Tests.Internal
             string input = "$['abc', 'efg']";
 
             IReadOnlyList<Token> tokens = Tokenizer.Tokenize(input);
-            Assert.Equal(1, tokens.Count);
+            Assert.Single(tokens);
             MultiplePropertiesToken mpt = tokens.First().CastToMultiplePropertiesToken();
             Assert.Equal(2, mpt.Properties.Length);
             Assert.Equal("abc", mpt.Properties[0]);

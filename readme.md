@@ -4,7 +4,7 @@
 
 ---
 
-[JsonPath](https://goessner.net/articles/JsonPath/) implementation in .NET standard 2.0 
+[JsonPath](https://goessner.net/articles/JsonPath/) implementation in .NET 8.0+
 that depends only on [System.Text.Json](https://www.nuget.org/packages/System.Text.Json/4.7.1).
 
 ## Changes
@@ -15,9 +15,10 @@ that depends only on [System.Text.Json](https://www.nuget.org/packages/System.Te
 - 2.1.100 - Return clones of JsonElements when executing path so it's safe to dispose JsonDocument
 - 2.1.101 - Fix filter expressions when comparing with `null` values
 - 2.2.100 - Overloads to execute JsonPath on JsonElement and symbols package
-- 2.3.100 - Support 5.x.x - 6.x.x System.Text.Json versions
-- 2.4.100 - Support 5.x.x - 7.x.x System.Text.Json versions
-- 2.5.100 - Support 5.x.x - 8.x.x System.Text.Json versions
+- 2.3.100 - Support 5.x.x - 6.x.x `System.Text.Json` versions
+- 2.4.100 - Support 5.x.x - 7.x.x `System.Text.Json` versions
+- 2.5.100 - Support 5.x.x - 8.x.x `System.Text.Json` versions
+- 3.0.100 - Drop support for `netstandard2.0`, support only version 8 and newer of `System.Text.Json`
 
 ## Supported operators
 
