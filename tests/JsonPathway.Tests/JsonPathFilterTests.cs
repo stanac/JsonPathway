@@ -333,7 +333,7 @@ namespace JsonPathway.Tests
 
             IReadOnlyList<JsonElement> result = JsonPath.ExecutePath(expression, input);
 
-            Assert.Single(result);
+            Assert.Empty(result);
         }
 
         [Fact]
