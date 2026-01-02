@@ -19,6 +19,7 @@ that depends only on [System.Text.Json](https://www.nuget.org/packages/System.Te
 - 2.4.100 - Support 5.x.x - 7.x.x `System.Text.Json` versions
 - 2.5.100 - Support 5.x.x - 8.x.x `System.Text.Json` versions
 - 3.0.100 - Drop support for `netstandard2.0`, support only version 8 and newer of `System.Text.Json`
+- 4.0.100 - Support only `netstandard2.0`, and only `System.Text.Json` versions `[8.*, 11)`
 
 ## Supported operators
 

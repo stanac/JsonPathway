@@ -4,22 +4,21 @@ using System.Text.Json;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace JsonPathway.Tests
+namespace JsonPathway.Tests;
+
+public class VersionLog
 {
-    public class VersionLog
+    private readonly ITestOutputHelper _testOutput;
+
+    public VersionLog(ITestOutputHelper testOutput)
     {
-        private readonly ITestOutputHelper _testOutput;
+        _testOutput = testOutput;
+    }
 
-        public VersionLog(ITestOutputHelper testOutput)
-        {
-            _testOutput = testOutput;
-        }
-
-        [Fact]
-        public void Log()
-        {
-            FileVersionInfo info = FileVersionInfo.GetVersionInfo(typeof(JsonDocument).Assembly.Location);
-            _testOutput.WriteLine($"Testing using: {info.FileVersion}");
-        }
+    [Fact]
+    public void Log()
+    {
+        FileVersionInfo info = FileVersionInfo.GetVersionInfo(typeof(JsonDocument).Assembly.Location);
+        _testOutput.WriteLine($"Testing using: {info.FileVersion}");
     }
 }

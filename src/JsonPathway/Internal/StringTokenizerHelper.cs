@@ -2,60 +2,59 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace JsonPathway.Internal
+namespace JsonPathway.Internal;
+
+/// <summary>
+/// Gets collection of <see cref="StringToken"/> from <see cref="string"/>
+/// </summary>
+internal static class StringTokenizerHelper
 {
-    /// <summary>
-    /// Gets collection of <see cref="StringToken"/> from <see cref="string"/>
-    /// </summary>
-    internal static class StringTokenizerHelper
+    public static IReadOnlyList<StringToken> GetStringTokens(string s) => GetStringTokensInternal(s).ToList();
+
+    private static IEnumerable<StringToken> GetStringTokensInternal(string s)
     {
-        public static IReadOnlyList<StringToken> GetStringTokens(string s) => GetStringTokensInternal(s).ToList();
+        if (s == null) throw new ArgumentNullException(nameof(s));
 
-        private static IEnumerable<StringToken> GetStringTokensInternal(string s)
+        PositionedChar[] chars = PositionedChar.GetFromString(s);
+
+        PositionedCharStringList currentString = new PositionedCharStringList();
+
+        int start = int.MinValue;
+        const char singleQuote = '\'';
+        const char doubleQuote = '"';
+        char openQuote = char.MinValue;
+
+        for (int i = 0; i < chars.Length; i++)
         {
-            if (s == null) throw new ArgumentNullException(nameof(s));
+            PositionedChar c = chars[i];
 
-            PositionedChar[] chars = PositionedChar.GetFromString(s);
-
-            PositionedCharStringList currentString = new PositionedCharStringList();
-
-            int start = int.MinValue;
-            const char singleQuote = '\'';
-            const char doubleQuote = '"';
-            char openQuote = char.MinValue;
-
-            for (int i = 0; i < chars.Length; i++)
+            if (start >= 0)
             {
-                PositionedChar c = chars[i];
-
-                if (start >= 0)
+                if (c.Value == openQuote && !currentString.IsLastEscapeSymbol)
                 {
-                    if (c.Value == openQuote && !currentString.IsLastEscapeSymbol)
-                    {
-                        string value = currentString.ToString();
-                        currentString = new PositionedCharStringList();
-                        openQuote = char.MinValue;
-                        yield return new StringToken(start, i, value);
-                        start = int.MinValue;
-                    }
-                    else
-                    {
-                        currentString.Add(c);
-                    }
+                    string value = currentString.ToString();
+                    currentString = new PositionedCharStringList();
+                    openQuote = char.MinValue;
+                    yield return new StringToken(start, i, value);
+                    start = int.MinValue;
                 }
-                else if (c.Value == singleQuote)
+                else
                 {
-                    start = i;
-                    openQuote = singleQuote;
-                }
-                else if (c.Value == doubleQuote)
-                {
-                    start = i;
-                    openQuote = doubleQuote;
+                    currentString.Add(c);
                 }
             }
-
-            if (start != int.MinValue) throw new UnclosedStringException(openQuote, start);
+            else if (c.Value == singleQuote)
+            {
+                start = i;
+                openQuote = singleQuote;
+            }
+            else if (c.Value == doubleQuote)
+            {
+                start = i;
+                openQuote = doubleQuote;
+            }
         }
+
+        if (start != int.MinValue) throw new UnclosedStringException(openQuote, start);
     }
 }

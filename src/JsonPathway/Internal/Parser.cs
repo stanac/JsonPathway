@@ -1,71 +1,70 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 
-namespace JsonPathway.Internal
+namespace JsonPathway.Internal;
+
+internal static class Parser
 {
-    internal static class Parser
+    public static IEnumerable<JsonPathExpression> Parse(IReadOnlyList<Token> tokens)
     {
-        public static IEnumerable<JsonPathExpression> Parse(IReadOnlyList<Token> tokens)
-        {
-            EnsureTokensAreValid(tokens.ToList());
+        EnsureTokensAreValid(tokens.ToList());
 
-            foreach (Token t in tokens.Where(x => !x.IsSymbolToken('.')))
+        foreach (Token t in tokens.Where(x => !x.IsSymbolToken('.')))
+        {
+            foreach (JsonPathExpression e in Parse(t))
             {
-                foreach (JsonPathExpression e in Parse(t))
-                {
-                    yield return e;
-                }
+                yield return e;
             }
         }
+    }
 
-        private static void EnsureTokensAreValid(List<Token> tokens)
-        {
-            if (!tokens.Any()) return;
+    private static void EnsureTokensAreValid(List<Token> tokens)
+    {
+        if (!tokens.Any()) return;
 
-            Token unexpectedToken = tokens.FirstOrDefault(x => !x.CanBeConvertedToExpression() && !x.IsSymbolToken('.'));
-            if (unexpectedToken != null) throw new UnexpectedTokenException(unexpectedToken);
+        Token unexpectedToken = tokens.FirstOrDefault(x => !x.CanBeConvertedToExpression() && !x.IsSymbolToken('.'));
+        if (unexpectedToken != null) throw new UnexpectedTokenException(unexpectedToken);
 
-            if (tokens[0].IsSymbolToken('.') && ! tokens[0].IsSymbolToken('.')) throw new UnexpectedTokenException(tokens[0]);
-            if (tokens.Last().IsSymbolToken('.')) throw new UnexpectedTokenException(tokens.Last());
+        if (tokens[0].IsSymbolToken('.') && ! tokens[0].IsSymbolToken('.')) throw new UnexpectedTokenException(tokens[0]);
+        if (tokens.Last().IsSymbolToken('.')) throw new UnexpectedTokenException(tokens.Last());
 
-            IEnumerable<Token> pointTokens = tokens.Where(x => x.IsSymbolToken('.'));
+        IEnumerable<Token> pointTokens = tokens.Where(x => x.IsSymbolToken('.'));
             
-            foreach (SymbolToken pt in pointTokens)
-            {
-                int index = tokens.IndexOf(pt);
-                Token next = tokens[index + 1];
-
-                if (!next.IsPropertyToken() && !next.IsChildPropertiesToken()) throw new UnexpectedTokenException(next, "Expected property accessor");
-
-                if (next.IsPropertyToken() && next.CastToPropertyToken().Escaped) throw new UnexpectedTokenException(next, "Expected unescaped property accessor");
-            }
-        }
-
-        private static IEnumerable<JsonPathExpression> Parse(Token t)
+        foreach (SymbolToken pt in pointTokens)
         {
-            switch (t)
-            {
-                case PropertyToken pt: yield return new PropertyAccessExpression(pt);
-                    break;
+            int index = tokens.IndexOf(pt);
+            Token next = tokens[index + 1];
 
-                case ChildPropertiesToken pt: yield return new PropertyAccessExpression(pt);
-                    break;
+            if (!next.IsPropertyToken() && !next.IsChildPropertiesToken()) throw new UnexpectedTokenException(next, "Expected property accessor");
 
-                case RecursivePropertiesToken pt: yield return new PropertyAccessExpression(pt);
-                    break;
+            if (next.IsPropertyToken() && next.CastToPropertyToken().Escaped) throw new UnexpectedTokenException(next, "Expected unescaped property accessor");
+        }
+    }
 
-                case MultiplePropertiesToken pt: yield return new PropertyAccessExpression(pt);
-                    break;
+    private static IEnumerable<JsonPathExpression> Parse(Token t)
+    {
+        switch (t)
+        {
+            case PropertyToken pt: yield return new PropertyAccessExpression(pt);
+                break;
 
-                case ArrayElementsToken at: yield return new ArrayElementsExpression(at);
-                    break;
+            case ChildPropertiesToken pt: yield return new PropertyAccessExpression(pt);
+                break;
 
-                case AllArrayElementsToken at: yield return new ArrayElementsExpression(at);
-                    break;
+            case RecursivePropertiesToken pt: yield return new PropertyAccessExpression(pt);
+                break;
 
-                case FilterToken ft: yield return new FilterExpression(ft);
-                    break;
-            }
+            case MultiplePropertiesToken pt: yield return new PropertyAccessExpression(pt);
+                break;
+
+            case ArrayElementsToken at: yield return new ArrayElementsExpression(at);
+                break;
+
+            case AllArrayElementsToken at: yield return new ArrayElementsExpression(at);
+                break;
+
+            case FilterToken ft: yield return new FilterExpression(ft);
+                break;
         }
     }
 }

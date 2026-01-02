@@ -2,42 +2,41 @@
 using System.Collections;
 using System.Collections.Generic;
 
-namespace JsonPathway
+namespace JsonPathway;
+
+public class ExpressionList: IReadOnlyList<JsonPathExpression>
 {
-    public class ExpressionList: IReadOnlyList<JsonPathExpression>
+    private readonly List<JsonPathExpression> _expressions = new List<JsonPathExpression>();
+
+    private ExpressionList(IReadOnlyList<Token> tokens)
     {
-        private readonly List<JsonPathExpression> _expressions = new List<JsonPathExpression>();
+        _expressions.AddRange(Parser.Parse(tokens));
 
-        private ExpressionList(IReadOnlyList<Token> tokens)
+        foreach (JsonPathExpression ex in _expressions)
         {
-            _expressions.AddRange(Parser.Parse(tokens));
-
-            foreach (JsonPathExpression ex in _expressions)
+            if (ex is FilterExpression fe)
             {
-                if (ex is FilterExpression fe)
-                {
-                    fe.EnsureMethodNamesAreValid();
-                }
+                fe.EnsureMethodNamesAreValid();
             }
         }
-
-        public JsonPathExpression this[int index] => _expressions[index];
-
-        public int Count => _expressions.Count;
-
-        internal static ExpressionList Parse(IReadOnlyList<Token> tokens) => new ExpressionList(tokens);
-
-        internal static ExpressionList TokenizeAndParse(string jsonPathExpression)
-        {
-            IReadOnlyList<Token> tokens = Tokenizer.Tokenize(jsonPathExpression);
-            return Parse(tokens);
-        }
-
-        public IEnumerator<JsonPathExpression> GetEnumerator()
-        {
-            foreach (JsonPathExpression expr in _expressions) yield return expr;
-        }
-
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
+
+    public JsonPathExpression this[int index] => _expressions[index];
+
+    public int Count => _expressions.Count;
+
+    internal static ExpressionList Parse(IReadOnlyList<Token> tokens) => new ExpressionList(tokens);
+
+    internal static ExpressionList TokenizeAndParse(string jsonPathExpression)
+    {
+        IReadOnlyList<Token> tokens = Tokenizer.Tokenize(jsonPathExpression);
+        return Parse(tokens);
+    }
+
+    public IEnumerator<JsonPathExpression> GetEnumerator()
+    {
+        foreach (JsonPathExpression expr in _expressions) yield return expr;
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 }

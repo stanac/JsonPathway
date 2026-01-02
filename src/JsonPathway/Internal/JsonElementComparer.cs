@@ -2,24 +2,23 @@
 using System.Collections.Generic;
 using System.Text.Json;
 
-namespace JsonPathway.Internal
+namespace JsonPathway.Internal;
+
+public class JsonElementComparer : IComparer<JsonElement>
 {
-    public class JsonElementComparer : IComparer<JsonElement>
+    public static JsonElementComparer Default { get; } = new JsonElementComparer();
+
+    public int Compare(JsonElement x, JsonElement y)
     {
-        public static JsonElementComparer Default { get; } = new JsonElementComparer();
+        if (x.ValueKind != y.ValueKind) throw new ArgumentException($"Cannot compare different value kinds ({x.ValueKind} and {y.ValueKind})");
 
-        public int Compare(JsonElement x, JsonElement y)
+        if (JsonElementEqualityComparer.Default.Equals(x, y)) return 0;
+
+        if (x.ValueKind == JsonValueKind.Number && x.GetDouble() > y.GetDouble())
         {
-            if (x.ValueKind != y.ValueKind) throw new ArgumentException($"Cannot compare different value kinds ({x.ValueKind} and {y.ValueKind})");
-
-            if (JsonElementEqualityComparer.Default.Equals(x, y)) return 0;
-
-            if (x.ValueKind == JsonValueKind.Number && x.GetDouble() > y.GetDouble())
-            {
-                return 1;
-            }
-
-            return -1;
+            return 1;
         }
+
+        return -1;
     }
 }
