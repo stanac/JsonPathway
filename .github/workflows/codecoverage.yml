@@ -33,4 +33,4 @@ jobs:
       uses: coverallsapp/github-action@v1.0.1
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ./tests/JsonPathway.Tests/TestResults/coverage.net8.0.info
+        path-to-lcov: ./tests/JsonPathway.Tests/TestResults/coverage.net10.0.info
