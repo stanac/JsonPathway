@@ -4,8 +4,8 @@
 
 ---
 
-[JsonPath](https://goessner.net/articles/JsonPath/) implementation in .NET 8.0+
-that depends only on [System.Text.Json](https://www.nuget.org/packages/System.Text.Json/4.7.1).
+[JsonPath](https://goessner.net/articles/JsonPath/) implementation in `netstandard2.0`
+that depends only on [System.Text.Json](https://www.nuget.org/packages/System.Text.Json/).
 
 ## Changes
 
